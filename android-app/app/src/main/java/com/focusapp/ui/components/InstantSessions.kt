@@ -196,6 +196,97 @@ private fun DurationSelector(
     }
 }
 
+// Helper function to calculate points along a rounded square path
+private fun getRoundedSquarePoint(
+    distance: Float,
+    squareSize: Float,
+    cornerRadius: Float,
+    centerX: Float,
+    centerY: Float
+): Triple<Float, Float, Boolean> {
+    val straightSide = squareSize - 2 * cornerRadius
+    val quarterArc = PI.toFloat() * cornerRadius / 2
+    val perimeter = 4 * straightSide + 4 * quarterArc
+    
+    var d = distance % perimeter
+    val halfSquare = squareSize / 2
+    val left = centerX - halfSquare
+    val top = centerY - halfSquare
+    val right = centerX + halfSquare
+    val bottom = centerY + halfSquare
+    
+    var isCorner = false
+    
+    // Top edge (left to right, after top-left corner)
+    if (d < straightSide) {
+        val x = left + cornerRadius + d
+        val y = top
+        return Triple(x, y, false)
+    }
+    d -= straightSide
+    
+    // Top-right corner
+    if (d < quarterArc) {
+        val angle = -PI.toFloat() / 2 + d / cornerRadius
+        val x = right - cornerRadius + cornerRadius * cos(angle)
+        val y = top + cornerRadius + cornerRadius * sin(angle)
+        isCorner = true
+        return Triple(x, y, isCorner)
+    }
+    d -= quarterArc
+    
+    // Right edge (top to bottom)
+    if (d < straightSide) {
+        val x = right
+        val y = top + cornerRadius + d
+        return Triple(x, y, false)
+    }
+    d -= straightSide
+    
+    // Bottom-right corner
+    if (d < quarterArc) {
+        val angle = 0f + d / cornerRadius
+        val x = right - cornerRadius + cornerRadius * cos(angle)
+        val y = bottom - cornerRadius + cornerRadius * sin(angle)
+        isCorner = true
+        return Triple(x, y, isCorner)
+    }
+    d -= quarterArc
+    
+    // Bottom edge (right to left)
+    if (d < straightSide) {
+        val x = right - cornerRadius - d
+        val y = bottom
+        return Triple(x, y, false)
+    }
+    d -= straightSide
+    
+    // Bottom-left corner
+    if (d < quarterArc) {
+        val angle = PI.toFloat() / 2 + d / cornerRadius
+        val x = left + cornerRadius + cornerRadius * cos(angle)
+        val y = bottom - cornerRadius + cornerRadius * sin(angle)
+        isCorner = true
+        return Triple(x, y, isCorner)
+    }
+    d -= quarterArc
+    
+    // Left edge (bottom to top)
+    if (d < straightSide) {
+        val x = left
+        val y = bottom - cornerRadius - d
+        return Triple(x, y, false)
+    }
+    d -= straightSide
+    
+    // Top-left corner
+    val angle = PI.toFloat() + d / cornerRadius
+    val x = left + cornerRadius + cornerRadius * cos(angle)
+    val y = top + cornerRadius + cornerRadius * sin(angle)
+    isCorner = true
+    return Triple(x, y, isCorner)
+}
+
 @Composable
 private fun RoundedSquareTimer(
     remainingSeconds: Int,
@@ -225,29 +316,37 @@ private fun RoundedSquareTimer(
         Canvas(modifier = Modifier.fillMaxSize()) {
             val canvasSize = size.minDimension
             val cornerRadius = 36.dp.toPx()
-            val tickCount = 32
+            val tickCount = 40 // Increased for better distribution around rounded square
             val centerX = size.width / 2
             val centerY = size.height / 2
-            val radiusOuter = canvasSize / 2 - 16.dp.toPx()
-            val radiusInner = radiusOuter - 16.dp.toPx()
+            val squareSize = canvasSize - 32.dp.toPx()
+            val halfSquare = squareSize / 2
+            val tickInset = 12.dp.toPx()
             
             // Draw rounded square background
             drawRoundRect(
                 color = Color.White,
                 topLeft = Offset(16.dp.toPx(), 16.dp.toPx()),
-                size = androidx.compose.ui.geometry.Size(
-                    canvasSize - 32.dp.toPx(),
-                    canvasSize - 32.dp.toPx()
-                ),
+                size = androidx.compose.ui.geometry.Size(squareSize, squareSize),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius)
             )
             
-            // Draw ticks
+            // Draw ticks along rounded square path
             for (i in 0 until tickCount) {
-                val angle = (i * 360f / tickCount - 90f) * PI.toFloat() / 180f
+                val t = i.toFloat() / tickCount
+                val perimeter = 4 * (squareSize - 2 * cornerRadius) + 2 * PI.toFloat() * cornerRadius
+                val distance = t * perimeter
+                
+                // Calculate position on rounded square path
+                val (x, y, isCorner) = getRoundedSquarePoint(
+                    distance = distance,
+                    squareSize = squareSize,
+                    cornerRadius = cornerRadius,
+                    centerX = centerX,
+                    centerY = centerY
+                )
                 
                 // Calculate tick progress-based color
-                val tickProgress = (i.toFloat() / tickCount)
                 val progressForTick = (progress * tickCount - i) / 3f
                 val colorProgress = progressForTick.coerceIn(0f, 1f)
                 val tickColor = lerp(
@@ -261,15 +360,25 @@ private fun RoundedSquareTimer(
                     (sin(oscillation + i * 0.2f) * 1.5f * progress).coerceIn(-2f, 2f)
                 } else 0f
                 
-                val perpAngle = angle + PI.toFloat() / 2
-                val offsetX = cos(perpAngle) * motionAmplitude
-                val offsetY = sin(perpAngle) * motionAmplitude
+                // Calculate normal direction for tick
+                val dx = x - centerX
+                val dy = y - centerY
+                val length = kotlin.math.sqrt(dx * dx + dy * dy)
+                val normalX = dx / length
+                val normalY = dy / length
                 
-                // Calculate tick positions
-                val x1 = centerX + cos(angle) * radiusInner + offsetX
-                val y1 = centerY + sin(angle) * radiusInner + offsetY
-                val x2 = centerX + cos(angle) * radiusOuter + offsetX
-                val y2 = centerY + sin(angle) * radiusOuter + offsetY
+                // Perpendicular for motion offset
+                val perpX = -normalY * motionAmplitude
+                val perpY = normalX * motionAmplitude
+                
+                // Tick length varies - shorter at corners
+                val tickLength = if (isCorner) 12.dp.toPx() else 16.dp.toPx()
+                
+                // Calculate tick start and end positions
+                val x1 = x - normalX * tickInset + perpX
+                val y1 = y - normalY * tickInset + perpY
+                val x2 = x - normalX * (tickInset + tickLength) + perpX
+                val y2 = y - normalY * (tickInset + tickLength) + perpY
                 
                 drawLine(
                     color = tickColor,
