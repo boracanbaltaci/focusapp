@@ -31,29 +31,14 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun FocusApp() {
     val context = LocalContext.current
-    val authViewModel = remember { AuthViewModel(context) }
-    val sessionViewModel = remember { SessionViewModel() }
+    val sessionViewModel = remember { SessionViewModel(context) }
     
-    var currentScreen by remember { mutableStateOf("login") }
-    val isLoggedIn by authViewModel.isLoggedIn.collectAsState()
-    
-    LaunchedEffect(isLoggedIn) {
-        currentScreen = if (isLoggedIn) "home" else "login"
-    }
+    var currentScreen by remember { mutableStateOf("home") }
     
     when (currentScreen) {
-        "login" -> LoginScreen(
-            authViewModel = authViewModel,
-            onLoginSuccess = { currentScreen = "home" }
-        )
-        
         "home" -> HomeScreen(
             sessionViewModel = sessionViewModel,
-            onNavigateToSettings = { currentScreen = "settings" },
-            onLogout = { 
-                authViewModel.logout()
-                currentScreen = "login"
-            }
+            onNavigateToSettings = { currentScreen = "settings" }
         )
         
         "settings" -> SettingsScreen(
