@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.focusapp.ui.components.InstantSessions
 import com.focusapp.ui.components.StatsChart
 import com.focusapp.ui.theme.GlassSurface
 
@@ -158,6 +159,14 @@ fun HomeScreen(
                         }
                     }
                 }
+            }
+            
+            item {
+                // Instant Sessions
+                InstantSessions(
+                    onStart = { minutes -> sessionViewModel.startSession(false) },
+                    onComplete = { sessionViewModel.endSession() }
+                )
             }
             
             item {
