@@ -219,25 +219,25 @@ private fun RoundedSquareTimer(
     )
     
     Box(
-        modifier = Modifier.size(96.dp),
+        modifier = Modifier.size(192.dp),
         contentAlignment = Alignment.Center
     ) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val canvasSize = size.minDimension
-            val cornerRadius = 18.dp.toPx()
+            val cornerRadius = 36.dp.toPx()
             val tickCount = 32
             val centerX = size.width / 2
             val centerY = size.height / 2
-            val radiusOuter = canvasSize / 2 - 8.dp.toPx()
-            val radiusInner = radiusOuter - 8.dp.toPx()
+            val radiusOuter = canvasSize / 2 - 16.dp.toPx()
+            val radiusInner = radiusOuter - 16.dp.toPx()
             
             // Draw rounded square background
             drawRoundRect(
                 color = Color.White,
-                topLeft = Offset(8.dp.toPx(), 8.dp.toPx()),
+                topLeft = Offset(16.dp.toPx(), 16.dp.toPx()),
                 size = androidx.compose.ui.geometry.Size(
-                    canvasSize - 16.dp.toPx(),
-                    canvasSize - 16.dp.toPx()
+                    canvasSize - 32.dp.toPx(),
+                    canvasSize - 32.dp.toPx()
                 ),
                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(cornerRadius)
             )
@@ -287,7 +287,7 @@ private fun RoundedSquareTimer(
             style = MaterialTheme.typography.titleLarge,
             color = Color.Black,
             fontWeight = FontWeight.Bold,
-            fontSize = 24.sp
+            fontSize = 48.sp
         )
     }
 }
