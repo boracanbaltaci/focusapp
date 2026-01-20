@@ -202,8 +202,8 @@ fun SettingsScreen(
                             readOnly = true,
                             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = languageExpanded) },
                             modifier = Modifier
-                                .menuAnchor()
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .menuAnchor(),
                             colors = OutlinedTextFieldDefaults.colors(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,

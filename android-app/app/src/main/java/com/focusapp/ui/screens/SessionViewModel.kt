@@ -82,11 +82,13 @@ class SessionViewModel(context: Context) : ViewModel() {
     }
     
     fun toggleBreak() {
-        _isOnBreak.value = !_isOnBreak.value
-        if (_isOnBreak.value) {
-            breakStartTime = System.currentTimeMillis()
-        } else {
-            totalBreakTime += System.currentTimeMillis() - breakStartTime
+        synchronized(this) {
+            _isOnBreak.value = !_isOnBreak.value
+            if (_isOnBreak.value) {
+                breakStartTime = System.currentTimeMillis()
+            } else {
+                totalBreakTime += System.currentTimeMillis() - breakStartTime
+            }
         }
     }
     
@@ -94,11 +96,14 @@ class SessionViewModel(context: Context) : ViewModel() {
         timerJob?.cancel()
         val startTime = System.currentTimeMillis()
         timerJob = viewModelScope.launch {
-            while (true) {
+            while (currentSession.value != null) {
                 delay(1000)
-                if (!_isOnBreak.value) {
-                    _elapsedTime.value = (System.currentTimeMillis() - startTime - totalBreakTime) / 1000
+                val currentBreakTime = if (_isOnBreak.value) {
+                    System.currentTimeMillis() - breakStartTime
+                } else {
+                    0L
                 }
+                _elapsedTime.value = (System.currentTimeMillis() - startTime - totalBreakTime - currentBreakTime) / 1000
             }
         }
     }
