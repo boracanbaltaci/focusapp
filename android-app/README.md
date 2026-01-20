@@ -1,14 +1,13 @@
 # Focus App - Android Client
 
-Android client for the Focus tracking application built with Kotlin and Jetpack Compose.
+Android focus tracking application built with Kotlin and Jetpack Compose. All data is stored locally on the device with no backend required.
 
 ## Technologies
 
 - Kotlin
 - Jetpack Compose (Material 3)
 - MVVM Architecture
-- Retrofit + Moshi for networking
-- DataStore for secure token storage
+- Room Database for local storage
 - Coroutines for async operations
 
 ## Prerequisites
@@ -17,26 +16,6 @@ Android client for the Focus tracking application built with Kotlin and Jetpack 
 - JDK 17 or higher
 - Android SDK with API level 34
 - Gradle 8.2
-
-## Configuration
-
-### Backend URL
-
-The app connects to the backend API. The default URL is configured for Android Emulator to connect to localhost:
-
-```kotlin
-// In app/build.gradle.kts
-buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
-```
-
-To change the backend URL:
-
-1. Open `android-app/app/build.gradle.kts`
-2. Find the `buildConfigField` for `BASE_URL`
-3. Update the URL:
-   - For emulator connecting to localhost: `http://10.0.2.2:8080/`
-   - For physical device on same network: `http://<your-machine-ip>:8080/`
-   - For production: `https://your-api-domain.com/`
 
 ## Building and Running
 
@@ -66,7 +45,7 @@ Or from command line:
 ```
 app/src/main/java/com/focusapp/
 ├── data/
-│   ├── api/           # Retrofit API interfaces and client
+│   ├── local/         # Room database entities and DAOs
 │   ├── model/         # Data models
 │   └── repository/    # Repository layer
 ├── ui/
@@ -80,18 +59,13 @@ app/src/main/java/com/focusapp/
 
 ### Screens
 
-1. **Login Screen**
-   - User registration
-   - User login
-   - JWT token storage
-
-2. **Home Screen**
+1. **Home Screen**
    - Start/stop work sessions
    - Start break sessions
    - View weekly progress chart
    - Quick stats preview
 
-3. **Settings Screen**
+2. **Settings Screen**
    - Clock type (Digital/Analog)
    - Style selection
    - Background selection
@@ -99,9 +73,12 @@ app/src/main/java/com/focusapp/
 
 ### Data Storage
 
-The app uses DataStore Preferences to securely store:
-- JWT authentication token
-- Username
+The app uses Room Database to locally store:
+- Focus session data (start time, end time, duration)
+- Break session data
+- Weekly and hourly statistics
+
+All data is stored on the device and persists between app launches.
 
 ### UI Design
 
@@ -118,19 +95,6 @@ Run unit tests:
 ./gradlew test
 ```
 
-## API Integration
-
-The app communicates with the backend REST API:
-
-- `POST /api/auth/register` - User registration
-- `POST /api/auth/login` - User login
-- `POST /api/sessions/start` - Start session
-- `PUT /api/sessions/{id}/end` - End session
-- `GET /api/sessions/stats/weekly` - Get weekly stats
-- `GET /api/sessions/stats/hourly` - Get hourly stats
-
-All authenticated endpoints require a Bearer token in the Authorization header.
-
 ## Building for Production
 
 ```bash
@@ -139,19 +103,9 @@ All authenticated endpoints require a Bearer token in the Authorization header.
 
 **Note:** For production builds, you'll need to:
 1. Configure signing keys in `app/build.gradle.kts`
-2. Update the BASE_URL to your production API
-3. Enable ProGuard/R8 minification
+2. Enable ProGuard/R8 minification
 
 ## Troubleshooting
-
-### Connection Issues
-
-If the app can't connect to the backend:
-
-1. Ensure the backend is running on port 8080
-2. For emulator, use `10.0.2.2` instead of `localhost`
-3. For physical device, ensure it's on the same network
-4. Check firewall settings
 
 ### Build Issues
 
