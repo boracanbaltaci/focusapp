@@ -10,6 +10,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class SessionViewModel(context: Context) : ViewModel() {
     
@@ -36,6 +38,7 @@ class SessionViewModel(context: Context) : ViewModel() {
     private var timerJob: Job? = null
     private var breakStartTime: Long = 0L
     private var totalBreakTime: Long = 0L
+    private val breakMutex = Mutex()
     
     fun startSession(isBreak: Boolean = false) {
         viewModelScope.launch {
@@ -82,12 +85,14 @@ class SessionViewModel(context: Context) : ViewModel() {
     }
     
     fun toggleBreak() {
-        synchronized(this) {
-            _isOnBreak.value = !_isOnBreak.value
-            if (_isOnBreak.value) {
-                breakStartTime = System.currentTimeMillis()
-            } else {
-                totalBreakTime += System.currentTimeMillis() - breakStartTime
+        viewModelScope.launch {
+            breakMutex.withLock {
+                _isOnBreak.value = !_isOnBreak.value
+                if (_isOnBreak.value) {
+                    breakStartTime = System.currentTimeMillis()
+                } else {
+                    totalBreakTime += System.currentTimeMillis() - breakStartTime
+                }
             }
         }
     }
@@ -98,12 +103,15 @@ class SessionViewModel(context: Context) : ViewModel() {
         timerJob = viewModelScope.launch {
             while (currentSession.value != null) {
                 delay(1000)
-                val currentBreakTime = if (_isOnBreak.value) {
-                    System.currentTimeMillis() - breakStartTime
-                } else {
-                    0L
+                breakMutex.withLock {
+                    val currentBreakTime = if (_isOnBreak.value) {
+                        System.currentTimeMillis() - breakStartTime
+                    } else {
+                        0L
+                    }
+                    val elapsedSeconds = (System.currentTimeMillis() - startTime - totalBreakTime - currentBreakTime) / 1000
+                    _elapsedTime.value = maxOf(0L, elapsedSeconds)
                 }
-                _elapsedTime.value = (System.currentTimeMillis() - startTime - totalBreakTime - currentBreakTime) / 1000
             }
         }
     }
