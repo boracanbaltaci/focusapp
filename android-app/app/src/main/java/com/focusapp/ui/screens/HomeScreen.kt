@@ -165,7 +165,9 @@ fun HomeScreen(
                 // Instant Sessions
                 InstantSessions(
                     onStart = { minutes -> sessionViewModel.startSession(false) },
-                    onComplete = { sessionViewModel.endSession() }
+                    onPause = { /* optional: sessionViewModel.pauseSession() if implemented */ },
+                    onResume = { /* optional: resume */ },
+                    onStop = { sessionViewModel.endSession() }
                 )
             }
             
