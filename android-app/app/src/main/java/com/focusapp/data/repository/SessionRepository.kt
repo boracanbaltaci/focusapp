@@ -1,20 +1,33 @@
 package com.focusapp.data.repository
 
-import com.focusapp.data.api.RetrofitClient
+import android.content.Context
+import com.focusapp.data.local.AppDatabase
+import com.focusapp.data.local.SessionEntity
 import com.focusapp.data.model.*
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.concurrent.TimeUnit
 
-class SessionRepository {
+class SessionRepository(context: Context) {
     
-    private val api = RetrofitClient.apiService
+    private val sessionDao = AppDatabase.getDatabase(context).sessionDao()
+    private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
     
     suspend fun startSession(isBreak: Boolean = false): Result<SessionResponse> {
         return try {
-            val response = api.startSession(SessionRequest(isBreak))
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Result.failure(Exception(response.message() ?: "Failed to start session"))
-            }
+            val currentTime = System.currentTimeMillis()
+            val session = SessionEntity(
+                startTime = currentTime,
+                isBreak = isBreak
+            )
+            val id = sessionDao.insertSession(session)
+            Result.success(SessionResponse(
+                id = id,
+                startTime = dateFormat.format(Date(currentTime)),
+                endTime = null,
+                durationSeconds = null,
+                isBreak = isBreak
+            ))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -22,11 +35,24 @@ class SessionRepository {
     
     suspend fun endSession(sessionId: Long): Result<SessionResponse> {
         return try {
-            val response = api.endSession(sessionId)
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
+            val session = sessionDao.getSessionById(sessionId)
+            if (session != null) {
+                val endTime = System.currentTimeMillis()
+                val durationSeconds = TimeUnit.MILLISECONDS.toSeconds(endTime - session.startTime)
+                val updatedSession = session.copy(
+                    endTime = endTime,
+                    durationSeconds = durationSeconds
+                )
+                sessionDao.updateSession(updatedSession)
+                Result.success(SessionResponse(
+                    id = session.id,
+                    startTime = dateFormat.format(Date(session.startTime)),
+                    endTime = dateFormat.format(Date(endTime)),
+                    durationSeconds = durationSeconds,
+                    isBreak = session.isBreak
+                ))
             } else {
-                Result.failure(Exception(response.message() ?: "Failed to end session"))
+                Result.failure(Exception("Session not found"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -35,12 +61,27 @@ class SessionRepository {
     
     suspend fun getWeeklyStats(): Result<WeeklyStatsResponse> {
         return try {
-            val response = api.getWeeklyStats()
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Result.failure(Exception(response.message() ?: "Failed to fetch stats"))
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.DAY_OF_WEEK, calendar.firstDayOfWeek)
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            val startOfWeek = calendar.timeInMillis
+            
+            calendar.add(Calendar.WEEK_OF_YEAR, 1)
+            val endOfWeek = calendar.timeInMillis
+            
+            val sessions = sessionDao.getSessionsInRange(startOfWeek, endOfWeek)
+            val dailyDurations = mutableMapOf<String, Long>()
+            
+            val dayFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            sessions.filter { it.endTime != null && !it.isBreak }.forEach { session ->
+                val day = dayFormat.format(Date(session.startTime))
+                dailyDurations[day] = (dailyDurations[day] ?: 0) + (session.durationSeconds ?: 0)
             }
+            
+            Result.success(WeeklyStatsResponse(dailyDurations))
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -48,12 +89,27 @@ class SessionRepository {
     
     suspend fun getHourlyStats(): Result<HourlyStatsResponse> {
         return try {
-            val response = api.getHourlyStats()
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Result.failure(Exception(response.message() ?: "Failed to fetch stats"))
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.HOUR_OF_DAY, 0)
+            calendar.set(Calendar.MINUTE, 0)
+            calendar.set(Calendar.SECOND, 0)
+            calendar.set(Calendar.MILLISECOND, 0)
+            val startOfDay = calendar.timeInMillis
+            
+            calendar.add(Calendar.DAY_OF_YEAR, 1)
+            val endOfDay = calendar.timeInMillis
+            
+            val sessions = sessionDao.getSessionsInRange(startOfDay, endOfDay)
+            val hourlyDurations = mutableMapOf<Int, Long>()
+            
+            sessions.filter { it.endTime != null && !it.isBreak }.forEach { session ->
+                val hour = Calendar.getInstance().apply {
+                    timeInMillis = session.startTime
+                }.get(Calendar.HOUR_OF_DAY)
+                hourlyDurations[hour] = (hourlyDurations[hour] ?: 0) + (session.durationSeconds ?: 0)
             }
+            
+            Result.success(HourlyStatsResponse(hourlyDurations))
         } catch (e: Exception) {
             Result.failure(e)
         }

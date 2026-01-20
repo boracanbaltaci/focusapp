@@ -16,8 +16,7 @@ import com.focusapp.ui.theme.GlassSurface
 @Composable
 fun HomeScreen(
     sessionViewModel: SessionViewModel,
-    onNavigateToSettings: () -> Unit,
-    onLogout: () -> Unit
+    onNavigateToSettings: () -> Unit
 ) {
     val sessionState by sessionViewModel.sessionState.collectAsState()
     val currentSession by sessionViewModel.currentSession.collectAsState()
@@ -50,13 +49,8 @@ fun HomeScreen(
                         style = MaterialTheme.typography.headlineMedium,
                         color = Color.White
                     )
-                    Row {
-                        IconButton(onClick = onNavigateToSettings) {
-                            Text("⚙️", style = MaterialTheme.typography.headlineSmall)
-                        }
-                        IconButton(onClick = onLogout) {
-                            Text("🚪", style = MaterialTheme.typography.headlineSmall)
-                        }
+                    IconButton(onClick = onNavigateToSettings) {
+                        Text("⚙️", style = MaterialTheme.typography.headlineSmall)
                     }
                 }
             }
