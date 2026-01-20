@@ -305,17 +305,6 @@ fun InstantSessionsIdlePreview() {
 
 @Preview(showBackground = true, backgroundColor = 0xFF1E1E2E)
 @Composable
-fun InstantSessionsIdlePreview() {
-    InstantSessions(
-        onStart = {},
-        onPause = {},
-        onResume = {},
-        onStop = {}
-    )
-}
-
-@Preview(showBackground = true, backgroundColor = 0xFF1E1E2E)
-@Composable
 fun InstantSessionsRunningPreview() {
     var isRunning by remember { mutableStateOf(true) }
     var isPaused by remember { mutableStateOf(false) }
