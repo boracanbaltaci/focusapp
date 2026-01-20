@@ -1,5 +1,6 @@
 package com.focusapp.ui.screens
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.focusapp.data.model.SessionResponse
@@ -8,9 +9,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-class SessionViewModel : ViewModel() {
+class SessionViewModel(context: Context) : ViewModel() {
     
-    private val sessionRepository = SessionRepository()
+    private val sessionRepository = SessionRepository(context)
     
     private val _sessionState = MutableStateFlow<SessionState>(SessionState.Idle)
     val sessionState: StateFlow<SessionState> = _sessionState

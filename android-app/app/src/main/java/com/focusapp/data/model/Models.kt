@@ -1,25 +1,5 @@
 package com.focusapp.data.model
 
-data class LoginRequest(
-    val username: String,
-    val password: String
-)
-
-data class RegisterRequest(
-    val username: String,
-    val password: String
-)
-
-data class AuthResponse(
-    val token: String?,
-    val username: String?,
-    val message: String?
-)
-
-data class SessionRequest(
-    val isBreak: Boolean = false
-)
-
 data class SessionResponse(
     val id: Long,
     val startTime: String,
