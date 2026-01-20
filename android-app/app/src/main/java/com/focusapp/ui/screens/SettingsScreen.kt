@@ -1,6 +1,7 @@
 package com.focusapp.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -15,12 +16,15 @@ import com.focusapp.ui.theme.GlassSurface
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
+    settingsViewModel: SettingsViewModel,
     onBack: () -> Unit
 ) {
-    var selectedClockType by remember { mutableStateOf("digital") }
-    var selectedStyle by remember { mutableStateOf("default") }
-    var selectedBackground by remember { mutableStateOf("default") }
-    var selectedLanguage by remember { mutableStateOf("en") }
+    val clockType by settingsViewModel.clockType.collectAsState()
+    val style by settingsViewModel.style.collectAsState()
+    val background by settingsViewModel.background.collectAsState()
+    val language by settingsViewModel.language.collectAsState()
+    
+    var languageExpanded by remember { mutableStateOf(false) }
     
     Box(
         modifier = Modifier
@@ -73,13 +77,13 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FilterChip(
-                            selected = selectedClockType == "digital",
-                            onClick = { selectedClockType = "digital" },
+                            selected = clockType == "digital",
+                            onClick = { settingsViewModel.setClockType("digital") },
                             label = { Text("Digital") }
                         )
                         FilterChip(
-                            selected = selectedClockType == "analog",
-                            onClick = { selectedClockType = "analog" },
+                            selected = clockType == "analog",
+                            onClick = { settingsViewModel.setClockType("analog") },
                             label = { Text("Analog") }
                         )
                     }
@@ -110,18 +114,18 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FilterChip(
-                            selected = selectedStyle == "default",
-                            onClick = { selectedStyle = "default" },
+                            selected = style == "default",
+                            onClick = { settingsViewModel.setStyle("default") },
                             label = { Text("Default") }
                         )
                         FilterChip(
-                            selected = selectedStyle == "minimal",
-                            onClick = { selectedStyle = "minimal" },
+                            selected = style == "minimal",
+                            onClick = { settingsViewModel.setStyle("minimal") },
                             label = { Text("Minimal") }
                         )
                         FilterChip(
-                            selected = selectedStyle == "dark",
-                            onClick = { selectedStyle = "dark" },
+                            selected = style == "dark",
+                            onClick = { settingsViewModel.setStyle("dark") },
                             label = { Text("Dark") }
                         )
                     }
@@ -152,13 +156,13 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         FilterChip(
-                            selected = selectedBackground == "default",
-                            onClick = { selectedBackground = "default" },
+                            selected = background == "default",
+                            onClick = { settingsViewModel.setBackground("default") },
                             label = { Text("Default") }
                         )
                         FilterChip(
-                            selected = selectedBackground == "gradient",
-                            onClick = { selectedBackground = "gradient" },
+                            selected = background == "gradient",
+                            onClick = { settingsViewModel.setBackground("gradient") },
                             label = { Text("Gradient") }
                         )
                     }
@@ -184,25 +188,49 @@ fun SettingsScreen(
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ExposedDropdownMenuBox(
+                        expanded = languageExpanded,
+                        onExpandedChange = { languageExpanded = !languageExpanded }
                     ) {
-                        FilterChip(
-                            selected = selectedLanguage == "en",
-                            onClick = { selectedLanguage = "en" },
-                            label = { Text("English") }
+                        OutlinedTextField(
+                            value = when (language) {
+                                "en" -> "🇬🇧 English"
+                                "tr" -> "🇹🇷 Turkish"
+                                else -> "🇬🇧 English"
+                            },
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = languageExpanded) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White,
+                                focusedBorderColor = Color.White,
+                                unfocusedBorderColor = Color.White.copy(alpha = 0.5f)
+                            )
                         )
-                        FilterChip(
-                            selected = selectedLanguage == "es",
-                            onClick = { selectedLanguage = "es" },
-                            label = { Text("Español") }
-                        )
-                        FilterChip(
-                            selected = selectedLanguage == "fr",
-                            onClick = { selectedLanguage = "fr" },
-                            label = { Text("Français") }
-                        )
+                        
+                        ExposedDropdownMenu(
+                            expanded = languageExpanded,
+                            onDismissRequest = { languageExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("🇬🇧 English") },
+                                onClick = {
+                                    settingsViewModel.setLanguage("en")
+                                    languageExpanded = false
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("🇹🇷 Turkish") },
+                                onClick = {
+                                    settingsViewModel.setLanguage("tr")
+                                    languageExpanded = false
+                                }
+                            )
+                        }
                     }
                 }
             }

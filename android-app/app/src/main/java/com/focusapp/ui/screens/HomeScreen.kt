@@ -16,11 +16,20 @@ import com.focusapp.ui.theme.GlassSurface
 @Composable
 fun HomeScreen(
     sessionViewModel: SessionViewModel,
+    settingsViewModel: SettingsViewModel,
     onNavigateToSettings: () -> Unit
 ) {
     val sessionState by sessionViewModel.sessionState.collectAsState()
     val currentSession by sessionViewModel.currentSession.collectAsState()
     val weeklyStats by sessionViewModel.weeklyStats.collectAsState()
+    val elapsedTime by sessionViewModel.elapsedTime.collectAsState()
+    val isOnBreak by sessionViewModel.isOnBreak.collectAsState()
+    val background by settingsViewModel.background.collectAsState()
+    
+    val backgroundColor = when (background) {
+        "gradient" -> Color(0xFF2E1E3E)
+        else -> Color(0xFF1E1E2E)
+    }
     
     LaunchedEffect(Unit) {
         sessionViewModel.loadWeeklyStats()
@@ -29,7 +38,7 @@ fun HomeScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF1E1E2E))
+            .background(backgroundColor)
     ) {
         LazyColumn(
             modifier = Modifier
@@ -76,11 +85,23 @@ fun HomeScreen(
                         )
                         
                         if (currentSession != null) {
+                            // Display timer
+                            val hours = elapsedTime / 3600
+                            val minutes = (elapsedTime % 3600) / 60
+                            val seconds = elapsedTime % 60
                             Text(
-                                text = "Started at: ${currentSession?.startTime?.take(16)}",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = Color.White.copy(alpha = 0.8f)
+                                text = String.format("%02d:%02d:%02d", hours, minutes, seconds),
+                                style = MaterialTheme.typography.displayLarge,
+                                color = if (isOnBreak) Color.Yellow else Color.White
                             )
+                            
+                            if (isOnBreak) {
+                                Text(
+                                    text = "On Break",
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = Color.Yellow
+                                )
+                            }
                         }
                         
                         Row(
@@ -104,13 +125,26 @@ fun HomeScreen(
                                     Text("Start Break")
                                 }
                             } else {
-                                Button(
-                                    onClick = { sessionViewModel.endSession() },
+                                Column(
                                     modifier = Modifier.fillMaxWidth(),
-                                    enabled = sessionState !is SessionState.Loading,
-                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Text("Stop Session")
+                                    Button(
+                                        onClick = { sessionViewModel.endSession() },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        enabled = sessionState !is SessionState.Loading,
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                                    ) {
+                                        Text("End Session")
+                                    }
+                                    
+                                    OutlinedButton(
+                                        onClick = { sessionViewModel.toggleBreak() },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        enabled = sessionState !is SessionState.Loading
+                                    ) {
+                                        Text(if (isOnBreak) "Continue" else "Give a Break")
+                                    }
                                 }
                             }
                         }
