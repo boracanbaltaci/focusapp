@@ -72,17 +72,6 @@ fun TimerDisplay(
         animationSpec = tween(300, easing = FastOutSlowInEasing)
     )
     
-    // Bright light glow pulse animation (not liquid - modern light effect)
-    val infiniteTransition = rememberInfiniteTransition()
-    val glowPulse by infiniteTransition.animateFloat(
-        initialValue = 0.7f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
-        )
-    )
-    
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -149,7 +138,7 @@ fun TimerDisplay(
                         .width(240.dp)
                         .height(100.dp)
                 ) {
-                    // Pill/capsule shape progress with bright modern light effect
+                    // Pill/capsule shape progress - filling the outline
                     Canvas(
                         modifier = Modifier.fillMaxSize()
                     ) {
@@ -158,7 +147,7 @@ fun TimerDisplay(
                         val width = size.width
                         val radius = height / 2
                         
-                        // Background track (dark pill shape)
+                        // Background track (dark pill shape outline)
                         drawRoundRect(
                             color = Color(0xFF2A2A2A),
                             size = Size(width, height),
@@ -166,35 +155,54 @@ fun TimerDisplay(
                             style = Stroke(width = strokeWidth)
                         )
                         
-                        // Progress pill with bright light effect
-                        val progressWidth = animatedProgress * (width - strokeWidth)
-                        if (progressWidth > 0) {
-                            // Outer bright glow layer
-                            drawRoundRect(
-                                color = Color(0xFFCCFF00).copy(alpha = 0.3f * glowPulse),
-                                topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
-                                size = Size(progressWidth, height - strokeWidth),
-                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius - strokeWidth / 2, radius - strokeWidth / 2),
-                                style = Stroke(width = strokeWidth + 12.dp.toPx(), cap = StrokeCap.Round)
-                            )
+                        // Progress fill inside the pill outline (no glow)
+                        if (animatedProgress > 0) {
+                            val path = Path()
+                            val progressWidth = animatedProgress * width
                             
-                            // Mid glow layer
-                            drawRoundRect(
-                                color = Color(0xFFCCFF00).copy(alpha = 0.6f * glowPulse),
-                                topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
-                                size = Size(progressWidth, height - strokeWidth),
-                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius - strokeWidth / 2, radius - strokeWidth / 2),
-                                style = Stroke(width = strokeWidth + 6.dp.toPx(), cap = StrokeCap.Round)
-                            )
+                            // Calculate the fill path based on progress
+                            if (progressWidth <= radius) {
+                                // Left cap only (circular segment)
+                                val centerX = radius
+                                val centerY = radius
+                                val sweepAngle = Math.toDegrees(2 * Math.acos((radius - progressWidth) / radius.toDouble())).toFloat()
+                                
+                                path.moveTo(centerX, centerY - radius + strokeWidth)
+                                path.arcTo(
+                                    rect = androidx.compose.ui.geometry.Rect(
+                                        left = strokeWidth,
+                                        top = strokeWidth,
+                                        right = 2 * radius - strokeWidth,
+                                        bottom = height - strokeWidth
+                                    ),
+                                    startAngleDegrees = 270f - sweepAngle / 2,
+                                    sweepAngleDegrees = sweepAngle,
+                                    forceMoveTo = false
+                                )
+                            } else if (progressWidth >= width - radius) {
+                                // Full width (both caps filled)
+                                drawRoundRect(
+                                    color = Color(0xFFCCFF00),
+                                    topLeft = Offset(strokeWidth, strokeWidth),
+                                    size = Size(width - 2 * strokeWidth, height - 2 * strokeWidth),
+                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius - strokeWidth, radius - strokeWidth)
+                                )
+                            } else {
+                                // Left cap + middle section
+                                drawRoundRect(
+                                    color = Color(0xFFCCFF00),
+                                    topLeft = Offset(strokeWidth, strokeWidth),
+                                    size = Size(progressWidth - strokeWidth, height - 2 * strokeWidth),
+                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius - strokeWidth, radius - strokeWidth)
+                                )
+                            }
                             
-                            // Main progress pill (bright green)
-                            drawRoundRect(
-                                color = Color(0xFFCCFF00),
-                                topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
-                                size = Size(progressWidth, height - strokeWidth),
-                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius - strokeWidth / 2, radius - strokeWidth / 2),
-                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                            )
+                            if (path.isEmpty.not()) {
+                                drawPath(
+                                    path = path,
+                                    color = Color(0xFFCCFF00)
+                                )
+                            }
                         }
                     }
                     
