@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.focusapp.ui.components.InstantSessions
 import com.focusapp.ui.components.StatsChart
+import com.focusapp.ui.components.TimerDisplay
 import com.focusapp.ui.theme.GlassSurface
 
 @Composable
@@ -169,6 +170,11 @@ fun HomeScreen(
                     onResume = { /* optional: resume */ },
                     onStop = { /* Instant sessions cleanup */ }
                 )
+            }
+            
+            item {
+                // Timer Display
+                TimerDisplay()
             }
             
             item {
