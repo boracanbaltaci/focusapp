@@ -156,46 +156,119 @@ fun TimerDisplay(
                             style = Stroke(width = strokeWidth)
                         )
                         
-                        // Progress fill inside the pill outline (no glow)
+                        // Progress fill - starts from top center, progresses to the right
                         if (animatedProgress > 0) {
                             val path = Path()
-                            val progressWidth = animatedProgress * width
                             
-                            // Calculate the fill path based on progress
-                            if (progressWidth <= radius) {
-                                // Left cap only (circular segment)
-                                val centerX = radius
-                                val centerY = radius
-                                val sweepAngle = Math.toDegrees(2 * Math.acos((radius - progressWidth) / radius.toDouble())).toFloat()
-                                
-                                path.moveTo(centerX, centerY - radius + strokeWidth)
-                                path.arcTo(
-                                    rect = androidx.compose.ui.geometry.Rect(
-                                        left = strokeWidth,
-                                        top = strokeWidth,
-                                        right = 2 * radius - strokeWidth,
-                                        bottom = height - strokeWidth
-                                    ),
-                                    startAngleDegrees = 270f - sweepAngle / 2,
-                                    sweepAngleDegrees = sweepAngle,
-                                    forceMoveTo = false
-                                )
-                            } else if (progressWidth >= width - radius) {
-                                // Full width (both caps filled)
-                                drawRoundRect(
-                                    color = Color(0xFFCCFF00),
-                                    topLeft = Offset(strokeWidth, strokeWidth),
-                                    size = Size(width - 2 * strokeWidth, height - 2 * strokeWidth),
-                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius - strokeWidth, radius - strokeWidth)
-                                )
-                            } else {
-                                // Left cap + middle section
-                                drawRoundRect(
-                                    color = Color(0xFFCCFF00),
-                                    topLeft = Offset(strokeWidth, strokeWidth),
-                                    size = Size(progressWidth - strokeWidth, height - 2 * strokeWidth),
-                                    cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius - strokeWidth, radius - strokeWidth)
-                                )
+                            // Total perimeter of the pill (excluding flat sides)
+                            // Left semicircle + top straight + right semicircle + bottom straight
+                            val straightLength = width - 2 * radius
+                            val semicircleLength = Math.PI * radius // Half circumference
+                            val totalLength = 2 * semicircleLength + 2 * straightLength
+                            
+                            val progressLength = animatedProgress * totalLength.toFloat()
+                            
+                            // Start from top center (12 o'clock on left cap)
+                            val leftCenterX = radius
+                            val leftCenterY = radius
+                            
+                            when {
+                                // Phase 1: Right side of left cap (12 o'clock to 3 o'clock)
+                                progressLength <= semicircleLength / 2 -> {
+                                    val angle = (progressLength / semicircleLength.toFloat()) * 180f
+                                    
+                                    path.moveTo(leftCenterX, strokeWidth)
+                                    path.arcTo(
+                                        rect = androidx.compose.ui.geometry.Rect(
+                                            left = strokeWidth,
+                                            top = strokeWidth,
+                                            right = 2 * radius - strokeWidth,
+                                            bottom = height - strokeWidth
+                                        ),
+                                        startAngleDegrees = -90f,
+                                        sweepAngleDegrees = angle,
+                                        forceMoveTo = false
+                                    )
+                                    path.lineTo(leftCenterX, leftCenterY)
+                                    path.close()
+                                    
+                                    drawPath(path, color = Color(0xFFCCFF00))
+                                }
+                                // Phase 2: Top straight section
+                                progressLength <= semicircleLength / 2 + straightLength -> {
+                                    val straightProgress = progressLength - semicircleLength.toFloat() / 2
+                                    
+                                    // Draw right quarter of left cap
+                                    path.moveTo(leftCenterX, strokeWidth)
+                                    path.arcTo(
+                                        rect = androidx.compose.ui.geometry.Rect(
+                                            left = strokeWidth,
+                                            top = strokeWidth,
+                                            right = 2 * radius - strokeWidth,
+                                            bottom = height - strokeWidth
+                                        ),
+                                        startAngleDegrees = -90f,
+                                        sweepAngleDegrees = 90f,
+                                        forceMoveTo = false
+                                    )
+                                    // Draw top straight line
+                                    path.lineTo(radius + straightProgress, strokeWidth)
+                                    path.lineTo(radius + straightProgress, leftCenterY)
+                                    path.lineTo(leftCenterX, leftCenterY)
+                                    path.close()
+                                    
+                                    drawPath(path, color = Color(0xFFCCFF00))
+                                }
+                                // Phase 3: Right cap (3 o'clock to 9 o'clock)
+                                progressLength <= semicircleLength / 2 + straightLength + semicircleLength -> {
+                                    val capProgress = progressLength - (semicircleLength.toFloat() / 2 + straightLength)
+                                    val angle = (capProgress / semicircleLength.toFloat()) * 180f
+                                    
+                                    val rightCenterX = width - radius
+                                    
+                                    // Draw right quarter of left cap
+                                    path.moveTo(leftCenterX, strokeWidth)
+                                    path.arcTo(
+                                        rect = androidx.compose.ui.geometry.Rect(
+                                            left = strokeWidth,
+                                            top = strokeWidth,
+                                            right = 2 * radius - strokeWidth,
+                                            bottom = height - strokeWidth
+                                        ),
+                                        startAngleDegrees = -90f,
+                                        sweepAngleDegrees = 90f,
+                                        forceMoveTo = false
+                                    )
+                                    // Draw top straight
+                                    path.lineTo(rightCenterX, strokeWidth)
+                                    // Draw right cap arc
+                                    path.arcTo(
+                                        rect = androidx.compose.ui.geometry.Rect(
+                                            left = width - 2 * radius + strokeWidth,
+                                            top = strokeWidth,
+                                            right = width - strokeWidth,
+                                            bottom = height - strokeWidth
+                                        ),
+                                        startAngleDegrees = -90f,
+                                        sweepAngleDegrees = angle,
+                                        forceMoveTo = false
+                                    )
+                                    path.lineTo(rightCenterX, leftCenterY)
+                                    path.lineTo(leftCenterX, leftCenterY)
+                                    path.close()
+                                    
+                                    drawPath(path, color = Color(0xFFCCFF00))
+                                }
+                                // Phase 4: Bottom straight + left cap return (completing the loop)
+                                else -> {
+                                    // Full pill
+                                    drawRoundRect(
+                                        color = Color(0xFFCCFF00),
+                                        topLeft = Offset(strokeWidth, strokeWidth),
+                                        size = Size(width - 2 * strokeWidth, height - 2 * strokeWidth),
+                                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius - strokeWidth, radius - strokeWidth)
+                                    )
+                                }
                             }
                             
                             if (path.isEmpty.not()) {
