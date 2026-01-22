@@ -142,77 +142,58 @@ fun TimerDisplay(
                     fontSize = 16.sp
                 )
                 
-                // Main timer display with circular progress
+                // Main timer display with pill/capsule progress
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(200.dp)
+                    modifier = Modifier
+                        .width(240.dp)
+                        .height(100.dp)
                 ) {
-                    // Circular progress ring with bright modern light effect
+                    // Pill/capsule shape progress with bright modern light effect
                     Canvas(
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        val strokeWidth = 12.dp.toPx()
-                        val radius = (size.minDimension - strokeWidth) / 2
-                        val center = Offset(size.width / 2, size.height / 2)
+                        val strokeWidth = 8.dp.toPx()
+                        val height = size.height
+                        val width = size.width
+                        val radius = height / 2
                         
-                        // Background track (dark)
-                        drawCircle(
+                        // Background track (dark pill shape)
+                        drawRoundRect(
                             color = Color(0xFF2A2A2A),
-                            radius = radius,
-                            center = center,
+                            size = Size(width, height),
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius, radius),
                             style = Stroke(width = strokeWidth)
                         )
                         
-                        // Progress arc with bright light effect
-                        val sweepAngle = animatedProgress * 360f
-                        if (sweepAngle > 0) {
-                            // Outer bright glow (yellow/white light)
-                            drawArc(
-                                color = Color(0xFFFFFF00).copy(alpha = 0.25f * glowPulse),
-                                startAngle = -90f,
-                                sweepAngle = sweepAngle,
-                                useCenter = false,
-                                style = Stroke(width = strokeWidth + 20.dp.toPx(), cap = StrokeCap.Round),
-                                topLeft = Offset(
-                                    center.x - radius,
-                                    center.y - radius
-                                ),
-                                size = Size(radius * 2, radius * 2)
+                        // Progress pill with bright light effect
+                        val progressWidth = animatedProgress * (width - strokeWidth)
+                        if (progressWidth > 0) {
+                            // Outer bright glow layer
+                            drawRoundRect(
+                                color = Color(0xFFCCFF00).copy(alpha = 0.3f * glowPulse),
+                                topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
+                                size = Size(progressWidth, height - strokeWidth),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius - strokeWidth / 2, radius - strokeWidth / 2),
+                                style = Stroke(width = strokeWidth + 12.dp.toPx(), cap = StrokeCap.Round)
                             )
                             
-                            // Mid bright glow
-                            drawArc(
-                                color = Color(0xFFFFFF00).copy(alpha = 0.5f * glowPulse),
-                                startAngle = -90f,
-                                sweepAngle = sweepAngle,
-                                useCenter = false,
-                                style = Stroke(width = strokeWidth + 10.dp.toPx(), cap = StrokeCap.Round),
-                                topLeft = Offset(
-                                    center.x - radius,
-                                    center.y - radius
-                                ),
-                                size = Size(radius * 2, radius * 2)
+                            // Mid glow layer
+                            drawRoundRect(
+                                color = Color(0xFFCCFF00).copy(alpha = 0.6f * glowPulse),
+                                topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
+                                size = Size(progressWidth, height - strokeWidth),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius - strokeWidth / 2, radius - strokeWidth / 2),
+                                style = Stroke(width = strokeWidth + 6.dp.toPx(), cap = StrokeCap.Round)
                             )
                             
-                            // Main progress arc (bright yellow-green)
-                            drawArc(
-                                brush = Brush.sweepGradient(
-                                    colors = listOf(
-                                        Color(0xFFCCFF00),
-                                        Color(0xFFFFFF00),
-                                        Color(0xFFCCFF00)
-                                    ),
-                                    center = center
-                                ),
-                                startAngle = -90f,
-                                sweepAngle = sweepAngle,
-                                useCenter = false,
-                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-                                topLeft = Offset(
-                                    center.x - radius,
-                                    center.y - radius
-                                ),
-                                size = Size(radius * 2, radius * 2)
+                            // Main progress pill (bright green)
+                            drawRoundRect(
+                                color = Color(0xFFCCFF00),
+                                topLeft = Offset(strokeWidth / 2, strokeWidth / 2),
+                                size = Size(progressWidth, height - strokeWidth),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(radius - strokeWidth / 2, radius - strokeWidth / 2),
+                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
                             )
                         }
                     }
@@ -220,9 +201,9 @@ fun TimerDisplay(
                     // Main time display - clean, crystal clear, properly sized and centered
                     Text(
                         text = String.format("%02d:%02d", remainingMinutes, remainingSecondsDisplay),
-                        fontSize = 42.sp,  // Reduced from 56sp to fit better in circle
+                        fontSize = 42.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFCCFF00),  // Match the bright yellow-green theme
+                        color = Color.White,  // White text for better contrast
                         style = MaterialTheme.typography.displayLarge
                     )
                 }
@@ -301,42 +282,44 @@ fun TimerDisplay(
                                     }
                             )
                             
-                            // Track with discrete marks
-                            Row(
+                            // Track with vertical line marks
+                            Canvas(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .align(Alignment.Center)
-                                    .padding(horizontal = 24.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                                    .fillMaxHeight()
+                                    .padding(horizontal = 24.dp)
                             ) {
+                                val width = size.width
+                                val height = size.height
+                                val step = width / (durationOptions.size - 1)
+                                val smallStep = step / 10f
+                                
+                                // Draw small light gray lines between main lines (10 per segment)
+                                for (i in 0 until (durationOptions.size - 1)) {
+                                    for (j in 1..9) {
+                                        val x = i * step + j * smallStep
+                                        drawLine(
+                                            color = Color.LightGray.copy(alpha = 0.3f),
+                                            start = Offset(x, height * 0.35f),
+                                            end = Offset(x, height * 0.65f),
+                                            strokeWidth = 1.dp.toPx()
+                                        )
+                                    }
+                                }
+                                
+                                // Draw main green vertical lines at discrete positions
                                 durationOptions.forEachIndexed { index, _ ->
-                                    Box(
-                                        modifier = Modifier
-                                            .size(if (index == selectedIndex) 10.dp else 6.dp)
-                                            .background(
-                                                if (index == selectedIndex) 
-                                                    Color(0xFFCCFF00) 
-                                                else 
-                                                    Color.White.copy(alpha = 0.3f),
-                                                shape = CircleShape
-                                            )
+                                    val x = index * step
+                                    val isSelected = index == selectedIndex
+                                    
+                                    drawLine(
+                                        color = if (isSelected) Color(0xFFCCFF00) else Color(0xFFCCFF00).copy(alpha = 0.5f),
+                                        start = Offset(x, height * 0.25f),
+                                        end = Offset(x, height * 0.75f),
+                                        strokeWidth = if (isSelected) 3.dp.toPx() else 2.dp.toPx(),
+                                        cap = StrokeCap.Round
                                     )
                                 }
-                            }
-                            
-                            // Current duration display (centered)
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "${durationOptions[selectedIndex]}m",
-                                    color = Color.White,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
                             }
                         }
                         
