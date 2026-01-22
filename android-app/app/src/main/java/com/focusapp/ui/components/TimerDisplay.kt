@@ -40,6 +40,7 @@ fun TimerDisplay(
     var selectedIndex by remember { mutableStateOf(2) } // Default to 15 minutes
     var duration by remember { mutableStateOf(durationOptions[selectedIndex] * 60) }
     var elapsedSeconds by remember { mutableStateOf(0) }
+    var elapsedMillis by remember { mutableStateOf(0L) } // For smooth continuous animation
     var isRunning by remember { mutableStateOf(false) }
     var sliderPosition by remember { mutableStateOf(selectedIndex.toFloat()) }
     
@@ -52,26 +53,36 @@ fun TimerDisplay(
         )
     )
     
-    // Timer countdown logic
-    LaunchedEffect(isRunning, elapsedSeconds) {
-        if (isRunning && elapsedSeconds < duration) {
-            delay(1000L)
-            elapsedSeconds++
-        } else if (isRunning && elapsedSeconds >= duration) {
-            isRunning = false
+    // Timer countdown logic with millisecond precision for smooth animation
+    LaunchedEffect(isRunning) {
+        val startTime = System.currentTimeMillis() - elapsedMillis
+        while (isRunning) {
+            val currentTime = System.currentTimeMillis()
+            elapsedMillis = currentTime - startTime
+            elapsedSeconds = (elapsedMillis / 1000).toInt()
+            
+            if (elapsedSeconds >= duration) {
+                isRunning = false
+                elapsedMillis = duration * 1000L
+                elapsedSeconds = duration
+            }
+            
+            delay(16L) // ~60fps for smooth animation
         }
     }
     
-    val progress = if (duration > 0) elapsedSeconds.toFloat() / duration.toFloat() else 0f
+    // Smooth continuous progress (not stepwise)
+    val progress = if (duration > 0) {
+        val totalMillis = duration * 1000L
+        (elapsedMillis.toFloat() / totalMillis.toFloat()).coerceIn(0f, 1f)
+    } else 0f
+    
     val remainingSeconds = duration - elapsedSeconds
     val remainingMinutes = remainingSeconds / 60
     val remainingSecondsDisplay = remainingSeconds % 60
     
-    // Animated progress for smooth transitions
-    val animatedProgress by animateFloatAsState(
-        targetValue = progress,
-        animationSpec = tween(300, easing = FastOutSlowInEasing)
-    )
+    // Use progress directly for continuous smooth animation (no extra animation layer)
+    val animatedProgress = progress
     
     Card(
         modifier = modifier
@@ -281,13 +292,19 @@ fun TimerDisplay(
                     }
                     
                     // Main time display - clean, crystal clear, properly sized and centered
-                    Text(
-                        text = String.format("%02d:%02d", remainingMinutes, remainingSecondsDisplay),
-                        fontSize = 42.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,  // White text for better contrast
-                        style = MaterialTheme.typography.displayLarge
-                    )
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Text(
+                            text = String.format("%02d:%02d", remainingMinutes, remainingSecondsDisplay),
+                            fontSize = 36.sp, // Slightly reduced for better fit (was 42sp)
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,  // White text for better contrast
+                            style = MaterialTheme.typography.displayLarge,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
                 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -298,9 +315,11 @@ fun TimerDisplay(
                         if (isRunning) {
                             isRunning = false
                             elapsedSeconds = 0
+                            elapsedMillis = 0L
                         } else {
                             isRunning = true
                             elapsedSeconds = 0
+                            elapsedMillis = 0L
                         }
                     },
                     colors = ButtonDefaults.buttonColors(
