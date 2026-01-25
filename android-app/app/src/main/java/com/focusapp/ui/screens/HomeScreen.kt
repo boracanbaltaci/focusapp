@@ -32,8 +32,8 @@ fun HomeScreen(
     // Background color - off white
     val backgroundColor = Color(0xFFFBFBFB)
     
-    // Navigation state (2 = current/main screen with clock)
-    var currentScreen by remember { mutableStateOf(2) }
+    // Navigation state (1 = current/main screen with clock)
+    var currentScreen by remember { mutableStateOf(1) }
     
     // Real-time clock
     var currentTime by remember { mutableStateOf(getCurrentTimeString()) }
@@ -118,28 +118,28 @@ fun HomeScreen(
                         style = TextStyle(
                             fontFamily = MenilFontFamily,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 160.sp,
-                            lineHeight = 160.sp,
-                            letterSpacing = (-3).sp,
+                            fontSize = 210.sp,
+                            lineHeight = 210.sp,
+                            letterSpacing = 2.sp, // Increased spacing between characters
                             color = Color.Black,
                             textAlign = TextAlign.Center
                         )
                     )
                     
-                    // AM/PM or ÖÖ/ÖS indicator (1/5 size, positioned to the right)
+                    // AM/PM or ÖÖ/ÖS indicator (50sp, positioned to the right at same height)
                     if (period.isNotEmpty()) {
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = period,
                             style = TextStyle(
                                 fontFamily = MenilFontFamily,
                                 fontWeight = FontWeight.Normal,
-                                fontSize = 32.sp,
-                                lineHeight = 32.sp,
+                                fontSize = 50.sp,
+                                lineHeight = 50.sp,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center
                             ),
-                            modifier = Modifier.offset(y = 24.dp) // Align with bottom of time
+                            modifier = Modifier.align(Alignment.CenterVertically)
                         )
                     }
                 }
