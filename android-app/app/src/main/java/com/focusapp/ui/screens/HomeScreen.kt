@@ -51,24 +51,26 @@ fun HomeScreen(
             .fillMaxSize()
             .background(backgroundColor)
     ) {
-        // Decorative half circle in background
+        // Decorative half circle in background (matching reference design)
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
         ) {
             val centerX = size.width / 2f
-            val centerY = size.height / 2f
-            val radius = size.height * 0.7f
+            // Position arc higher up on screen, aligned with clock area
+            val centerY = size.height * 0.45f
+            // Large radius for sweeping arc
+            val radius = size.width * 0.65f
             
-            // Draw decorative arc (half circle)
+            // Draw thin decorative arc (upper half circle)
             drawArc(
-                color = Color(0xFFE5E5E5),
-                startAngle = 0f,
-                sweepAngle = 180f,
+                color = Color(0xFFE5E5E5),  // Light gray as in design
+                startAngle = 180f,  // Start from left side
+                sweepAngle = 180f,  // Draw upper half
                 useCenter = false,
                 topLeft = Offset(centerX - radius, centerY - radius),
                 size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2),
-                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+                style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round)
             )
         }
         
@@ -112,21 +114,21 @@ fun HomeScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    // Main time display
+                    // Main time display (240sp)
                     Text(
                         text = time,
                         style = TextStyle(
                             fontFamily = MenilFontFamily,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 210.sp,
-                            lineHeight = 210.sp,
+                            fontSize = 240.sp,
+                            lineHeight = 240.sp,
                             letterSpacing = 2.sp, // Increased spacing between characters
                             color = Color.Black,
                             textAlign = TextAlign.Center
                         )
                     )
                     
-                    // AM/PM or ÖÖ/ÖS indicator (50sp, positioned to the right at same height)
+                    // AM/PM or ÖÖ/ÖS indicator (75sp, positioned to the right at same height)
                     if (period.isNotEmpty()) {
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
@@ -134,8 +136,8 @@ fun HomeScreen(
                             style = TextStyle(
                                 fontFamily = MenilFontFamily,
                                 fontWeight = FontWeight.Normal,
-                                fontSize = 50.sp,
-                                lineHeight = 50.sp,
+                                fontSize = 75.sp,
+                                lineHeight = 75.sp,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center
                             ),
