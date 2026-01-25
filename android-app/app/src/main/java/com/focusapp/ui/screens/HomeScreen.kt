@@ -32,8 +32,8 @@ fun HomeScreen(
     // Background color - off white
     val backgroundColor = Color(0xFFFBFBFB)
     
-    // Navigation state (0 = current screen)
-    var currentScreen by remember { mutableStateOf(0) }
+    // Navigation state (2 = current/main screen with clock)
+    var currentScreen by remember { mutableStateOf(2) }
     
     // Real-time clock
     var currentTime by remember { mutableStateOf(getCurrentTimeString()) }
@@ -103,18 +103,46 @@ fun HomeScreen(
                 modifier = Modifier.weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = currentTime,
-                    style = TextStyle(
-                        fontFamily = MenilFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 120.sp,
-                        lineHeight = 120.sp,
-                        letterSpacing = (-2).sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
+                // Split time and period
+                val timeParts = currentTime.split("\n")
+                val time = timeParts[0]
+                val period = if (timeParts.size > 1) timeParts[1] else ""
+                
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    // Main time display
+                    Text(
+                        text = time,
+                        style = TextStyle(
+                            fontFamily = MenilFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 160.sp,
+                            lineHeight = 160.sp,
+                            letterSpacing = (-3).sp,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
                     )
-                )
+                    
+                    // AM/PM or ÖÖ/ÖS indicator (1/5 size, positioned to the right)
+                    if (period.isNotEmpty()) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = period,
+                            style = TextStyle(
+                                fontFamily = MenilFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 32.sp,
+                                lineHeight = 32.sp,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            ),
+                            modifier = Modifier.offset(y = 24.dp) // Align with bottom of time
+                        )
+                    }
+                }
             }
             
             // Bottom navigation dots
