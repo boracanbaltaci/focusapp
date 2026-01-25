@@ -12,12 +12,16 @@ val CareerFontFamily = FontFamily(
     Font(R.font.career, FontWeight.Normal)
 )
 
+val MenilFontFamily = FontFamily(
+    Font(R.font.menil_etroit, FontWeight.Normal)
+)
+
 val Typography = Typography(
     displayLarge = TextStyle(
-        fontFamily = CareerFontFamily,
+        fontFamily = MenilFontFamily,
         fontWeight = FontWeight.Normal,
-        fontSize = 57.sp,
-        lineHeight = 64.sp,
+        fontSize = 120.sp,
+        lineHeight = 128.sp,
         letterSpacing = 0.sp
     ),
     displayMedium = TextStyle(

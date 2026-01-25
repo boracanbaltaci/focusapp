@@ -1,18 +1,27 @@
 package com.focusapp.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.focusapp.ui.components.TimerDisplay
+import androidx.compose.ui.unit.sp
+import com.focusapp.ui.theme.MenilFontFamily
+import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @Composable
 fun HomeScreen(
@@ -20,78 +29,150 @@ fun HomeScreen(
     settingsViewModel: SettingsViewModel,
     onNavigateToSettings: () -> Unit
 ) {
-    val background by settingsViewModel.background.collectAsState()
+    // Background color - off white
+    val backgroundColor = Color(0xFFFBFBFB)
     
-    val backgroundColor = when (background) {
-        "gradient" -> Color(0xFF2E1E3E)
-        else -> Color(0xFF1E1E2E)
+    // Navigation state (0 = current screen)
+    var currentScreen by remember { mutableStateOf(0) }
+    
+    // Real-time clock
+    var currentTime by remember { mutableStateOf(getCurrentTimeString()) }
+    
+    // Update clock every second
+    LaunchedEffect(Unit) {
+        while (true) {
+            currentTime = getCurrentTimeString()
+            delay(1000)
+        }
     }
-    
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
     
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundColor)
     ) {
-        if (isLandscape) {
-            // Landscape layout: Settings button and timer side by side
-            Row(
+        // Decorative half circle in background
+        Canvas(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            val centerX = size.width / 2f
+            val centerY = size.height / 2f
+            val radius = size.height * 0.7f
+            
+            // Draw decorative arc (half circle)
+            drawArc(
+                color = Color(0xFFE5E5E5),
+                startAngle = 0f,
+                sweepAngle = 180f,
+                useCenter = false,
+                topLeft = Offset(centerX - radius, centerY - radius),
+                size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2),
+                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+            )
+        }
+        
+        // Main content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Top bar with settings icon
+            Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth()
+                    .padding(top = 24.dp, end = 24.dp),
+                contentAlignment = Alignment.TopEnd
             ) {
-                // Settings button on the left in landscape
                 IconButton(
                     onClick = onNavigateToSettings,
-                    modifier = Modifier.align(Alignment.Top)
+                    modifier = Modifier.size(32.dp)
                 ) {
-                    Text("⚙️", style = MaterialTheme.typography.headlineSmall)
+                    Text(
+                        text = "⚙️",
+                        style = TextStyle(fontSize = 20.sp)
+                    )
                 }
-                
-                // Timer in the center
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    TimerDisplay()
-                }
-                
-                // Spacer for balance
-                Spacer(modifier = Modifier.width(48.dp))
             }
-        } else {
-            // Portrait layout: Original vertical layout
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+            
+            // Center clock display
+            Box(
+                modifier = Modifier.weight(1f),
+                contentAlignment = Alignment.Center
             ) {
-                item {
-                    // Settings button at top right
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(onClick = onNavigateToSettings) {
-                            Text("⚙️", style = MaterialTheme.typography.headlineSmall)
-                        }
+                Text(
+                    text = currentTime,
+                    style = TextStyle(
+                        fontFamily = MenilFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 120.sp,
+                        lineHeight = 120.sp,
+                        letterSpacing = (-2).sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+                )
+            }
+            
+            // Bottom navigation dots
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 32.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                repeat(3) { index ->
+                    NavigationDot(
+                        isActive = index == currentScreen,
+                        onClick = { currentScreen = index }
+                    )
+                    if (index < 2) {
+                        Spacer(modifier = Modifier.width(16.dp))
                     }
-                }
-                
-
-                item {
-                    // Timer Display
-                    TimerDisplay()
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun NavigationDot(
+    isActive: Boolean,
+    onClick: () -> Unit
+) {
+    val size = if (isActive) 12.dp else 8.dp
+    val color = if (isActive) Color(0xFF000000) else Color(0xFF545454)
+    
+    Box(
+        modifier = Modifier
+            .size(size)
+            .background(color, shape = androidx.compose.foundation.shape.CircleShape)
+            .clickable(onClick = onClick)
+    )
+}
+
+private fun getCurrentTimeString(): String {
+    val calendar = Calendar.getInstance()
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+    val minute = calendar.get(Calendar.MINUTE)
+    
+    // Get locale to determine AM/PM or ÖÖ/ÖS
+    val locale = Locale.getDefault()
+    val isTurkish = locale.language == "tr"
+    
+    return if (isTurkish) {
+        // Turkish format with ÖÖ/ÖS
+        val period = if (hour < 12) "öö" else "ös"
+        val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+        String.format("%02d:%02d\n%s", displayHour, minute, period)
+    } else {
+        // English format with AM/PM
+        val period = if (hour < 12) "am" else "pm"
+        val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+        String.format("%02d:%02d\n%s", displayHour, minute, period)
     }
 }

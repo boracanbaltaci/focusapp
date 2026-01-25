@@ -14,7 +14,7 @@
             android:name=".ui.MainActivity"
             android:exported="true"
             android:configChanges="orientation|screenSize"
-            android:screenOrientation="sensor"
+            android:screenOrientation="landscape"
             android:theme="@style/Theme.FocusApp">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
