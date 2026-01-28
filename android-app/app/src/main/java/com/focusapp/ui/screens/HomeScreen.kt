@@ -51,16 +51,16 @@ fun HomeScreen(
             .fillMaxSize()
             .background(backgroundColor)
     ) {
-        // Decorative half circle in background (matching reference design)
+        // Decorative arcs in background (matching reference design)
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
         ) {
             val centerX = size.width / 2f
-            // Position arc higher up on screen, aligned with clock area
-            val centerY = size.height * 0.45f
-            // Large radius for sweeping arc
-            val radius = size.width * 0.65f
+            
+            // Upper arc - positioned higher on screen
+            val upperCenterY = size.height * 0.45f
+            val upperRadius = size.width * 0.65f
             
             // Draw thin decorative arc (upper half circle)
             drawArc(
@@ -68,9 +68,24 @@ fun HomeScreen(
                 startAngle = 180f,  // Start from left side
                 sweepAngle = 180f,  // Draw upper half
                 useCenter = false,
-                topLeft = Offset(centerX - radius, centerY - radius),
-                size = androidx.compose.ui.geometry.Size(radius * 2, radius * 2),
+                topLeft = Offset(centerX - upperRadius, upperCenterY - upperRadius),
+                size = androidx.compose.ui.geometry.Size(upperRadius * 2, upperRadius * 2),
                 style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round)
+            )
+            
+            // Middle arc - centered vertically on screen
+            val middleCenterY = size.height * 0.5f
+            val middleRadius = size.width * 0.55f
+            
+            // Draw thin decorative arc in the middle
+            drawArc(
+                color = Color(0xFFE5E5E5),  // Light gray
+                startAngle = 180f,  // Start from left side
+                sweepAngle = 180f,  // Draw upper half
+                useCenter = false,
+                topLeft = Offset(centerX - middleRadius, middleCenterY - middleRadius),
+                size = androidx.compose.ui.geometry.Size(middleRadius * 2, middleRadius * 2),
+                style = Stroke(width = 1.dp.toPx(), cap = StrokeCap.Round)
             )
         }
         
