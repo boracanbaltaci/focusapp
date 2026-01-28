@@ -247,7 +247,8 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
             
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.offset(x = 70.dp) // Shift 70dp to the right
             ) {
                 Text(
                     text = time,
@@ -260,7 +261,7 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     ),
-                    modifier = Modifier.widthIn(min = 350.dp) // Fixed minimum width to prevent jitter
+                    modifier = Modifier.widthIn(min = 300.dp) // Fixed minimum width to prevent jitter
                 )
                 
                 if (period.isNotEmpty()) {
