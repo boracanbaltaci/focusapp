@@ -32,16 +32,19 @@ class MainActivity : ComponentActivity() {
 fun FocusApp() {
     val context = LocalContext.current
     val sessionViewModel = remember { SessionViewModel(context) }
+    val settingsViewModel = remember { SettingsViewModel(context) }
     
     var currentScreen by remember { mutableStateOf("home") }
     
     when (currentScreen) {
         "home" -> HomeScreen(
             sessionViewModel = sessionViewModel,
+            settingsViewModel = settingsViewModel,
             onNavigateToSettings = { currentScreen = "settings" }
         )
         
         "settings" -> SettingsScreen(
+            settingsViewModel = settingsViewModel,
             onBack = { currentScreen = "home" }
         )
     }
