@@ -260,7 +260,7 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                         color = Color.Black,
                         textAlign = TextAlign.Center
                     ),
-                    modifier = Modifier.widthIn(min = 420.dp) // Fixed minimum width to prevent jitter
+                    modifier = Modifier.widthIn(min = 350.dp) // Fixed minimum width to prevent jitter
                 )
                 
                 if (period.isNotEmpty()) {
