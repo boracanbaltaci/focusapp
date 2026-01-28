@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -290,48 +291,63 @@ private fun TimerScreen(
             SettingsIconButton(onNavigateToSettings)
         }
         
-        // Center content with start/stop button on left
+        // Center content with timer centered and button on far left
         Box(
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.weight(1f).fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
+            // Timer display - centered
+            Text(
+                text = formatTime(seconds),
+                style = TextStyle(
+                    fontFamily = MenilFontFamily,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 240.sp,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center
+                )
+            )
+            
+            // Start/Stop button on the far left
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.CenterStart
             ) {
-                // Start/Stop button on the left
                 Button(
                     onClick = onStartStop,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (isRunning) Color(0xFFFF4444) else Color(0xFF4CAF50)
                     ),
-                    modifier = Modifier.size(80.dp),
-                    shape = CircleShape
+                    modifier = Modifier
+                        .padding(start = 24.dp)
+                        .size(56.dp),
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(0.dp)
                 ) {
-                    Text(
-                        text = if (isRunning) "Stop" else "Start",
-                        style = TextStyle(
-                            fontFamily = MenilFontFamily,
-                            fontSize = 16.sp,
-                            color = Color.White
-                        )
-                    )
+                    // Play or Stop icon using Canvas
+                    Canvas(modifier = Modifier.size(24.dp)) {
+                        if (isRunning) {
+                            // Stop icon (square)
+                            drawRect(
+                                color = Color.White,
+                                topLeft = Offset(size.width * 0.25f, size.height * 0.25f),
+                                size = Size(size.width * 0.5f, size.height * 0.5f)
+                            )
+                        } else {
+                            // Play icon (triangle)
+                            val path = Path().apply {
+                                moveTo(size.width * 0.3f, size.height * 0.2f)
+                                lineTo(size.width * 0.3f, size.height * 0.8f)
+                                lineTo(size.width * 0.75f, size.height * 0.5f)
+                                close()
+                            }
+                            drawPath(
+                                path = path,
+                                color = Color.White
+                            )
+                        }
+                    }
                 }
-                
-                Spacer(modifier = Modifier.width(48.dp))
-                
-                // Timer display
-                Text(
-                    text = formatTime(seconds),
-                    style = TextStyle(
-                        fontFamily = MenilFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 120.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
-                    )
-                )
             }
         }
         
