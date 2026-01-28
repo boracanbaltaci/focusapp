@@ -259,7 +259,8 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                         letterSpacing = 2.sp,
                         color = Color.Black,
                         textAlign = TextAlign.Center
-                    )
+                    ),
+                    modifier = Modifier.widthIn(min = 450.dp) // Fixed minimum width to prevent jitter
                 )
                 
                 if (period.isNotEmpty()) {
@@ -345,7 +346,8 @@ private fun TimerScreen(
                         fontSize = 240.sp,
                         color = Color.Black,
                         textAlign = TextAlign.Center
-                    )
+                    ),
+                    modifier = Modifier.widthIn(min = 350.dp) // Fixed minimum width to prevent jitter
                 )
             }
             
@@ -519,17 +521,20 @@ private fun DurationPickerDialog(
         Pair("2 hours 00:00", 120 * 60)
     )
     
+    var selectedDuration by remember { mutableStateOf(25 * 60) } // Default 25 minutes
+    
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier
                 .width(400.dp)
-                .heightIn(max = 500.dp),
+                .height(450.dp),
             shape = RoundedCornerShape(16.dp),
             color = Color.White
         ) {
-            Column(
-                modifier = Modifier.padding(24.dp)
+            Box(
+                modifier = Modifier.fillMaxSize()
             ) {
+                // Title
                 Text(
                     text = "Select Duration",
                     style = TextStyle(
@@ -538,45 +543,84 @@ private fun DurationPickerDialog(
                         fontWeight = FontWeight.Normal,
                         color = Color.Black
                     ),
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 24.dp)
                 )
                 
+                // Center selection rectangle
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .width(300.dp)
+                        .height(60.dp)
+                        .background(
+                            color = Color(0xFFF0F0F0),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                )
+                
+                // Scrollable list of durations
                 LazyColumn(
-                    modifier = Modifier.weight(1f, fill = false)
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .width(300.dp)
+                        .height(300.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
-                    items(durationOptions) { (label, seconds) ->
-                        Text(
-                            text = label,
-                            style = TextStyle(
-                                fontFamily = MenilFontFamily,
-                                fontSize = 20.sp,
-                                color = Color.Black
-                            ),
+                    // Add spacers at top to allow scrolling items into center
+                    item {
+                        Spacer(modifier = Modifier.height(120.dp))
+                    }
+                    
+                    items(durationOptions.size) { index ->
+                        val (label, seconds) = durationOptions[index]
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clickable { onDurationSelected(seconds) }
-                                .padding(vertical = 12.dp, horizontal = 16.dp)
-                        )
+                                .height(60.dp)
+                                .clickable { selectedDuration = seconds },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                style = TextStyle(
+                                    fontFamily = MenilFontFamily,
+                                    fontSize = 22.sp,
+                                    color = Color.Black.copy(alpha = if (selectedDuration == seconds) 1f else 0.4f),
+                                    fontWeight = if (selectedDuration == seconds) FontWeight.Bold else FontWeight.Normal
+                                )
+                            )
+                        }
+                    }
+                    
+                    // Add spacers at bottom
+                    item {
+                        Spacer(modifier = Modifier.height(120.dp))
                     }
                 }
                 
-                Button(
-                    onClick = onDismiss,
+                // Checkmark button in bottom left corner
+                IconButton(
+                    onClick = { onDurationSelected(selectedDuration) },
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF545454)
-                    )
+                        .align(Alignment.BottomStart)
+                        .padding(start = 24.dp, bottom = 24.dp)
+                        .size(56.dp)
                 ) {
-                    Text(
-                        text = "Cancel",
-                        style = TextStyle(
-                            fontFamily = MenilFontFamily,
-                            fontSize = 16.sp,
-                            color = Color.White
+                    Canvas(modifier = Modifier.size(32.dp)) {
+                        val path = Path().apply {
+                            moveTo(size.width * 0.2f, size.height * 0.5f)
+                            lineTo(size.width * 0.4f, size.height * 0.7f)
+                            lineTo(size.width * 0.8f, size.height * 0.2f)
+                        }
+                        drawPath(
+                            path = path,
+                            color = Color(0xFF4CAF50),
+                            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
                         )
-                    )
+                    }
                 }
             }
         }
