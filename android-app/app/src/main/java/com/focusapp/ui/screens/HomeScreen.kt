@@ -5,7 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,6 +25,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import com.focusapp.ui.theme.MenilFontFamily
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
@@ -49,7 +53,8 @@ fun HomeScreen(
     
     // Timer state
     var isTimerRunning by remember { mutableStateOf(false) }
-    var timerSeconds by remember { mutableStateOf(0) }
+    var timerSeconds by remember { mutableStateOf(25 * 60) } // Default 25 minutes
+    var showDurationPicker by remember { mutableStateOf(false) }
     
     // Update clock every second
     LaunchedEffect(Unit) {
@@ -135,11 +140,23 @@ fun HomeScreen(
                     if (isTimerRunning) {
                         isTimerRunning = false
                     } else {
-                        if (timerSeconds == 0) timerSeconds = 60 // Default 1 minute
                         isTimerRunning = true
                     }
                 },
+                onTimerClick = { showDurationPicker = true },
                 onNavigateToSettings = onNavigateToSettings
+            )
+        }
+        
+        // Duration picker dialog
+        if (showDurationPicker) {
+            DurationPickerDialog(
+                onDismiss = { showDurationPicker = false },
+                onDurationSelected = { seconds ->
+                    timerSeconds = seconds
+                    isTimerRunning = false
+                    showDurationPicker = false
+                }
             )
         }
         
@@ -272,6 +289,7 @@ private fun TimerScreen(
     isRunning: Boolean,
     seconds: Int,
     onStartStop: () -> Unit,
+    onTimerClick: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
     Column(
@@ -296,17 +314,40 @@ private fun TimerScreen(
             modifier = Modifier.weight(1f).fillMaxWidth(),
             contentAlignment = Alignment.Center
         ) {
-            // Timer display - centered
-            Text(
-                text = formatTime(seconds),
-                style = TextStyle(
-                    fontFamily = MenilFontFamily,
-                    fontWeight = FontWeight.Normal,
-                    fontSize = 240.sp,
-                    color = Color.Black,
-                    textAlign = TextAlign.Center
+            // Timer display with hour label - centered
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.clickable(enabled = !isRunning) { onTimerClick() }
+            ) {
+                // Show hour label if >= 1 hour
+                val hours = seconds / 3600
+                if (hours >= 1) {
+                    val hourText = if (hours == 1) "1 hour" else "$hours hours"
+                    Text(
+                        text = hourText,
+                        style = TextStyle(
+                            fontFamily = MenilFontFamily,
+                            fontWeight = FontWeight.Normal,
+                            fontSize = 70.sp,
+                            color = Color.Black,
+                            textAlign = TextAlign.End
+                        ),
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+                }
+                
+                Text(
+                    text = formatTime(seconds),
+                    style = TextStyle(
+                        fontFamily = MenilFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 240.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
                 )
-            )
+            }
             
             // Start/Stop button on the far left
             Box(
@@ -324,14 +365,26 @@ private fun TimerScreen(
                     shape = CircleShape,
                     contentPadding = PaddingValues(0.dp)
                 ) {
-                    // Play or Stop icon using Canvas
+                    // Play or Pause icon using Canvas
                     Canvas(modifier = Modifier.size(24.dp)) {
                         if (isRunning) {
-                            // Stop icon (square)
+                            // Pause icon (two vertical lines)
+                            val lineWidth = size.width * 0.15f
+                            val lineHeight = size.height * 0.6f
+                            val topOffset = (size.height - lineHeight) / 2f
+                            
+                            // Left line
                             drawRect(
                                 color = Color.White,
-                                topLeft = Offset(size.width * 0.25f, size.height * 0.25f),
-                                size = Size(size.width * 0.5f, size.height * 0.5f)
+                                topLeft = Offset(size.width * 0.3f, topOffset),
+                                size = Size(lineWidth, lineHeight)
+                            )
+                            
+                            // Right line
+                            drawRect(
+                                color = Color.White,
+                                topLeft = Offset(size.width * 0.55f, topOffset),
+                                size = Size(lineWidth, lineHeight)
                             )
                         } else {
                             // Play icon (triangle)
@@ -364,27 +417,35 @@ private fun SettingsIconButton(onClick: () -> Unit) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             val centerX = size.width / 2f
             val centerY = size.height / 2f
-            val radius = size.width * 0.35f
+            val radius = size.width * 0.4f
             val strokeWidth = 2.dp.toPx()
             
-            // Draw gear icon (simplified version)
+            // Draw a simple cog/settings icon with 6 teeth
             // Center circle
             drawCircle(
                 color = Color.Black,
-                radius = radius * 0.4f,
+                radius = radius * 0.35f,
                 center = Offset(centerX, centerY),
                 style = Stroke(width = strokeWidth)
             )
             
-            // Outer gear teeth (8 small circles around)
-            for (i in 0 until 8) {
-                val angle = (i * 45f).toRadians()
-                val x = centerX + radius * kotlin.math.cos(angle)
-                val y = centerY + radius * kotlin.math.sin(angle)
-                drawCircle(
+            // Draw 6 rectangular teeth around the circle
+            for (i in 0 until 6) {
+                val angle = (i * 60f).toRadians()
+                val toothLength = radius * 0.4f
+                val toothWidth = radius * 0.25f
+                
+                val startX = centerX + (radius * 0.35f) * kotlin.math.cos(angle)
+                val startY = centerY + (radius * 0.35f) * kotlin.math.sin(angle)
+                val endX = centerX + (radius * 0.75f) * kotlin.math.cos(angle)
+                val endY = centerY + (radius * 0.75f) * kotlin.math.sin(angle)
+                
+                // Draw tooth as a line
+                drawLine(
                     color = Color.Black,
-                    radius = radius * 0.15f,
-                    center = Offset(x, y)
+                    start = Offset(startX, startY),
+                    end = Offset(endX, endY),
+                    strokeWidth = toothWidth
                 )
             }
         }
@@ -434,5 +495,90 @@ private fun getCurrentTimeString(): String {
         val period = if (hour < 12) "am" else "pm"
         val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
         String.format("%02d:%02d\n%s", displayHour, minute, period)
+    }
+}
+
+@Composable
+private fun DurationPickerDialog(
+    onDismiss: () -> Unit,
+    onDurationSelected: (Int) -> Unit
+) {
+    val durationOptions = listOf(
+        Pair("5:00", 5 * 60),
+        Pair("10:00", 10 * 60),
+        Pair("15:00", 15 * 60),
+        Pair("20:00", 20 * 60),
+        Pair("30:00", 30 * 60),
+        Pair("45:00", 45 * 60),
+        Pair("1 hour 00:00", 60 * 60),
+        Pair("1 hour 10:00", 70 * 60),
+        Pair("1 hour 15:00", 75 * 60),
+        Pair("1 hour 20:00", 80 * 60),
+        Pair("1 hour 30:00", 90 * 60),
+        Pair("1 hour 45:00", 105 * 60),
+        Pair("2 hours 00:00", 120 * 60)
+    )
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(
+            modifier = Modifier
+                .width(400.dp)
+                .heightIn(max = 500.dp),
+            shape = RoundedCornerShape(16.dp),
+            color = Color.White
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Text(
+                    text = "Select Duration",
+                    style = TextStyle(
+                        fontFamily = MenilFontFamily,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black
+                    ),
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                
+                LazyColumn(
+                    modifier = Modifier.weight(1f, fill = false)
+                ) {
+                    items(durationOptions) { (label, seconds) ->
+                        Text(
+                            text = label,
+                            style = TextStyle(
+                                fontFamily = MenilFontFamily,
+                                fontSize = 20.sp,
+                                color = Color.Black
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onDurationSelected(seconds) }
+                                .padding(vertical = 12.dp, horizontal = 16.dp)
+                        )
+                    }
+                }
+                
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF545454)
+                    )
+                ) {
+                    Text(
+                        text = "Cancel",
+                        style = TextStyle(
+                            fontFamily = MenilFontFamily,
+                            fontSize = 16.sp,
+                            color = Color.White
+                        )
+                    )
+                }
+            }
+        }
     }
 }
