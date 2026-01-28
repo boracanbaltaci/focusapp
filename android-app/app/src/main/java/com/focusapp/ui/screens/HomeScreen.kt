@@ -264,7 +264,7 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                 )
                 
                 if (period.isNotEmpty()) {
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(2.dp))
                     Text(
                         text = period,
                         style = TextStyle(
