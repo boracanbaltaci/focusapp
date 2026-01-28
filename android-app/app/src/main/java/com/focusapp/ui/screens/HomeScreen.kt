@@ -264,7 +264,7 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                 )
                 
                 if (period.isNotEmpty()) {
-                    Spacer(modifier = Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = period,
                         style = TextStyle(
@@ -334,7 +334,7 @@ private fun TimerScreen(
                             color = Color.Black,
                             textAlign = TextAlign.End
                         ),
-                        modifier = Modifier.padding(end = 16.dp)
+                        modifier = Modifier.padding(end = 8.dp)
                     )
                 }
                 
