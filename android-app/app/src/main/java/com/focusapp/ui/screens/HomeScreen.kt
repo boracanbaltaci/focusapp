@@ -236,23 +236,27 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
             SettingsIconButton(onNavigateToSettings)
         }
         
-        // Center clock display
+        // Center clock display - positioned at 50% width and 50% height
         Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
+            modifier = Modifier.weight(1f)
         ) {
             val timeParts = currentTime.split("\n")
             val time = timeParts[0]
             val period = if (timeParts.size > 1) timeParts[1] else ""
             
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.offset(x = 35.dp) // Shift right to align colon with center dot
+            BoxWithConstraints(
+                modifier = Modifier.fillMaxSize()
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically, // Changed from Bottom to CenterVertically
-                    horizontalArrangement = Arrangement.Center
+                Box(
+                    modifier = Modifier.offset(
+                        x = maxWidth * 0.5f,
+                        y = maxHeight * 0.5f
+                    )
                 ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
                     Text(
                         text = time,
                         style = TextStyle(
