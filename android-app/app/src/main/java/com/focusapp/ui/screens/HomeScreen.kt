@@ -322,23 +322,15 @@ private fun TimerScreen(
         
         // Center content with timer centered and button on far left
         Box(
-            modifier = Modifier.weight(1f).fillMaxWidth()
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+            contentAlignment = Alignment.Center
         ) {
-            BoxWithConstraints(
-                modifier = Modifier.fillMaxSize()
+            // Timer display with hour label - centered
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.clickable(enabled = !isRunning) { onTimerClick() }
             ) {
-                Box(
-                    modifier = Modifier.offset(
-                        x = maxWidth * 0.5f,
-                        y = maxHeight * 0.5f
-                    )
-                ) {
-                    // Timer display with hour label - centered
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.clickable(enabled = !isRunning) { onTimerClick() }
-                    ) {
                 // Show hour label if >= 1 hour
                 val hours = seconds / 3600
                 if (hours >= 1) {
@@ -367,8 +359,6 @@ private fun TimerScreen(
                     ),
                     modifier = Modifier.widthIn(min = 350.dp) // Fixed minimum width to prevent jitter
                 )
-            }
-                }
             }
             
             // Start/Stop button on the far left
