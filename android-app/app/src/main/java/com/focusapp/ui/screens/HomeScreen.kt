@@ -286,7 +286,7 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                             // Removed align modifier since we're using CenterVertically
                         )
                     }
-                }
+                    }
                 }
             }
         }
