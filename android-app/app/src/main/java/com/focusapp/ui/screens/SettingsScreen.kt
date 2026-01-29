@@ -1,13 +1,21 @@
 package com.focusapp.ui.screens
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.focusapp.ui.theme.MenilFontFamily
+import com.focusapp.ui.theme.CareerFontFamily
 
 @Composable
 fun SettingsScreen(
@@ -25,45 +33,91 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(48.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             // Header with back button
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.Start
             ) {
-                IconButton(onClick = onBack) {
-                    Text(
-                        text = "←",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = Color.Black
-                    )
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Canvas(modifier = Modifier.size(32.dp)) {
+                        // Draw back arrow
+                        val arrowSize = size.width * 0.6f
+                        val centerY = size.height / 2f
+                        val startX = size.width * 0.5f
+                        
+                        // Arrow line
+                        drawLine(
+                            color = Color.Black,
+                            start = Offset(startX, centerY),
+                            end = Offset(startX - arrowSize, centerY),
+                            strokeWidth = 3.dp.toPx()
+                        )
+                        
+                        // Arrow head top
+                        drawLine(
+                            color = Color.Black,
+                            start = Offset(startX - arrowSize, centerY),
+                            end = Offset(startX - arrowSize + arrowSize * 0.4f, centerY - arrowSize * 0.4f),
+                            strokeWidth = 3.dp.toPx()
+                        )
+                        
+                        // Arrow head bottom
+                        drawLine(
+                            color = Color.Black,
+                            start = Offset(startX - arrowSize, centerY),
+                            end = Offset(startX - arrowSize + arrowSize * 0.4f, centerY + arrowSize * 0.4f),
+                            strokeWidth = 3.dp.toPx()
+                        )
+                    }
                 }
+                
+                Spacer(modifier = Modifier.width(24.dp))
+                
                 Text(
                     text = "Settings",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.Black
+                    style = TextStyle(
+                        fontFamily = CareerFontFamily,
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = Color.Black
+                    )
                 )
-                // Empty spacer for balance
-                Spacer(modifier = Modifier.width(48.dp))
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
             
-            // Empty settings area
-            Box(
+            // Settings container with rounded rectangle
+            Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                contentAlignment = Alignment.Center
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White,
+                shadowElevation = 2.dp
             ) {
-                Text(
-                    text = "Settings options will be added here",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.Gray
-                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    // Placeholder for settings options
+                    Text(
+                        text = "Settings options will be added here",
+                        style = TextStyle(
+                            fontFamily = CareerFontFamily,
+                            fontSize = 18.sp,
+                            color = Color.Gray
+                        )
+                    )
+                }
             }
         }
     }
