@@ -65,17 +65,17 @@ fun HomeScreen(
     var offsetX by remember { mutableStateOf(0f) }
     
     // Real-time clock
-    var currentTime by remember { mutableStateOf(getCurrentTimeString(language)) }
+    var currentTime by remember { mutableStateOf(getCurrentTimeString()) }
     
     // Timer state
     var isTimerRunning by remember { mutableStateOf(false) }
     var timerSeconds by remember { mutableStateOf(25 * 60) } // Default 25 minutes
     var showDurationPicker by remember { mutableStateOf(false) }
     
-    // Update clock every second with language support
-    LaunchedEffect(language) {
+    // Update clock every second
+    LaunchedEffect(Unit) {
         while (true) {
-            currentTime = getCurrentTimeString(language)
+            currentTime = getCurrentTimeString()
             delay(1000)
         }
     }
@@ -161,10 +161,7 @@ fun HomeScreen(
                 },
                 onTimerClick = { showDurationPicker = true },
                 onNavigateToSettings = onNavigateToSettings,
-                clockFontFamily = clockFontFamily,
-                theme = theme,
-                textColor = textColor,
-                language = language
+                clockFontFamily = clockFontFamily
             )
         }
         
@@ -321,10 +318,7 @@ private fun TimerScreen(
     onStartStop: () -> Unit,
     onTimerClick: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    clockFontFamily: FontFamily,
-    theme: String,
-    textColor: Color,
-    language: String
+    clockFontFamily: FontFamily
 ) {
     val context = LocalContext.current
     
@@ -530,18 +524,13 @@ private fun NavigationDot(
     )
 }
 
-private fun getCurrentTimeString(language: String = "en"): String {
+private fun getCurrentTimeString(): String {
     val calendar = Calendar.getInstance()
     val hour = calendar.get(Calendar.HOUR_OF_DAY)
     val minute = calendar.get(Calendar.MINUTE)
     
-    // Determine AM/PM based on language - matches string resources
-    val period = when (language) {
-        "tr" -> if (hour < 12) "öö" else "ös"
-        "de" -> if (hour < 12) "vorm." else "nachm."
-        "es" -> if (hour < 12) "a.m." else "p.m."
-        else -> if (hour < 12) "am" else "pm"
-    }
+    // Use standard AM/PM
+    val period = if (hour < 12) "am" else "pm"
     
     val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
     return String.format("%02d:%02d\n%s", displayHour, minute, period)
