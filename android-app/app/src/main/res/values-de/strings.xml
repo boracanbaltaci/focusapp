@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Focus App</string>
+    <string name="login">Anmelden</string>
+    <string name="register">Registrieren</string>
+    <string name="username">Benutzername</string>
+    <string name="password">Passwort</string>
+    <string name="start_session">Sitzung starten</string>
+    <string name="stop_session">Sitzung beenden</string>
+    <string name="start_break">Pause machen</string>
+    <string name="settings">Einstellungen</string>
+    <string name="weekly_stats">Wöchentliche Statistiken</string>
+    <string name="hourly_stats">Stündliche Statistiken</string>
+    <string name="clock_type">Uhrtyp</string>
+    <string name="digital">Digital</string>
+    <string name="analog">Analog</string>
+    <string name="style">Stil</string>
+    <string name="background">Hintergrund</string>
+    <string name="language">Sprache</string>
+    <string name="logout">Abmelden</string>
+    <string name="home">Startseite</string>
+    <string name="default_style">Standard</string>
+    
+    <!-- New strings for Phase 3 -->
+    <string name="select_duration">Dauer auswählen</string>
+    <string name="clock_font">Uhrschriftart</string>
+    <string name="theme">Design</string>
+    <string name="light">Hell</string>
+    <string name="dark">Dunkel</string>
+    <string name="am">vorm.</string>
+    <string name="pm">nachm.</string>
+    <string name="hour_singular">Stunde</string>
+    <string name="hours_plural">Stunden</string>
+    
+    <!-- Language names -->
+    <string name="lang_english">Englisch</string>
+    <string name="lang_turkish">Türkisch</string>
+    <string name="lang_french">Französisch</string>
+    <string name="lang_spanish">Spanisch</string>
+    <string name="lang_italian">Italienisch</string>
+    <string name="lang_german">Deutsch</string>
+    
+    <!-- Font names -->
+    <string name="font_menil">Menil-Étroit (Standard)</string>
+    <string name="font_avocado">LT Avocado</string>
+</resources>

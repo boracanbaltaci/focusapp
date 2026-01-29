@@ -16,6 +16,10 @@ val MenilFontFamily = FontFamily(
     Font(R.font.menil_etroit, FontWeight.Normal)
 )
 
+val AvocadoFontFamily = FontFamily(
+    Font(R.font.lt_avocado_regular, FontWeight.Normal)
+)
+
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = MenilFontFamily,

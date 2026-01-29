@@ -22,13 +22,18 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import com.focusapp.R
 import com.focusapp.ui.theme.MenilFontFamily
+import com.focusapp.ui.theme.AvocadoFontFamily
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -42,8 +47,18 @@ fun HomeScreen(
     settingsViewModel: SettingsViewModel,
     onNavigateToSettings: () -> Unit
 ) {
-    // Background color - off white
-    val backgroundColor = Color(0xFFFBFBFB)
+    // Collect settings
+    val theme by settingsViewModel.theme.collectAsState()
+    val clockFont by settingsViewModel.clockFont.collectAsState()
+    val language by settingsViewModel.language.collectAsState()
+    
+    // Theme colors
+    val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
+    val textColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
+    val arcColor = if (theme == "dark") Color(0xFF2A2E23) else Color(0xFFE5E5E5)
+    
+    // Font selection
+    val clockFontFamily = if (clockFont == "avocado") AvocadoFontFamily else MenilFontFamily
     
     // Navigation state (1 = middle screen with clock, 2 = timer screen)
     var currentScreen by remember { mutableStateOf(1) }
@@ -52,17 +67,17 @@ fun HomeScreen(
     var offsetX by remember { mutableStateOf(0f) }
     
     // Real-time clock
-    var currentTime by remember { mutableStateOf(getCurrentTimeString()) }
+    var currentTime by remember { mutableStateOf(getCurrentTimeString(language)) }
     
     // Timer state
     var isTimerRunning by remember { mutableStateOf(false) }
     var timerSeconds by remember { mutableStateOf(25 * 60) } // Default 25 minutes
     var showDurationPicker by remember { mutableStateOf(false) }
     
-    // Update clock every second
-    LaunchedEffect(Unit) {
+    // Update clock every second with language support
+    LaunchedEffect(language) {
         while (true) {
-            currentTime = getCurrentTimeString()
+            currentTime = getCurrentTimeString(language)
             delay(1000)
         }
     }
@@ -108,7 +123,7 @@ fun HomeScreen(
             val upperRadius = size.width * 0.65f
             
             drawArc(
-                color = Color(0xFFE5E5E5),
+                color = arcColor,
                 startAngle = 180f,
                 sweepAngle = 180f,
                 useCenter = false,
@@ -122,7 +137,7 @@ fun HomeScreen(
             val middleRadius = size.width * 0.55f
             
             drawArc(
-                color = Color(0xFFE5E5E5),
+                color = arcColor,
                 startAngle = 180f,
                 sweepAngle = 180f,
                 useCenter = false,
@@ -134,8 +149,8 @@ fun HomeScreen(
         
         // Screen content based on current screen
         when (currentScreen) {
-            0 -> PlaceholderScreen(onNavigateToSettings)
-            1 -> ClockScreen(currentTime, onNavigateToSettings)
+            0 -> PlaceholderScreen(onNavigateToSettings, theme, textColor)
+            1 -> ClockScreen(currentTime, onNavigateToSettings, clockFontFamily, theme, textColor)
             2 -> TimerScreen(
                 isRunning = isTimerRunning,
                 seconds = timerSeconds,
@@ -147,7 +162,11 @@ fun HomeScreen(
                     }
                 },
                 onTimerClick = { showDurationPicker = true },
-                onNavigateToSettings = onNavigateToSettings
+                onNavigateToSettings = onNavigateToSettings,
+                clockFontFamily = clockFontFamily,
+                theme = theme,
+                textColor = textColor,
+                language = language
             )
         }
         
@@ -186,7 +205,11 @@ fun HomeScreen(
 }
 
 @Composable
-private fun PlaceholderScreen(onNavigateToSettings: () -> Unit) {
+private fun PlaceholderScreen(
+    onNavigateToSettings: () -> Unit,
+    theme: String,
+    textColor: Color
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -201,7 +224,7 @@ private fun PlaceholderScreen(onNavigateToSettings: () -> Unit) {
                 .padding(top = 24.dp, end = 24.dp),
             contentAlignment = Alignment.TopEnd
         ) {
-            SettingsIconButton(onNavigateToSettings)
+            SettingsIconButton(onNavigateToSettings, textColor)
         }
         
         Box(
@@ -213,7 +236,7 @@ private fun PlaceholderScreen(onNavigateToSettings: () -> Unit) {
                 style = TextStyle(
                     fontFamily = MenilFontFamily,
                     fontSize = 48.sp,
-                    color = Color.Black.copy(alpha = 0.3f)
+                    color = textColor.copy(alpha = 0.3f)
                 )
             )
         }
@@ -221,7 +244,13 @@ private fun PlaceholderScreen(onNavigateToSettings: () -> Unit) {
 }
 
 @Composable
-private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
+private fun ClockScreen(
+    currentTime: String,
+    onNavigateToSettings: () -> Unit,
+    clockFontFamily: FontFamily,
+    theme: String,
+    textColor: Color
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -236,7 +265,7 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                 .padding(top = 32.dp, end = 48.dp),
             contentAlignment = Alignment.TopEnd
         ) {
-            SettingsIconButton(onNavigateToSettings)
+            SettingsIconButton(onNavigateToSettings, textColor)
         }
         
         // Center clock display - perfectly centered
@@ -255,12 +284,12 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                 Text(
                     text = time,
                     style = TextStyle(
-                        fontFamily = MenilFontFamily,
+                        fontFamily = clockFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 240.sp,
                         lineHeight = 240.sp,
                         letterSpacing = 2.sp,
-                        color = Color.Black,
+                        color = textColor,
                         textAlign = TextAlign.Center
                     ),
                     modifier = Modifier.widthIn(min = 300.dp) // Fixed minimum width to prevent jitter
@@ -271,11 +300,11 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                     Text(
                         text = period,
                         style = TextStyle(
-                            fontFamily = MenilFontFamily,
+                            fontFamily = clockFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 75.sp,
                             lineHeight = 75.sp,
-                            color = Color.Black,
+                            color = textColor,
                             textAlign = TextAlign.Center
                         )
                     )
@@ -293,8 +322,14 @@ private fun TimerScreen(
     seconds: Int,
     onStartStop: () -> Unit,
     onTimerClick: () -> Unit,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    clockFontFamily: FontFamily,
+    theme: String,
+    textColor: Color,
+    language: String
 ) {
+    val context = LocalContext.current
+    
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -309,7 +344,7 @@ private fun TimerScreen(
                 .padding(top = 32.dp, end = 48.dp),
             contentAlignment = Alignment.TopEnd
         ) {
-            SettingsIconButton(onNavigateToSettings)
+            SettingsIconButton(onNavigateToSettings, textColor)
         }
         
         // Center content with timer centered and button on far left
@@ -331,14 +366,18 @@ private fun TimerScreen(
                 
                 // Show hour label if >= 1 hour (60 minutes or more)
                 if (totalMinutes >= 60) {
-                    val hourText = if (hours == 1) "1 hour" else "$hours hours"
+                    val hourText = if (hours == 1) {
+                        "1 " + context.getString(R.string.hour_singular)
+                    } else {
+                        "$hours " + context.getString(R.string.hours_plural)
+                    }
                     Text(
                         text = hourText,
                         style = TextStyle(
-                            fontFamily = MenilFontFamily,
+                            fontFamily = clockFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 70.sp,
-                            color = Color.Black,
+                            color = textColor,
                             textAlign = TextAlign.End
                         ),
                         modifier = Modifier.padding(end = 8.dp)
@@ -356,10 +395,10 @@ private fun TimerScreen(
                 Text(
                     text = displayTime,
                     style = TextStyle(
-                        fontFamily = MenilFontFamily,
+                        fontFamily = clockFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 240.sp,
-                        color = Color.Black,
+                        color = textColor,
                         textAlign = TextAlign.Center
                     ),
                     modifier = Modifier.widthIn(min = 350.dp) // Fixed minimum width to prevent jitter
@@ -426,7 +465,7 @@ private fun TimerScreen(
 }
 
 @Composable
-private fun SettingsIconButton(onClick: () -> Unit) {
+private fun SettingsIconButton(onClick: () -> Unit, iconColor: Color) {
     IconButton(
         onClick = onClick,
         modifier = Modifier.size(32.dp)
@@ -440,7 +479,7 @@ private fun SettingsIconButton(onClick: () -> Unit) {
             // Draw a simple cog/settings icon with 6 teeth
             // Center circle
             drawCircle(
-                color = Color.Black,
+                color = iconColor,
                 radius = radius * 0.35f,
                 center = Offset(centerX, centerY),
                 style = Stroke(width = strokeWidth)
@@ -459,7 +498,7 @@ private fun SettingsIconButton(onClick: () -> Unit) {
                 
                 // Draw tooth as a line
                 drawLine(
-                    color = Color.Black,
+                    color = iconColor,
                     start = Offset(startX, startY),
                     end = Offset(endX, endY),
                     strokeWidth = toothWidth
@@ -493,26 +532,21 @@ private fun NavigationDot(
     )
 }
 
-private fun getCurrentTimeString(): String {
+private fun getCurrentTimeString(language: String = "en"): String {
     val calendar = Calendar.getInstance()
     val hour = calendar.get(Calendar.HOUR_OF_DAY)
     val minute = calendar.get(Calendar.MINUTE)
     
-    // Get locale to determine AM/PM or ÖÖ/ÖS
-    val locale = Locale.getDefault()
-    val isTurkish = locale.language == "tr"
-    
-    return if (isTurkish) {
-        // Turkish format with ÖÖ/ÖS
-        val period = if (hour < 12) "öö" else "ös"
-        val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
-        String.format("%02d:%02d\n%s", displayHour, minute, period)
-    } else {
-        // English format with AM/PM
-        val period = if (hour < 12) "am" else "pm"
-        val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
-        String.format("%02d:%02d\n%s", displayHour, minute, period)
+    // Determine AM/PM based on language
+    val period = when (language) {
+        "tr" -> if (hour < 12) "öö" else "ös"
+        "de" -> if (hour < 12) "vorm." else "nachm."
+        "es" -> if (hour < 12) "a.m." else "p.m."
+        else -> if (hour < 12) "am" else "pm" // Default for en, fr, it
     }
+    
+    val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+    return String.format("%02d:%02d\n%s", displayHour, minute, period)
 }
 
 @Composable
@@ -520,6 +554,10 @@ private fun DurationPickerDialog(
     onDismiss: () -> Unit,
     onDurationSelected: (Int) -> Unit
 ) {
+    val context = LocalContext.current
+    val hourStr = stringResource(R.string.hour_singular)
+    val hoursStr = stringResource(R.string.hours_plural)
+    
     val durationOptions = listOf(
         Pair("5:00", 5 * 60),
         Pair("10:00", 10 * 60),
@@ -527,13 +565,13 @@ private fun DurationPickerDialog(
         Pair("20:00", 20 * 60),
         Pair("30:00", 30 * 60),
         Pair("45:00", 45 * 60),
-        Pair("1 hour 00", 60 * 60),
-        Pair("1 hour 10", 70 * 60),
-        Pair("1 hour 15", 75 * 60),
-        Pair("1 hour 20", 80 * 60),
-        Pair("1 hour 30", 90 * 60),
-        Pair("1 hour 45", 105 * 60),
-        Pair("2 hours 00", 120 * 60)
+        Pair("1 $hourStr 00", 60 * 60),
+        Pair("1 $hourStr 10", 70 * 60),
+        Pair("1 $hourStr 15", 75 * 60),
+        Pair("1 $hourStr 20", 80 * 60),
+        Pair("1 $hourStr 30", 90 * 60),
+        Pair("1 $hourStr 45", 105 * 60),
+        Pair("2 $hoursStr 00", 120 * 60)
     )
     
     val listState = rememberLazyListState()
@@ -584,7 +622,7 @@ private fun DurationPickerDialog(
             ) {
                 // Title
                 Text(
-                    text = "Select Duration",
+                    text = stringResource(R.string.select_duration),
                     style = TextStyle(
                         fontFamily = MenilFontFamily,
                         fontSize = 24.sp,

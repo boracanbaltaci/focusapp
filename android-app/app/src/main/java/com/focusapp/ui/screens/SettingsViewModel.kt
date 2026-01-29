@@ -22,6 +22,12 @@ class SettingsViewModel(context: Context) : ViewModel() {
     private val _language = MutableStateFlow(settingsRepository.getLanguage())
     val language: StateFlow<String> = _language
     
+    private val _clockFont = MutableStateFlow(settingsRepository.getClockFont())
+    val clockFont: StateFlow<String> = _clockFont
+    
+    private val _theme = MutableStateFlow(settingsRepository.getTheme())
+    val theme: StateFlow<String> = _theme
+    
     fun setClockType(clockType: String) {
         _clockType.value = clockType
         settingsRepository.setClockType(clockType)
@@ -40,5 +46,15 @@ class SettingsViewModel(context: Context) : ViewModel() {
     fun setLanguage(language: String) {
         _language.value = language
         settingsRepository.setLanguage(language)
+    }
+    
+    fun setClockFont(font: String) {
+        _clockFont.value = font
+        settingsRepository.setClockFont(font)
+    }
+    
+    fun setTheme(theme: String) {
+        _theme.value = theme
+        settingsRepository.setTheme(theme)
     }
 }

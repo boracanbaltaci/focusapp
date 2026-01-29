@@ -2,6 +2,7 @@ package com.focusapp.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -10,10 +11,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.focusapp.R
 import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.CareerFontFamily
 
@@ -22,8 +25,14 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
     onBack: () -> Unit
 ) {
-    // Off-white background matching main screen
-    val backgroundColor = Color(0xFFFBFBFB)
+    val theme by settingsViewModel.theme.collectAsState()
+    val clockFont by settingsViewModel.clockFont.collectAsState()
+    val language by settingsViewModel.language.collectAsState()
+    
+    // Theme colors
+    val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
+    val textColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
+    val containerColor = if (theme == "dark") Color(0xFF1F2419) else Color.White
     
     Box(
         modifier = Modifier
@@ -52,9 +61,11 @@ fun SettingsScreen(
                         val centerY = size.height / 2f
                         val startX = size.width * 0.5f
                         
+                        val arrowColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
+                        
                         // Arrow line
                         drawLine(
-                            color = Color.Black,
+                            color = arrowColor,
                             start = Offset(startX, centerY),
                             end = Offset(startX - arrowSize, centerY),
                             strokeWidth = 3.dp.toPx()
@@ -62,7 +73,7 @@ fun SettingsScreen(
                         
                         // Arrow head top
                         drawLine(
-                            color = Color.Black,
+                            color = arrowColor,
                             start = Offset(startX - arrowSize, centerY),
                             end = Offset(startX - arrowSize + arrowSize * 0.4f, centerY - arrowSize * 0.4f),
                             strokeWidth = 3.dp.toPx()
@@ -70,7 +81,7 @@ fun SettingsScreen(
                         
                         // Arrow head bottom
                         drawLine(
-                            color = Color.Black,
+                            color = arrowColor,
                             start = Offset(startX - arrowSize, centerY),
                             end = Offset(startX - arrowSize + arrowSize * 0.4f, centerY + arrowSize * 0.4f),
                             strokeWidth = 3.dp.toPx()
@@ -81,12 +92,12 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.width(24.dp))
                 
                 Text(
-                    text = "Settings",
+                    text = stringResource(R.string.settings),
                     style = TextStyle(
                         fontFamily = CareerFontFamily,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Normal,
-                        color = Color.Black
+                        color = textColor
                     )
                 )
             }
@@ -99,26 +110,128 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .weight(1f),
                 shape = RoundedCornerShape(24.dp),
-                color = Color.White,
-                shadowElevation = 2.dp
+                color = containerColor,
+                shadowElevation = if (theme == "dark") 0.dp else 2.dp
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(32.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    verticalArrangement = Arrangement.spacedBy(32.dp)
                 ) {
-                    // Placeholder for settings options
-                    Text(
-                        text = "Settings options will be added here",
-                        style = TextStyle(
-                            fontFamily = CareerFontFamily,
-                            fontSize = 18.sp,
-                            color = Color.Gray
-                        )
+                    // Clock Font Setting
+                    SettingItem(
+                        title = stringResource(R.string.clock_font),
+                        options = listOf(
+                            stringResource(R.string.font_menil) to "menil",
+                            stringResource(R.string.font_avocado) to "avocado"
+                        ),
+                        selectedValue = clockFont,
+                        onValueChange = { settingsViewModel.setClockFont(it) },
+                        textColor = textColor
+                    )
+                    
+                    Divider(color = textColor.copy(alpha = 0.2f))
+                    
+                    // Language Setting
+                    SettingItem(
+                        title = stringResource(R.string.language),
+                        options = listOf(
+                            stringResource(R.string.lang_english) to "en",
+                            stringResource(R.string.lang_turkish) to "tr",
+                            stringResource(R.string.lang_french) to "fr",
+                            stringResource(R.string.lang_spanish) to "es",
+                            stringResource(R.string.lang_italian) to "it",
+                            stringResource(R.string.lang_german) to "de"
+                        ),
+                        selectedValue = language,
+                        onValueChange = { settingsViewModel.setLanguage(it) },
+                        textColor = textColor
+                    )
+                    
+                    Divider(color = textColor.copy(alpha = 0.2f))
+                    
+                    // Theme Setting
+                    SettingItem(
+                        title = stringResource(R.string.theme),
+                        options = listOf(
+                            stringResource(R.string.light) to "light",
+                            stringResource(R.string.dark) to "dark"
+                        ),
+                        selectedValue = theme,
+                        onValueChange = { settingsViewModel.setTheme(it) },
+                        textColor = textColor
                     )
                 }
             }
         }
     }
 }
+
+@Composable
+private fun SettingItem(
+    title: String,
+    options: List<Pair<String, String>>,
+    selectedValue: String,
+    onValueChange: (String) -> Unit,
+    textColor: Color
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        Text(
+            text = title,
+            style = TextStyle(
+                fontFamily = CareerFontFamily,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Normal,
+                color = textColor
+            )
+        )
+        
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            options.forEach { (label, value) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onValueChange(value) }
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = label,
+                        style = TextStyle(
+                            fontFamily = CareerFontFamily,
+                            fontSize = 16.sp,
+                            color = textColor.copy(alpha = if (selectedValue == value) 1f else 0.6f),
+                            fontWeight = if (selectedValue == value) FontWeight.Bold else FontWeight.Normal
+                        )
+                    )
+                    
+                    if (selectedValue == value) {
+                        // Checkmark indicator
+                        Canvas(modifier = Modifier.size(20.dp)) {
+                            val path = androidx.compose.ui.graphics.Path().apply {
+                                moveTo(size.width * 0.2f, size.height * 0.5f)
+                                lineTo(size.width * 0.4f, size.height * 0.7f)
+                                lineTo(size.width * 0.8f, size.height * 0.2f)
+                            }
+                            drawPath(
+                                path = path,
+                                color = Color(0xFF4CAF50),
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = 3.dp.toPx(),
+                                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+

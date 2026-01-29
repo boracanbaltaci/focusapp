@@ -38,4 +38,20 @@ class SettingsRepository(context: Context) {
     fun setLanguage(language: String) {
         prefs.edit().putString("language", language).apply()
     }
+    
+    fun getClockFont(): String {
+        return prefs.getString("clock_font", "menil") ?: "menil"
+    }
+    
+    fun setClockFont(font: String) {
+        prefs.edit().putString("clock_font", font).apply()
+    }
+    
+    fun getTheme(): String {
+        return prefs.getString("theme", "light") ?: "light"
+    }
+    
+    fun setTheme(theme: String) {
+        prefs.edit().putString("theme", theme).apply()
+    }
 }
