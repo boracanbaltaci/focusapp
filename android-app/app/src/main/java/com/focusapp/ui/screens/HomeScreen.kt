@@ -257,7 +257,7 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.Center
                     ) {
-                    Text(
+                        Text(
                         text = time,
                         style = TextStyle(
                             fontFamily = MenilFontFamily,
