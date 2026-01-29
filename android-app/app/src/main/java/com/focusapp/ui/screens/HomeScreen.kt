@@ -287,6 +287,7 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                         )
                     }
                 }
+                }
             }
         }
         
