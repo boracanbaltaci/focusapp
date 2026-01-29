@@ -27,14 +27,12 @@ fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
     onBack: () -> Unit
 ) {
-    val theme by settingsViewModel.theme.collectAsState()
     val clockFont by settingsViewModel.clockFont.collectAsState()
-    val language by settingsViewModel.language.collectAsState()
     
-    // Theme colors
-    val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
-    val textColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
-    val containerColor = if (theme == "dark") Color(0xFF1F2419) else Color.White
+    // Static theme colors (original design)
+    val backgroundColor = Color(0xFFFBFBFB)
+    val textColor = Color.Black
+    val containerColor = Color.White
     
     Box(
         modifier = Modifier
@@ -63,7 +61,7 @@ fun SettingsScreen(
                         val centerY = size.height / 2f
                         val startX = size.width * 0.5f
                         
-                        val arrowColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
+                        val arrowColor = Color.Black
                         
                         // Arrow line
                         drawLine(
@@ -185,12 +183,8 @@ private fun SettingItem(
                     )
                     
                     if (selectedValue == value) {
-                        // Checkmark indicator - theme aware
-                        val checkColor = if (textColor.luminance() > 0.5f) {
-                            Color(0xFF4CAF50) // Green for light theme
-                        } else {
-                            Color(0xFF81C784) // Lighter green for dark theme
-                        }
+                        // Checkmark indicator (green)
+                        val checkColor = Color(0xFF4CAF50)
                         Canvas(modifier = Modifier.size(20.dp)) {
                             val path = androidx.compose.ui.graphics.Path().apply {
                                 moveTo(size.width * 0.2f, size.height * 0.5f)

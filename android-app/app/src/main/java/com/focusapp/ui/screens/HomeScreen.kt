@@ -48,14 +48,12 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit
 ) {
     // Collect settings
-    val theme by settingsViewModel.theme.collectAsState()
     val clockFont by settingsViewModel.clockFont.collectAsState()
-    val language by settingsViewModel.language.collectAsState()
     
-    // Theme colors
-    val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
-    val textColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
-    val arcColor = if (theme == "dark") Color(0xFF2A2E23) else Color(0xFFE5E5E5)
+    // Static theme colors (original design - off-white background)
+    val backgroundColor = Color(0xFFFBFBFB)
+    val textColor = Color.Black
+    val arcColor = Color(0xFFE5E5E5)
     
     // Font selection
     val clockFontFamily = if (clockFont == "avocado") AvocadoFontFamily else MenilFontFamily
