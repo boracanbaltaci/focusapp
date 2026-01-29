@@ -245,39 +245,42 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
             val time = timeParts[0]
             val period = if (timeParts.size > 1) timeParts[1] else ""
             
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.offset(x = 70.dp) // Shift 70dp to the right
+            Box(
+                contentAlignment = Alignment.Center
             ) {
-                Text(
-                    text = time,
-                    style = TextStyle(
-                        fontFamily = MenilFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 240.sp,
-                        lineHeight = 240.sp,
-                        letterSpacing = 2.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
-                    ),
-                    modifier = Modifier.widthIn(min = 300.dp) // Fixed minimum width to prevent jitter
-                )
-                
-                if (period.isNotEmpty()) {
-                    Spacer(modifier = Modifier.width(1.dp))
+                Row(
+                    verticalAlignment = Alignment.Bottom,
+                    horizontalArrangement = Arrangement.Center
+                ) {
                     Text(
-                        text = period,
+                        text = time,
                         style = TextStyle(
                             fontFamily = MenilFontFamily,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 75.sp,
-                            lineHeight = 75.sp,
+                            fontSize = 240.sp,
+                            lineHeight = 240.sp,
+                            letterSpacing = 2.sp,
                             color = Color.Black,
                             textAlign = TextAlign.Center
                         ),
-                        modifier = Modifier.align(Alignment.CenterVertically)
+                        modifier = Modifier.widthIn(min = 300.dp) // Fixed minimum width to prevent jitter
                     )
+                    
+                    if (period.isNotEmpty()) {
+                        Spacer(modifier = Modifier.width(1.dp))
+                        Text(
+                            text = period,
+                            style = TextStyle(
+                                fontFamily = MenilFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 75.sp,
+                                lineHeight = 75.sp,
+                                color = Color.Black,
+                                textAlign = TextAlign.Center
+                            ),
+                            modifier = Modifier.align(Alignment.Bottom)
+                        )
+                    }
                 }
             }
         }
