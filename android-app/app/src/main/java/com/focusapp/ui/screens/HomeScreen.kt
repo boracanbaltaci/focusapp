@@ -226,67 +226,56 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Top bar with settings icon
+        // Top bar with settings icon - moved more to the left and down
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 24.dp, end = 24.dp),
+                .padding(top = 32.dp, end = 48.dp),
             contentAlignment = Alignment.TopEnd
         ) {
             SettingsIconButton(onNavigateToSettings)
         }
         
-        // Center clock display - positioned at 50% width and 50% height
+        // Center clock display - perfectly centered
         Box(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
         ) {
             val timeParts = currentTime.split("\n")
             val time = timeParts[0]
             val period = if (timeParts.size > 1) timeParts[1] else ""
             
-            BoxWithConstraints(
-                modifier = Modifier.fillMaxSize()
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
-                Box(
-                    modifier = Modifier.offset(
-                        x = maxWidth * 0.5f,
-                        y = maxHeight * 0.5f
-                    )
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                        text = time,
+                Text(
+                    text = time,
+                    style = TextStyle(
+                        fontFamily = MenilFontFamily,
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 240.sp,
+                        lineHeight = 240.sp,
+                        letterSpacing = 2.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    ),
+                    modifier = Modifier.widthIn(min = 300.dp) // Fixed minimum width to prevent jitter
+                )
+                
+                if (period.isNotEmpty()) {
+                    Spacer(modifier = Modifier.width(0.5.dp)) // Reduced spacing for closer proximity
+                    Text(
+                        text = period,
                         style = TextStyle(
                             fontFamily = MenilFontFamily,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 240.sp,
-                            lineHeight = 240.sp,
-                            letterSpacing = 2.sp,
+                            fontSize = 75.sp,
+                            lineHeight = 75.sp,
                             color = Color.Black,
                             textAlign = TextAlign.Center
-                        ),
-                        modifier = Modifier.widthIn(min = 300.dp) // Fixed minimum width to prevent jitter
-                    )
-                    
-                    if (period.isNotEmpty()) {
-                        Spacer(modifier = Modifier.width(0.5.dp)) // Reduced spacing for closer proximity
-                        Text(
-                            text = period,
-                            style = TextStyle(
-                                fontFamily = MenilFontFamily,
-                                fontWeight = FontWeight.Normal,
-                                fontSize = 75.sp,
-                                lineHeight = 75.sp,
-                                color = Color.Black,
-                                textAlign = TextAlign.Center
-                            )
-                            // Removed align modifier since we're using CenterVertically
                         )
-                    }
-                    }
+                    )
                 }
             }
         }
@@ -310,11 +299,11 @@ private fun TimerScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.SpaceBetween
     ) {
-        // Top bar with settings icon
+        // Top bar with settings icon - moved more to the left and down
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 24.dp, end = 24.dp),
+                .padding(top = 32.dp, end = 48.dp),
             contentAlignment = Alignment.TopEnd
         ) {
             SettingsIconButton(onNavigateToSettings)
@@ -331,9 +320,14 @@ private fun TimerScreen(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.clickable(enabled = !isRunning) { onTimerClick() }
             ) {
-                // Show hour label if >= 1 hour
-                val hours = seconds / 3600
-                if (hours >= 1) {
+                // Calculate remaining time after removing full hours
+                val totalMinutes = seconds / 60
+                val hours = totalMinutes / 60
+                val remainingMinutes = totalMinutes % 60
+                val remainingSeconds = seconds % 60
+                
+                // Show hour label if >= 1 hour (60 minutes or more)
+                if (totalMinutes >= 60) {
                     val hourText = if (hours == 1) "1 hour" else "$hours hours"
                     Text(
                         text = hourText,
@@ -348,8 +342,16 @@ private fun TimerScreen(
                     )
                 }
                 
+                // Display time: if >= 60 minutes, show remaining time after hours
+                // if < 60 minutes, show full time
+                val displayTime = if (totalMinutes >= 60) {
+                    String.format("%02d:%02d", remainingMinutes, remainingSeconds)
+                } else {
+                    String.format("%02d:%02d", totalMinutes, remainingSeconds)
+                }
+                
                 Text(
-                    text = formatTime(seconds),
+                    text = displayTime,
                     style = TextStyle(
                         fontFamily = MenilFontFamily,
                         fontWeight = FontWeight.Normal,
@@ -522,13 +524,13 @@ private fun DurationPickerDialog(
         Pair("20:00", 20 * 60),
         Pair("30:00", 30 * 60),
         Pair("45:00", 45 * 60),
-        Pair("1 hour 00:00", 60 * 60),
-        Pair("1 hour 10:00", 70 * 60),
-        Pair("1 hour 15:00", 75 * 60),
-        Pair("1 hour 20:00", 80 * 60),
-        Pair("1 hour 30:00", 90 * 60),
-        Pair("1 hour 45:00", 105 * 60),
-        Pair("2 hours 00:00", 120 * 60)
+        Pair("1 hour 00", 60 * 60),
+        Pair("1 hour 10", 70 * 60),
+        Pair("1 hour 15", 75 * 60),
+        Pair("1 hour 20", 80 * 60),
+        Pair("1 hour 30", 90 * 60),
+        Pair("1 hour 45", 105 * 60),
+        Pair("2 hours 00", 120 * 60)
     )
     
     var selectedDuration by remember { mutableStateOf(25 * 60) } // Default 25 minutes
@@ -568,7 +570,29 @@ private fun DurationPickerDialog(
                             color = Color(0xFFF0F0F0),
                             shape = RoundedCornerShape(8.dp)
                         )
-                )
+                ) {
+                    // Checkmark button inside rectangle on the left
+                    IconButton(
+                        onClick = { onDurationSelected(selectedDuration) },
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(start = 8.dp)
+                            .size(40.dp)
+                    ) {
+                        Canvas(modifier = Modifier.size(24.dp)) {
+                            val path = Path().apply {
+                                moveTo(size.width * 0.2f, size.height * 0.5f)
+                                lineTo(size.width * 0.4f, size.height * 0.7f)
+                                lineTo(size.width * 0.8f, size.height * 0.2f)
+                            }
+                            drawPath(
+                                path = path,
+                                color = Color(0xFF4CAF50),
+                                style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                            )
+                        }
+                    }
+                }
                 
                 // Scrollable list of durations
                 LazyColumn(
@@ -586,6 +610,7 @@ private fun DurationPickerDialog(
                     
                     items(durationOptions.size) { index ->
                         val (label, seconds) = durationOptions[index]
+                        val isSelected = selectedDuration == seconds
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -598,8 +623,8 @@ private fun DurationPickerDialog(
                                 style = TextStyle(
                                     fontFamily = MenilFontFamily,
                                     fontSize = 22.sp,
-                                    color = Color.Black.copy(alpha = if (selectedDuration == seconds) 1f else 0.4f),
-                                    fontWeight = if (selectedDuration == seconds) FontWeight.Bold else FontWeight.Normal
+                                    color = Color.Black.copy(alpha = if (isSelected) 1f else 0.4f),
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
                             )
                         }
@@ -608,28 +633,6 @@ private fun DurationPickerDialog(
                     // Add spacers at bottom
                     item {
                         Spacer(modifier = Modifier.height(120.dp))
-                    }
-                }
-                
-                // Checkmark button in bottom left corner
-                IconButton(
-                    onClick = { onDurationSelected(selectedDuration) },
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(start = 24.dp, bottom = 24.dp)
-                        .size(56.dp)
-                ) {
-                    Canvas(modifier = Modifier.size(32.dp)) {
-                        val path = Path().apply {
-                            moveTo(size.width * 0.2f, size.height * 0.5f)
-                            lineTo(size.width * 0.4f, size.height * 0.7f)
-                            lineTo(size.width * 0.8f, size.height * 0.2f)
-                        }
-                        drawPath(
-                            path = path,
-                            color = Color(0xFF4CAF50),
-                            style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
-                        )
                     }
                 }
             }
