@@ -11,7 +11,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -196,7 +198,10 @@ private fun SettingItem(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .clickable { onValueChange(value) }
+                        .clickable(
+                            role = Role.RadioButton,
+                            onClick = { onValueChange(value) }
+                        )
                         .padding(vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -212,7 +217,12 @@ private fun SettingItem(
                     )
                     
                     if (selectedValue == value) {
-                        // Checkmark indicator
+                        // Checkmark indicator - theme aware
+                        val checkColor = if (textColor.luminance() > 0.5f) {
+                            Color(0xFF4CAF50) // Green for light theme
+                        } else {
+                            Color(0xFF81C784) // Lighter green for dark theme
+                        }
                         Canvas(modifier = Modifier.size(20.dp)) {
                             val path = androidx.compose.ui.graphics.Path().apply {
                                 moveTo(size.width * 0.2f, size.height * 0.5f)
@@ -221,7 +231,7 @@ private fun SettingItem(
                             }
                             drawPath(
                                 path = path,
-                                color = Color(0xFF4CAF50),
+                                color = checkColor,
                                 style = androidx.compose.ui.graphics.drawscope.Stroke(
                                     width = 3.dp.toPx(),
                                     cap = androidx.compose.ui.graphics.StrokeCap.Round

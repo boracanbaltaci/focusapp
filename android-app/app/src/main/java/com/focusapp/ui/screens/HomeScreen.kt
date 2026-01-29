@@ -537,12 +537,12 @@ private fun getCurrentTimeString(language: String = "en"): String {
     val hour = calendar.get(Calendar.HOUR_OF_DAY)
     val minute = calendar.get(Calendar.MINUTE)
     
-    // Determine AM/PM based on language
+    // Determine AM/PM based on language - matches string resources
     val period = when (language) {
         "tr" -> if (hour < 12) "öö" else "ös"
         "de" -> if (hour < 12) "vorm." else "nachm."
         "es" -> if (hour < 12) "a.m." else "p.m."
-        else -> if (hour < 12) "am" else "pm" // Default for en, fr, it
+        else -> if (hour < 12) "am" else "pm"
     }
     
     val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
@@ -577,6 +577,11 @@ private fun DurationPickerDialog(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     
+    // Constants for snap-to-center
+    val itemHeight = 60 // dp
+    val viewportHeight = 300 // dp  
+    val snapOffset = -(viewportHeight / 2 - itemHeight / 2) // Center alignment offset
+    
     // Calculate center item based on scroll position
     val centerItemIndex by remember {
         derivedStateOf {
@@ -604,7 +609,7 @@ private fun DurationPickerDialog(
             // Snap the center item to the center position
             listState.animateScrollToItem(
                 index = centerItemIndex + 1, // +1 for spacer
-                scrollOffset = -120 // Offset to center the item
+                scrollOffset = snapOffset
             )
         }
     }
