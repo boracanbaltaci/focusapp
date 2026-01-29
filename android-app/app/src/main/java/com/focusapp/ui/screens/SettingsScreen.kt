@@ -132,38 +132,6 @@ fun SettingsScreen(
                         onValueChange = { settingsViewModel.setClockFont(it) },
                         textColor = textColor
                     )
-                    
-                    Divider(color = textColor.copy(alpha = 0.2f))
-                    
-                    // Language Setting
-                    SettingItem(
-                        title = stringResource(R.string.language),
-                        options = listOf(
-                            stringResource(R.string.lang_english) to "en",
-                            stringResource(R.string.lang_turkish) to "tr",
-                            stringResource(R.string.lang_french) to "fr",
-                            stringResource(R.string.lang_spanish) to "es",
-                            stringResource(R.string.lang_italian) to "it",
-                            stringResource(R.string.lang_german) to "de"
-                        ),
-                        selectedValue = language,
-                        onValueChange = { settingsViewModel.setLanguage(it) },
-                        textColor = textColor
-                    )
-                    
-                    Divider(color = textColor.copy(alpha = 0.2f))
-                    
-                    // Theme Setting
-                    SettingItem(
-                        title = stringResource(R.string.theme),
-                        options = listOf(
-                            stringResource(R.string.light) to "light",
-                            stringResource(R.string.dark) to "dark"
-                        ),
-                        selectedValue = theme,
-                        onValueChange = { settingsViewModel.setTheme(it) },
-                        textColor = textColor
-                    )
                 }
             }
         }
