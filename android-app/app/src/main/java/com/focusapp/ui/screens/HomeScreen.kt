@@ -246,10 +246,11 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
             val period = if (timeParts.size > 1) timeParts[1] else ""
             
             Box(
-                contentAlignment = Alignment.Center
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.offset(x = 35.dp) // Shift right to align colon with center dot
             ) {
                 Row(
-                    verticalAlignment = Alignment.Bottom,
+                    verticalAlignment = Alignment.CenterVertically, // Changed from Bottom to CenterVertically
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
@@ -267,7 +268,7 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                     )
                     
                     if (period.isNotEmpty()) {
-                        Spacer(modifier = Modifier.width(1.dp))
+                        Spacer(modifier = Modifier.width(0.5.dp)) // Reduced spacing for closer proximity
                         Text(
                             text = period,
                             style = TextStyle(
@@ -277,8 +278,8 @@ private fun ClockScreen(currentTime: String, onNavigateToSettings: () -> Unit) {
                                 lineHeight = 75.sp,
                                 color = Color.Black,
                                 textAlign = TextAlign.Center
-                            ),
-                            modifier = Modifier.align(Alignment.Bottom)
+                            )
+                            // Removed align modifier since we're using CenterVertically
                         )
                     }
                 }
