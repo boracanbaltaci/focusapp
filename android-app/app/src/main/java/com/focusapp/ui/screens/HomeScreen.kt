@@ -577,11 +577,6 @@ private fun DurationPickerDialog(
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     
-    // Constants for snap-to-center
-    val itemHeight = 60 // dp
-    val viewportHeight = 300 // dp  
-    val snapOffset = -(viewportHeight / 2 - itemHeight / 2) // Center alignment offset
-    
     // Calculate center item based on scroll position
     val centerItemIndex by remember {
         derivedStateOf {
@@ -597,32 +592,10 @@ private fun DurationPickerDialog(
         }
     }
     
-    // Track if initial layout is complete
-    var hasScrolledOnce by remember { mutableStateOf(false) }
-    
     val selectedDuration = if (centerItemIndex in durationOptions.indices) {
         durationOptions[centerItemIndex].second
     } else {
         25 * 60 // Default
-    }
-    
-    // Snap to center when scrolling stops (but not on initial composition)
-    LaunchedEffect(listState.isScrollInProgress) {
-        if (!listState.isScrollInProgress && centerItemIndex in durationOptions.indices) {
-            // Only snap if user has scrolled at least once
-            if (hasScrolledOnce) {
-                // Snap the center item to the center position
-                listState.animateScrollToItem(
-                    index = centerItemIndex + 1, // +1 for spacer
-                    scrollOffset = snapOffset
-                )
-            }
-        }
-        
-        // Mark that scrolling has happened
-        if (listState.isScrollInProgress) {
-            hasScrolledOnce = true
-        }
     }
     
     Dialog(onDismissRequest = onDismiss) {
@@ -663,7 +636,10 @@ private fun DurationPickerDialog(
                 ) {
                     // Checkmark button inside rectangle on the left
                     IconButton(
-                        onClick = { onDurationSelected(selectedDuration) },
+                        onClick = {
+                            onDurationSelected(selectedDuration)
+                            onDismiss()
+                        },
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .padding(start = 8.dp)
