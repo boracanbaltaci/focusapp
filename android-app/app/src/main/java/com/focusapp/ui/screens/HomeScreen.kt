@@ -4,9 +4,11 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -32,6 +34,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 
 @Composable
 fun HomeScreen(
@@ -533,7 +536,40 @@ private fun DurationPickerDialog(
         Pair("2 hours 00", 120 * 60)
     )
     
-    var selectedDuration by remember { mutableStateOf(25 * 60) } // Default 25 minutes
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    
+    // Calculate center item based on scroll position
+    val centerItemIndex by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val viewportCenter = layoutInfo.viewportStartOffset + (layoutInfo.viewportSize.height / 2)
+            
+            layoutInfo.visibleItemsInfo
+                .filter { it.index > 0 && it.index <= durationOptions.size } // Skip top spacer
+                .minByOrNull { item ->
+                    val itemCenter = item.offset + (item.size / 2)
+                    (itemCenter - viewportCenter).absoluteValue
+                }?.index?.minus(1) ?: 0 // Adjust for spacer item
+        }
+    }
+    
+    val selectedDuration = if (centerItemIndex in durationOptions.indices) {
+        durationOptions[centerItemIndex].second
+    } else {
+        25 * 60 // Default
+    }
+    
+    // Snap to center when scrolling stops
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress && centerItemIndex in durationOptions.indices) {
+            // Snap the center item to the center position
+            listState.animateScrollToItem(
+                index = centerItemIndex + 1, // +1 for spacer
+                scrollOffset = -120 // Offset to center the item
+            )
+        }
+    }
     
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -594,8 +630,9 @@ private fun DurationPickerDialog(
                     }
                 }
                 
-                // Scrollable list of durations
+                // Scrollable list of durations with snap-to-center
                 LazyColumn(
+                    state = listState,
                     modifier = Modifier
                         .align(Alignment.Center)
                         .width(300.dp)
@@ -610,12 +647,11 @@ private fun DurationPickerDialog(
                     
                     items(durationOptions.size) { index ->
                         val (label, seconds) = durationOptions[index]
-                        val isSelected = selectedDuration == seconds
+                        val isSelected = centerItemIndex == index
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(60.dp)
-                                .clickable { selectedDuration = seconds },
+                                .height(60.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
