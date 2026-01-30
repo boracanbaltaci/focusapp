@@ -147,8 +147,8 @@ fun HomeScreen(
         
         // Screen content based on current screen
         when (currentScreen) {
-            0 -> PlaceholderScreen(onNavigateToSettings, theme, textColor)
-            1 -> ClockScreen(currentTime, onNavigateToSettings, clockFontFamily, theme, textColor)
+            0 -> PlaceholderScreen(onNavigateToSettings, textColor)
+            1 -> ClockScreen(currentTime, onNavigateToSettings, clockFontFamily, textColor)
             2 -> TimerScreen(
                 isRunning = isTimerRunning,
                 seconds = timerSeconds,
@@ -202,7 +202,6 @@ fun HomeScreen(
 @Composable
 private fun PlaceholderScreen(
     onNavigateToSettings: () -> Unit,
-    theme: String,
     textColor: Color
 ) {
     Column(
@@ -243,7 +242,6 @@ private fun ClockScreen(
     currentTime: String,
     onNavigateToSettings: () -> Unit,
     clockFontFamily: FontFamily,
-    theme: String,
     textColor: Color
 ) {
     Column(
