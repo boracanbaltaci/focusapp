@@ -4,7 +4,9 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,8 +31,10 @@ fun SettingsScreen(
 ) {
     val clockFont by settingsViewModel.clockFont.collectAsState()
     val theme by settingsViewModel.theme.collectAsState()
+    val language by settingsViewModel.language.collectAsState()
     
     var showFontSubmenu by remember { mutableStateOf(false) }
+    var showLanguageSubmenu by remember { mutableStateOf(false) }
     
     // Theme-based colors
     val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
@@ -119,6 +123,7 @@ fun SettingsScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
+                        .verticalScroll(rememberScrollState())  // Make scrollable
                         .padding(32.dp),
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
@@ -133,13 +138,24 @@ fun SettingsScreen(
                             onBack = { showFontSubmenu = false },
                             textColor = textColor
                         )
+                    } else if (showLanguageSubmenu) {
+                        // Language Selection Submenu
+                        LanguageSubmenu(
+                            selectedLanguage = language,
+                            onLanguageSelect = {
+                                settingsViewModel.setLanguage(it)
+                                showLanguageSubmenu = false
+                            },
+                            onBack = { showLanguageSubmenu = false },
+                            textColor = textColor
+                        )
                     } else {
                         // Main Settings Menu
                         
                         // Clock Font Setting (clickable to open submenu)
                         ClickableSettingItem(
                             title = stringResource(R.string.clock_font),
-                            subtitle = if (clockFont == "menil") stringResource(R.string.font_menil) else stringResource(R.string.font_avocado),
+                            subtitle = if (clockFont == "menil") "Menil-Étroit (Default)" else "LT Avocado",
                             onClick = { showFontSubmenu = true },
                             textColor = textColor
                         )
@@ -157,10 +173,36 @@ fun SettingsScreen(
                             },
                             textColor = textColor
                         )
+                        
+                        Divider(
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            color = textColor.copy(alpha = 0.1f)
+                        )
+                        
+                        // Language Setting (clickable to open submenu)
+                        ClickableSettingItem(
+                            title = stringResource(R.string.language),
+                            subtitle = getLanguageDisplayName(language),
+                            onClick = { showLanguageSubmenu = true },
+                            textColor = textColor
+                        )
                     }
                 }
             }
         }
+    }
+}
+
+// Helper function to get language display name
+private fun getLanguageDisplayName(languageCode: String): String {
+    return when (languageCode) {
+        "en" -> "English"
+        "fr" -> "Français"
+        "tr" -> "Türkçe"
+        "it" -> "Italiano"
+        "de" -> "Deutsch"
+        "es" -> "Español"
+        else -> "English"
     }
 }
 
@@ -235,7 +277,7 @@ private fun ThemeSettingItem(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(
-            text = "Theme",
+            text = stringResource(R.string.theme),  // Use string resource
             style = TextStyle(
                 fontFamily = CareerFontFamily,
                 fontSize = 18.sp,
@@ -249,7 +291,7 @@ private fun ThemeSettingItem(
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = if (isDark) "Dark" else "Light",
+                text = if (isDark) stringResource(R.string.dark) else stringResource(R.string.light),
                 style = TextStyle(
                     fontFamily = CareerFontFamily,
                     fontSize = 14.sp,
@@ -279,7 +321,9 @@ private fun FontSubmenu(
     textColor: Color
 ) {
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),  // Make scrollable
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         // Back button
@@ -328,10 +372,11 @@ private fun FontSubmenu(
         
         Divider(color = textColor.copy(alpha = 0.1f))
         
-        // Font options
+        // Font options - Now includes both fonts and is scrollable
         val fontOptions = listOf(
-            "Menil-Étroit" to "menil",
+            "Menil-Étroit (Default)" to "menil",
             "LT Avocado" to "avocado"
+            // More fonts can be added here in the future
         )
         
         Column(
@@ -360,6 +405,125 @@ private fun FontSubmenu(
                     )
                     
                     if (selectedFont == value) {
+                        // Checkmark indicator
+                        val checkColor = Color(0xFF4CAF50)
+                        Canvas(modifier = Modifier.size(20.dp)) {
+                            val path = androidx.compose.ui.graphics.Path().apply {
+                                moveTo(size.width * 0.2f, size.height * 0.5f)
+                                lineTo(size.width * 0.4f, size.height * 0.7f)
+                                lineTo(size.width * 0.8f, size.height * 0.2f)
+                            }
+                            drawPath(
+                                path = path,
+                                color = checkColor,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = 3.dp.toPx(),
+                                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun LanguageSubmenu(
+    selectedLanguage: String,
+    onLanguageSelect: (String) -> Unit,
+    onBack: () -> Unit,
+    textColor: Color
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),  // Make scrollable
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        // Back button
+        Row(
+            modifier = Modifier
+                .clickable(onClick = onBack)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Canvas(modifier = Modifier.size(20.dp)) {
+                val arrowColor = textColor
+                val centerY = size.height / 2f
+                val arrowSize = size.width * 0.6f
+                
+                drawLine(
+                    color = arrowColor,
+                    start = Offset(size.width * 0.5f, centerY),
+                    end = Offset(size.width * 0.5f - arrowSize, centerY),
+                    strokeWidth = 2.dp.toPx()
+                )
+                drawLine(
+                    color = arrowColor,
+                    start = Offset(size.width * 0.5f - arrowSize, centerY),
+                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY - arrowSize * 0.4f),
+                    strokeWidth = 2.dp.toPx()
+                )
+                drawLine(
+                    color = arrowColor,
+                    start = Offset(size.width * 0.5f - arrowSize, centerY),
+                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY + arrowSize * 0.4f),
+                    strokeWidth = 2.dp.toPx()
+                )
+            }
+            
+            Text(
+                text = stringResource(R.string.language),
+                style = TextStyle(
+                    fontFamily = CareerFontFamily,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor
+                )
+            )
+        }
+        
+        Divider(color = textColor.copy(alpha = 0.1f))
+        
+        // Language options
+        val languageOptions = listOf(
+            "English" to "en",
+            "Français" to "fr",
+            "Türkçe" to "tr",
+            "Italiano" to "it",
+            "Deutsch" to "de",
+            "Español" to "es"
+        )
+        
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            languageOptions.forEach { (label, value) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            role = Role.RadioButton,
+                            onClick = { onLanguageSelect(value) }
+                        )
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = label,
+                        style = TextStyle(
+                            fontFamily = CareerFontFamily,
+                            fontSize = 16.sp,
+                            color = textColor.copy(alpha = if (selectedLanguage == value) 1f else 0.6f),
+                            fontWeight = if (selectedLanguage == value) FontWeight.Bold else FontWeight.Normal
+                        )
+                    )
+                    
+                    if (selectedLanguage == value) {
                         // Checkmark indicator
                         val checkColor = Color(0xFF4CAF50)
                         Canvas(modifier = Modifier.size(20.dp)) {
