@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.focusapp.R
+import com.focusapp.data.StatisticsRepository
 import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.AvocadoFontFamily
 import kotlinx.coroutines.delay
@@ -47,6 +48,9 @@ fun HomeScreen(
     settingsViewModel: SettingsViewModel,
     onNavigateToSettings: () -> Unit
 ) {
+    val context = LocalContext.current
+    val statisticsRepository = remember { StatisticsRepository(context) }
+    
     // Collect settings
     val clockFont by settingsViewModel.clockFont.collectAsState()
     val theme by settingsViewModel.theme.collectAsState()
@@ -71,6 +75,7 @@ fun HomeScreen(
     // Timer state
     var isTimerRunning by remember { mutableStateOf(false) }
     var timerSeconds by remember { mutableStateOf(25 * 60) } // Default 25 minutes
+    var initialTimerSeconds by remember { mutableStateOf(25 * 60) } // Track initial duration
     var showDurationPicker by remember { mutableStateOf(false) }
     
     // Update clock every second
@@ -89,6 +94,9 @@ fun HomeScreen(
         }
         if (timerSeconds == 0) {
             isTimerRunning = false
+            // Save completed session
+            val durationMinutes = initialTimerSeconds / 60
+            statisticsRepository.saveSession(durationMinutes)
         }
     }
     
@@ -148,7 +156,7 @@ fun HomeScreen(
         
         // Screen content based on current screen
         when (currentScreen) {
-            0 -> PlaceholderScreen(onNavigateToSettings, textColor)
+            0 -> StatisticsScreen(onNavigateToSettings, textColor)
             1 -> ClockScreen(currentTime, onNavigateToSettings, clockFontFamily, textColor)
             2 -> TimerScreen(
                 isRunning = isTimerRunning,
@@ -157,6 +165,8 @@ fun HomeScreen(
                     if (isTimerRunning) {
                         isTimerRunning = false
                     } else {
+                        // Starting timer - capture initial duration
+                        initialTimerSeconds = timerSeconds
                         isTimerRunning = true
                     }
                 },
@@ -169,6 +179,7 @@ fun HomeScreen(
                     // Finish/end the session
                     isTimerRunning = false
                     timerSeconds = 25 * 60 // Reset to default 25 minutes
+                    initialTimerSeconds = 25 * 60
                 },
                 onNavigateToSettings = onNavigateToSettings,
                 clockFontFamily = clockFontFamily,
@@ -182,6 +193,7 @@ fun HomeScreen(
                 onDismiss = { showDurationPicker = false },
                 onDurationSelected = { seconds ->
                     timerSeconds = seconds
+                    initialTimerSeconds = seconds // Track initial duration for statistics
                     isTimerRunning = false
                     showDurationPicker = false
                 }
