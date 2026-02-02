@@ -343,9 +343,7 @@ private fun FontSubmenu(
     textColor: Color
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),  // Make scrollable
+        modifier = Modifier.fillMaxSize(),  // Removed verticalScroll - parent is already scrollable
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         // Back button
@@ -459,9 +457,7 @@ private fun LanguageSubmenu(
     textColor: Color
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),  // Make scrollable
+        modifier = Modifier.fillMaxSize(),  // Removed verticalScroll - parent is already scrollable
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         // Back button
