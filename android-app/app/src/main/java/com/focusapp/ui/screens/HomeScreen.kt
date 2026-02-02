@@ -223,44 +223,6 @@ fun HomeScreen(
 }
 
 @Composable
-private fun PlaceholderScreen(
-    onNavigateToSettings: () -> Unit,
-    textColor: Color
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        // Top bar with settings icon
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp, end = 24.dp),
-            contentAlignment = Alignment.TopEnd
-        ) {
-            SettingsIconButton(onNavigateToSettings, textColor)
-        }
-        
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Screen 1",
-                style = TextStyle(
-                    fontFamily = MenilFontFamily,
-                    fontSize = 48.sp,
-                    color = textColor.copy(alpha = 0.3f)
-                )
-            )
-        }
-    }
-}
-
-@Composable
 private fun ClockScreen(
     currentTime: String,
     onNavigateToSettings: () -> Unit,

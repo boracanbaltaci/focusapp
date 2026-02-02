@@ -137,22 +137,8 @@ fun StatisticsScreen(
             )
         }
         
-        // Bottom navigation dots
-        Row(
-            modifier = Modifier.padding(bottom = 24.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            repeat(3) { index ->
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .background(
-                            color = if (index == 0) textColor else textColor.copy(alpha = 0.3f),
-                            shape = RoundedCornerShape(50)
-                        )
-                )
-            }
-        }
+        // No bottom navigation dots here - they're handled by HomeScreen
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
