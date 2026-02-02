@@ -123,11 +123,6 @@ fun StatisticsScreen(
                 modifier = Modifier.fillMaxWidth()
             )
         }
-        
-        // No bottom navigation dots here - they're handled by HomeScreen
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        }
     }
 }
 
