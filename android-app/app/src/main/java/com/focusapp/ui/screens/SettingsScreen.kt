@@ -111,7 +111,7 @@ fun SettingsScreen(
                     .weight(1f),
                 shape = RoundedCornerShape(24.dp),
                 color = containerColor,
-                shadowElevation = if (theme == "dark") 0.dp else 2.dp
+                shadowElevation = 2.dp
             ) {
                 Column(
                     modifier = Modifier
