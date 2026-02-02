@@ -1,5 +1,7 @@
 package com.focusapp.ui.screens
 
+import android.app.Activity
+import android.content.res.Configuration
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -23,12 +26,16 @@ import androidx.compose.ui.unit.sp
 import com.focusapp.R
 import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.CareerFontFamily
+import java.util.*
 
 @Composable
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+    
     val clockFont by settingsViewModel.clockFont.collectAsState()
     val theme by settingsViewModel.theme.collectAsState()
     val language by settingsViewModel.language.collectAsState()
@@ -144,7 +151,9 @@ fun SettingsScreen(
                             selectedLanguage = language,
                             onLanguageSelect = {
                                 settingsViewModel.setLanguage(it)
-                                showLanguageSubmenu = false
+                                // Update locale and recreate activity to apply new language
+                                updateLocale(context, it)
+                                activity?.recreate()
                             },
                             onBack = { showLanguageSubmenu = false },
                             textColor = textColor
@@ -619,3 +628,14 @@ private fun SettingItem(
     }
 }
 
+
+// Helper function to update locale
+private fun updateLocale(context: android.content.Context, languageCode: String) {
+    val locale = Locale(languageCode)
+    Locale.setDefault(locale)
+    
+    val config = Configuration(context.resources.configuration)
+    config.setLocale(locale)
+    
+    context.resources.updateConfiguration(config, context.resources.displayMetrics)
+}
