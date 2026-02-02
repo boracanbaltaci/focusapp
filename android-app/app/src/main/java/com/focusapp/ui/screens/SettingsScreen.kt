@@ -42,6 +42,20 @@ fun SettingsScreen(
     
     var showFontSubmenu by remember { mutableStateOf(false) }
     var showLanguageSubmenu by remember { mutableStateOf(false) }
+    var pendingLanguageChange by remember { mutableStateOf<String?>(null) }
+    
+    // Handle language change with LaunchedEffect for safe recreation
+    LaunchedEffect(pendingLanguageChange) {
+        pendingLanguageChange?.let { newLanguage ->
+            try {
+                updateLocale(context, newLanguage)
+                activity?.recreate()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            pendingLanguageChange = null
+        }
+    }
     
     // Theme-based colors
     val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
@@ -151,9 +165,8 @@ fun SettingsScreen(
                             selectedLanguage = language,
                             onLanguageSelect = {
                                 settingsViewModel.setLanguage(it)
-                                // Update locale and recreate activity to apply new language
-                                updateLocale(context, it)
-                                activity?.recreate()
+                                showLanguageSubmenu = false  // Close submenu first
+                                pendingLanguageChange = it  // Trigger recreation via LaunchedEffect
                             },
                             onBack = { showLanguageSubmenu = false },
                             textColor = textColor
