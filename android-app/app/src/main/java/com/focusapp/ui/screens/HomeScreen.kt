@@ -159,7 +159,16 @@ fun HomeScreen(
                         isTimerRunning = true
                     }
                 },
-                onTimerClick = { showDurationPicker = true },
+                onTimerClick = { 
+                    if (!isTimerRunning) {
+                        showDurationPicker = true 
+                    }
+                },
+                onFinish = {
+                    // Finish/end the session
+                    isTimerRunning = false
+                    timerSeconds = 25 * 60 // Reset to default 25 minutes
+                },
                 onNavigateToSettings = onNavigateToSettings,
                 clockFontFamily = clockFontFamily,
                 textColor = textColor
@@ -316,6 +325,7 @@ private fun TimerScreen(
     seconds: Int,
     onStartStop: () -> Unit,
     onTimerClick: () -> Unit,
+    onFinish: () -> Unit,
     onNavigateToSettings: () -> Unit,
     clockFontFamily: FontFamily,
     textColor: Color
@@ -445,6 +455,35 @@ private fun TimerScreen(
                             drawPath(
                                 path = path,
                                 color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // Finish button on the far right (only when running)
+            if (isRunning) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.CenterEnd
+                ) {
+                    Button(
+                        onClick = onFinish,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF9E9E9E) // Gray color for finish
+                        ),
+                        modifier = Modifier
+                            .padding(end = 24.dp)
+                            .size(56.dp),
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        // Stop/Finish icon (square) using Canvas
+                        Canvas(modifier = Modifier.size(20.dp)) {
+                            drawRect(
+                                color = Color.White,
+                                topLeft = Offset(0f, 0f),
+                                size = Size(size.width, size.height)
                             )
                         }
                     }
