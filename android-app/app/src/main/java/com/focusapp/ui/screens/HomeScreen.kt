@@ -600,39 +600,18 @@ private fun DurationPickerDialog(
         Pair("2 $hoursStr 00", 120 * 60)
     )
     
-    val listState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
-    
-    // Calculate center item based on scroll position
-    val centerItemIndex by remember {
-        derivedStateOf {
-            val layoutInfo = listState.layoutInfo
-            val viewportCenter = layoutInfo.viewportStartOffset + (layoutInfo.viewportSize.height / 2)
-            
-            layoutInfo.visibleItemsInfo
-                .filter { it.index > 0 && it.index <= durationOptions.size } // Skip top spacer
-                .minByOrNull { item ->
-                    val itemCenter = item.offset + (item.size / 2)
-                    (itemCenter - viewportCenter).absoluteValue
-                }?.index?.minus(1) ?: 0 // Adjust for spacer item
-        }
-    }
-    
-    val selectedDuration = if (centerItemIndex in durationOptions.indices) {
-        durationOptions[centerItemIndex].second
-    } else {
-        25 * 60 // Default
-    }
+    // Simple state to track selected index - default to 30:00 (index 4)
+    var selectedIndex by remember { mutableStateOf(4) }
     
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier
-                .width(400.dp)
-                .height(450.dp),
+                .width(350.dp)
+                .height(500.dp),
             shape = RoundedCornerShape(16.dp),
             color = Color.White
         ) {
-            Box(
+            Column(
                 modifier = Modifier.fillMaxSize()
             ) {
                 // Title
@@ -645,92 +624,92 @@ private fun DurationPickerDialog(
                         color = Color.Black
                     ),
                     modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 24.dp)
+                        .fillMaxWidth()
+                        .padding(top = 24.dp, bottom = 16.dp),
+                    textAlign = TextAlign.Center
                 )
                 
-                // Center selection rectangle
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .width(300.dp)
-                        .height(60.dp)
-                        .background(
-                            color = Color(0xFFF0F0F0),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                ) {
-                    // Checkmark button inside rectangle on the left - larger and more prominent
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .padding(start = 8.dp)
-                            .size(44.dp)
-                            .background(
-                                color = Color(0xFF4CAF50),
-                                shape = androidx.compose.foundation.shape.CircleShape
-                            )
-                            .clickable {
-                                onDurationSelected(selectedDuration)
-                                onDismiss()
-                            },
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Canvas(modifier = Modifier.size(24.dp)) {
-                            val path = Path().apply {
-                                moveTo(size.width * 0.2f, size.height * 0.5f)
-                                lineTo(size.width * 0.4f, size.height * 0.7f)
-                                lineTo(size.width * 0.8f, size.height * 0.2f)
-                            }
-                            drawPath(
-                                path = path,
-                                color = Color.White,
-                                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
-                            )
-                        }
-                    }
-                }
-                
-                // Scrollable list of durations with snap-to-center
+                // Scrollable list of clickable durations
                 LazyColumn(
-                    state = listState,
                     modifier = Modifier
-                        .align(Alignment.Center)
-                        .width(300.dp)
-                        .height(300.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(0.dp)
+                        .weight(1f)
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    // Add spacers at top to allow scrolling items into center
-                    item {
-                        Spacer(modifier = Modifier.height(120.dp))
-                    }
-                    
                     items(durationOptions.size) { index ->
                         val (label, seconds) = durationOptions[index]
-                        val isSelected = centerItemIndex == index
-                        Box(
+                        val isSelected = selectedIndex == index
+                        
+                        Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(60.dp),
-                            contentAlignment = Alignment.Center
+                                .height(50.dp)
+                                .background(
+                                    color = if (isSelected) Color(0xFFE8F5E9) else Color.Transparent,
+                                    shape = RoundedCornerShape(8.dp)
+                                )
+                                .clickable {
+                                    selectedIndex = index
+                                }
+                                .padding(horizontal = 16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
                                 text = label,
                                 style = TextStyle(
                                     fontFamily = MenilFontFamily,
-                                    fontSize = 22.sp,
-                                    color = Color.Black.copy(alpha = if (isSelected) 1f else 0.4f),
+                                    fontSize = 20.sp,
+                                    color = Color.Black,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
                                 )
                             )
+                            
+                            // Show checkmark for selected item
+                            if (isSelected) {
+                                Canvas(modifier = Modifier.size(20.dp)) {
+                                    val path = Path().apply {
+                                        moveTo(size.width * 0.2f, size.height * 0.5f)
+                                        lineTo(size.width * 0.4f, size.height * 0.7f)
+                                        lineTo(size.width * 0.8f, size.height * 0.2f)
+                                    }
+                                    drawPath(
+                                        path = path,
+                                        color = Color(0xFF4CAF50),
+                                        style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
+                                    )
+                                }
+                            }
                         }
                     }
-                    
-                    // Add spacers at bottom
-                    item {
-                        Spacer(modifier = Modifier.height(120.dp))
-                    }
+                }
+                
+                // Confirm button at bottom
+                Button(
+                    onClick = {
+                        val selectedDuration = durationOptions[selectedIndex].second
+                        onDurationSelected(selectedDuration)
+                        onDismiss()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF4CAF50)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = "Confirm",
+                        style = TextStyle(
+                            fontFamily = MenilFontFamily,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    )
                 }
             }
         }
