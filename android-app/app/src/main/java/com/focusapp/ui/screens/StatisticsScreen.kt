@@ -44,28 +44,15 @@ fun StatisticsScreen(
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
     
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        // Top section with settings icon
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp),
-            contentAlignment = Alignment.CenterEnd
-        ) {
-            SettingsIconButton(onNavigateToSettings, textColor)
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Settings icon with absolute positioning (7% from top, 7% from right)
+        SettingsIconButton(onNavigateToSettings, textColor)
         
         // Main content
         Column(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
+                .fillMaxSize()
+                .padding(horizontal = 48.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -138,7 +125,9 @@ fun StatisticsScreen(
         }
         
         // No bottom navigation dots here - they're handled by HomeScreen
+        
         Spacer(modifier = Modifier.height(32.dp))
+        }
     }
 }
 

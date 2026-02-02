@@ -11,6 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.focusapp.data.AuthRepository
 import com.focusapp.data.repository.SettingsRepository
 import com.focusapp.ui.screens.*
 import com.focusapp.ui.theme.FocusAppTheme
@@ -55,21 +56,46 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun FocusApp() {
     val context = LocalContext.current
+    val authRepository = remember { AuthRepository(context) }
     val sessionViewModel = remember { SessionViewModel(context) }
     val settingsViewModel = remember { SettingsViewModel(context) }
     
     var currentScreen by remember { mutableStateOf("home") }
+    var isAuthenticated by remember { mutableStateOf(authRepository.isAuthenticated()) }
     
-    when (currentScreen) {
-        "home" -> HomeScreen(
-            sessionViewModel = sessionViewModel,
-            settingsViewModel = settingsViewModel,
-            onNavigateToSettings = { currentScreen = "settings" }
+    if (!isAuthenticated) {
+        // Show authentication screen
+        val theme by settingsViewModel.theme.collectAsState()
+        AuthenticationScreen(
+            onSignIn = { email, password ->
+                val success = authRepository.signIn(email, password)
+                if (success) {
+                    isAuthenticated = true
+                }
+                success
+            },
+            onSignUp = { email, password ->
+                val success = authRepository.signUp(email, password)
+                if (success) {
+                    isAuthenticated = true
+                }
+                success
+            },
+            theme = theme
         )
-        
-        "settings" -> SettingsScreen(
-            settingsViewModel = settingsViewModel,
-            onBack = { currentScreen = "home" }
-        )
+    } else {
+        // Show main app screens
+        when (currentScreen) {
+            "home" -> HomeScreen(
+                sessionViewModel = sessionViewModel,
+                settingsViewModel = settingsViewModel,
+                onNavigateToSettings = { currentScreen = "settings" }
+            )
+            
+            "settings" -> SettingsScreen(
+                settingsViewModel = settingsViewModel,
+                onBack = { currentScreen = "home" }
+            )
+        }
     }
 }

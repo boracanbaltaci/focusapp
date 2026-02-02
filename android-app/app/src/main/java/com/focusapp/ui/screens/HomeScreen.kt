@@ -229,28 +229,19 @@ private fun ClockScreen(
     clockFontFamily: FontFamily,
     textColor: Color
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        // Top bar with settings icon - moved more to the left and down
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp, end = 48.dp),
-            contentAlignment = Alignment.TopEnd
-        ) {
-            SettingsIconButton(onNavigateToSettings, textColor)
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Settings icon with absolute positioning (7% from top, 7% from right)
+        SettingsIconButton(onNavigateToSettings, textColor)
         
-        // Center clock display - perfectly centered
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
+        // Main content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
+            // Center clock display - perfectly centered
             val timeParts = currentTime.split("\n")
             val time = timeParts[0]
             val period = if (timeParts.size > 1) timeParts[1] else ""
@@ -288,9 +279,9 @@ private fun ClockScreen(
                     )
                 }
             }
+            
+            Spacer(modifier = Modifier.height(80.dp))
         }
-        
-        Spacer(modifier = Modifier.height(80.dp))
     }
 }
 
@@ -307,34 +298,29 @@ private fun TimerScreen(
 ) {
     val context = LocalContext.current
     
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 48.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
-        // Top bar with settings icon - moved more to the left and down
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 32.dp, end = 48.dp),
-            contentAlignment = Alignment.TopEnd
-        ) {
-            SettingsIconButton(onNavigateToSettings, textColor)
-        }
+    Box(modifier = Modifier.fillMaxSize()) {
+        // Settings icon with absolute positioning (7% from top, 7% from right)
+        SettingsIconButton(onNavigateToSettings, textColor)
         
-        // Center content with timer centered and button on far left
-        Box(
-            modifier = Modifier.weight(1f).fillMaxWidth(),
-            contentAlignment = Alignment.Center
+        // Main content
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            // Timer display with hour label - centered
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.clickable(enabled = !isRunning) { onTimerClick() }
+            // Center content with timer centered and button on far left
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
             ) {
+                // Timer display with hour label - centered
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier.clickable(enabled = !isRunning) { onTimerClick() }
+                ) {
                 // Calculate remaining time after removing full hours
                 val totalMinutes = seconds / 60
                 val hours = totalMinutes / 60
@@ -466,49 +452,59 @@ private fun TimerScreen(
             }
         }
         
+        
         Spacer(modifier = Modifier.height(80.dp))
+        }
     }
 }
 
 @Composable
-private fun SettingsIconButton(onClick: () -> Unit, iconColor: Color) {
-    IconButton(
-        onClick = onClick,
-        modifier = Modifier.size(32.dp)
-    ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val centerX = size.width / 2f
-            val centerY = size.height / 2f
-            val radius = size.width * 0.4f
-            val strokeWidth = 2.dp.toPx()
-            
-            // Draw a simple cog/settings icon with 6 teeth
-            // Center circle
-            drawCircle(
-                color = iconColor,
-                radius = radius * 0.35f,
-                center = Offset(centerX, centerY),
-                style = Stroke(width = strokeWidth)
-            )
-            
-            // Draw 6 rectangular teeth around the circle
-            for (i in 0 until 6) {
-                val angle = (i * 60f).toRadians()
-                val toothLength = radius * 0.4f
-                val toothWidth = radius * 0.25f
+fun SettingsIconButton(onClick: () -> Unit, iconColor: Color) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        // Position: 7% from top, 7% from right (93% from left)
+        val xOffset = maxWidth * 0.93f - 16.dp  // 7% from right
+        val yOffset = maxHeight * 0.07f          // 7% from top
+        
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier
+                .size(32.dp)
+                .offset(x = xOffset, y = yOffset)
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val centerX = size.width / 2f
+                val centerY = size.height / 2f
+                val radius = size.width * 0.4f
+                val strokeWidth = 2.dp.toPx()
                 
-                val startX = centerX + (radius * 0.35f) * kotlin.math.cos(angle)
-                val startY = centerY + (radius * 0.35f) * kotlin.math.sin(angle)
-                val endX = centerX + (radius * 0.75f) * kotlin.math.cos(angle)
-                val endY = centerY + (radius * 0.75f) * kotlin.math.sin(angle)
-                
-                // Draw tooth as a line
-                drawLine(
+                // Draw a simple cog/settings icon with 6 teeth
+                // Center circle
+                drawCircle(
                     color = iconColor,
-                    start = Offset(startX, startY),
-                    end = Offset(endX, endY),
-                    strokeWidth = toothWidth
+                    radius = radius * 0.35f,
+                    center = Offset(centerX, centerY),
+                    style = Stroke(width = strokeWidth)
                 )
+                
+                // Draw 6 rectangular teeth around the circle
+                for (i in 0 until 6) {
+                    val angle = (i * 60f).toRadians()
+                    val toothLength = radius * 0.4f
+                    val toothWidth = radius * 0.25f
+                    
+                    val startX = centerX + (radius * 0.35f) * kotlin.math.cos(angle)
+                    val startY = centerY + (radius * 0.35f) * kotlin.math.sin(angle)
+                    val endX = centerX + (radius * 0.75f) * kotlin.math.cos(angle)
+                    val endY = centerY + (radius * 0.75f) * kotlin.math.sin(angle)
+                    
+                    // Draw tooth as a line
+                    drawLine(
+                        color = iconColor,
+                        start = Offset(startX, startY),
+                        end = Offset(endX, endY),
+                        strokeWidth = toothWidth
+                    )
+                }
             }
         }
     }
