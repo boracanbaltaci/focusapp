@@ -46,7 +46,7 @@ fun StatisticsScreen(
     
     Box(modifier = Modifier.fillMaxSize()) {
         // Settings icon with absolute positioning (7% from top, 7% from right)
-        SettingsIconButton(onNavigateToSettings, textColor)
+        SettingsIconButton(onClick = onNavigateToSettings, iconColor = textColor)
         
         // Main content
         Column(
@@ -238,58 +238,6 @@ private fun ChartLabels(
                 fontSize = 12.sp,
                 color = textColor,
                 modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun SettingsIconButton(
-    onClick: () -> Unit,
-    textColor: Color
-) {
-    Box(
-        modifier = Modifier
-            .size(40.dp)
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Canvas(modifier = Modifier.size(24.dp)) {
-            val centerX = size.width / 2
-            val centerY = size.height / 2
-            val radius = size.width / 3
-            val toothCount = 6
-            val toothSize = size.width / 6
-            
-            // Draw teeth
-            for (i in 0 until toothCount) {
-                val angle = (i * 360f / toothCount)
-                val radian = Math.toRadians(angle.toDouble())
-                val x1 = centerX + (radius * Math.cos(radian)).toFloat()
-                val y1 = centerY + (radius * Math.sin(radian)).toFloat()
-                val x2 = centerX + ((radius + toothSize) * Math.cos(radian)).toFloat()
-                val y2 = centerY + ((radius + toothSize) * Math.sin(radian)).toFloat()
-                
-                drawLine(
-                    color = textColor,
-                    start = Offset(x1, y1),
-                    end = Offset(x2, y2),
-                    strokeWidth = 3.dp.toPx()
-                )
-            }
-            
-            // Draw center circle
-            drawCircle(
-                color = textColor,
-                radius = radius,
-                center = Offset(centerX, centerY)
-            )
-            
-            // Draw inner hole
-            drawCircle(
-                color = Color(0xFFFBFBFB),
-                radius = radius * 0.4f,
-                center = Offset(centerX, centerY)
             )
         }
     }
