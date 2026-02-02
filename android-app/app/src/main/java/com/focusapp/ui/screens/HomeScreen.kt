@@ -660,16 +660,21 @@ private fun DurationPickerDialog(
                             shape = RoundedCornerShape(8.dp)
                         )
                 ) {
-                    // Checkmark button inside rectangle on the left
-                    IconButton(
-                        onClick = {
-                            onDurationSelected(selectedDuration)
-                            onDismiss()
-                        },
+                    // Checkmark button inside rectangle on the left - larger and more prominent
+                    Box(
                         modifier = Modifier
                             .align(Alignment.CenterStart)
                             .padding(start = 8.dp)
-                            .size(40.dp)
+                            .size(44.dp)
+                            .background(
+                                color = Color(0xFF4CAF50),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            )
+                            .clickable {
+                                onDurationSelected(selectedDuration)
+                                onDismiss()
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         Canvas(modifier = Modifier.size(24.dp)) {
                             val path = Path().apply {
@@ -679,8 +684,8 @@ private fun DurationPickerDialog(
                             }
                             drawPath(
                                 path = path,
-                                color = Color(0xFF4CAF50),
-                                style = Stroke(width = 4.dp.toPx(), cap = StrokeCap.Round)
+                                color = Color.White,
+                                style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
                             )
                         }
                     }
