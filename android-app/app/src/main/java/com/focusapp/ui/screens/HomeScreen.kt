@@ -161,7 +161,8 @@ fun HomeScreen(
                 },
                 onTimerClick = { showDurationPicker = true },
                 onNavigateToSettings = onNavigateToSettings,
-                clockFontFamily = clockFontFamily
+                clockFontFamily = clockFontFamily,
+                textColor = textColor
             )
         }
         
@@ -316,7 +317,8 @@ private fun TimerScreen(
     onStartStop: () -> Unit,
     onTimerClick: () -> Unit,
     onNavigateToSettings: () -> Unit,
-    clockFontFamily: FontFamily
+    clockFontFamily: FontFamily,
+    textColor: Color
 ) {
     val context = LocalContext.current
     
