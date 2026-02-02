@@ -128,7 +128,7 @@ fun StatisticsScreen(
 }
 
 @Composable
-private fun ViewModeButton(
+fun ViewModeButton(
     text: String,
     selected: Boolean,
     onClick: () -> Unit,
@@ -153,7 +153,7 @@ private fun ViewModeButton(
 }
 
 @Composable
-private fun BarChart(
+fun BarChart(
     data: Map<Int, Int>,
     viewMode: ViewMode,
     textColor: Color,
@@ -188,7 +188,7 @@ private fun BarChart(
 }
 
 @Composable
-private fun ChartLabels(
+fun ChartLabels(
     data: Map<Int, Int>,
     viewMode: ViewMode,
     textColor: Color,
