@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.focusapp"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.focusapp"
