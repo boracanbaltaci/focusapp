@@ -23,3 +23,20 @@ data class User(
     val style: String = "default",
     val background: String = "default"
 )
+
+// API Request/Response models for backend communication
+data class FocusSessionRequest(
+    val startTime: String,
+    val endTime: String?,
+    val durationSeconds: Long?,
+    val isBreak: Boolean
+)
+
+data class FocusSessionResponse(
+    val id: Long,
+    val startTime: String,
+    val endTime: String?,
+    val durationSeconds: Long?,
+    val isBreak: Boolean,
+    val userId: Long? = null
+)

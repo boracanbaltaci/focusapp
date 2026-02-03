@@ -178,6 +178,13 @@ fun HomeScreen(
                 },
                 onFinish = {
                     // Finish/end the session
+                    if (isTimerRunning) {
+                        // If timer is running, save the session with actual elapsed time
+                        val elapsedMinutes = (initialTimerSeconds - timerSeconds) / 60
+                        if (elapsedMinutes > 0) {
+                            statisticsRepository.saveSession(elapsedMinutes)
+                        }
+                    }
                     isTimerRunning = false
                     // Reset to initial duration instead of default
                     timerSeconds = initialTimerSeconds
