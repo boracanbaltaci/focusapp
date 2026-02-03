@@ -10,5 +10,6 @@ data class SessionEntity(
     val startTime: Long,
     val endTime: Long? = null,
     val durationSeconds: Long? = null,
-    val isBreak: Boolean = false
+    val isBreak: Boolean = false,
+    val serverId: Long? = null  // Server-assigned ID from backend
 )

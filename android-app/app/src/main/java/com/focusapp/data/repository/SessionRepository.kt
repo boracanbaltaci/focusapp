@@ -1,9 +1,12 @@
 package com.focusapp.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.focusapp.data.local.AppDatabase
 import com.focusapp.data.local.SessionEntity
 import com.focusapp.data.model.*
+import com.focusapp.data.network.FocusSessionRequest
+import com.focusapp.data.network.RetrofitClient
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -11,7 +14,12 @@ import java.util.concurrent.TimeUnit
 class SessionRepository(context: Context) {
     
     private val sessionDao = AppDatabase.getDatabase(context).sessionDao()
+    private val apiService = RetrofitClient.apiService
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+    
+    companion object {
+        private const val TAG = "SessionRepository"
+    }
     
     suspend fun startSession(isBreak: Boolean = false): Result<SessionResponse> {
         return try {
@@ -20,14 +28,42 @@ class SessionRepository(context: Context) {
                 startTime = currentTime,
                 isBreak = isBreak
             )
-            val id = sessionDao.insertSession(session)
-            Result.success(SessionResponse(
-                id = id,
+            
+            // Save to local database first (for offline support)
+            val localId = sessionDao.insertSession(session)
+            
+            val sessionResponse = SessionResponse(
+                id = localId,
                 startTime = dateFormat.format(Date(currentTime)),
                 endTime = null,
                 durationSeconds = null,
                 isBreak = isBreak
-            ))
+            )
+            
+            // Try to send to backend (non-blocking, failure doesn't prevent local save)
+            try {
+                val request = FocusSessionRequest(
+                    startTime = sessionResponse.startTime,
+                    endTime = null,
+                    durationSeconds = null,
+                    isBreak = isBreak
+                )
+                val response = apiService.createSession(request)
+                if (response.isSuccessful && response.body() != null) {
+                    val serverSession = response.body()!!
+                    Log.d(TAG, "Session created on backend with ID: ${serverSession.id}")
+                    
+                    // Update local session with server ID
+                    val updatedSession = session.copy(id = localId, serverId = serverSession.id)
+                    sessionDao.updateSession(updatedSession)
+                } else {
+                    Log.w(TAG, "Failed to create session on backend: ${response.code()} ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.w(TAG, "Backend not available, session saved locally only: ${e.message}")
+            }
+            
+            Result.success(sessionResponse)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -43,14 +79,33 @@ class SessionRepository(context: Context) {
                     endTime = endTime,
                     durationSeconds = durationSeconds
                 )
+                
+                // Update local database first
                 sessionDao.updateSession(updatedSession)
-                Result.success(SessionResponse(
+                
+                val sessionResponse = SessionResponse(
                     id = session.id,
                     startTime = dateFormat.format(Date(session.startTime)),
                     endTime = dateFormat.format(Date(endTime)),
                     durationSeconds = durationSeconds,
                     isBreak = session.isBreak
-                ))
+                )
+                
+                // Try to send completion to backend using server ID if available
+                try {
+                    // Use server ID if available, otherwise fall back to local ID
+                    val backendId = session.serverId ?: sessionId
+                    val response = apiService.completeSession(backendId)
+                    if (response.isSuccessful && response.body() != null) {
+                        Log.d(TAG, "Session completed on backend: ${response.body()?.id}")
+                    } else {
+                        Log.w(TAG, "Failed to complete session on backend: ${response.code()} ${response.message()}")
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Backend not available, session completed locally only: ${e.message}")
+                }
+                
+                Result.success(sessionResponse)
             } else {
                 Result.failure(Exception("Session not found"))
             }

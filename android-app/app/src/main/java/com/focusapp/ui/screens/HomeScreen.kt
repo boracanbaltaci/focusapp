@@ -56,6 +56,9 @@ fun HomeScreen(
     val clockFont by settingsViewModel.clockFont.collectAsState()
     val theme by settingsViewModel.theme.collectAsState()
     
+    // Collect session state from ViewModel
+    val currentSession by sessionViewModel.currentSession.collectAsState()
+    
     // Theme-based colors
     val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
     val textColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
@@ -77,6 +80,7 @@ fun HomeScreen(
     var isTimerRunning by remember { mutableStateOf(false) }
     var timerSeconds by remember { mutableStateOf(25 * 60) } // Default 25 minutes
     var initialTimerSeconds by remember { mutableStateOf(25 * 60) } // Track initial duration
+    var timerStartTime by remember { mutableStateOf(0L) } // Track when timer actually started
     var showDurationPicker by remember { mutableStateOf(false) }
     
     // Update clock every second
@@ -95,9 +99,14 @@ fun HomeScreen(
         }
         if (timerSeconds == 0) {
             isTimerRunning = false
-            // Save completed session
+            // Save completed session to both repositories
             val durationMinutes = initialTimerSeconds / 60
             statisticsRepository.saveSession(durationMinutes)
+            
+            // End session in backend (if session was started)
+            currentSession?.let { session ->
+                sessionViewModel.endSession()
+            }
         }
     }
     
@@ -166,9 +175,12 @@ fun HomeScreen(
                     if (isTimerRunning) {
                         isTimerRunning = false
                     } else {
-                        // Starting timer - capture initial duration
+                        // Starting timer - capture initial duration and start session
                         initialTimerSeconds = timerSeconds
+                        timerStartTime = System.currentTimeMillis()
                         isTimerRunning = true
+                        // Start a session in the backend
+                        sessionViewModel.startSession(isBreak = false)
                     }
                 },
                 onTimerClick = { 
@@ -177,10 +189,26 @@ fun HomeScreen(
                     }
                 },
                 onFinish = {
-                    // Finish/end the session
+                    // Finish/end the session - send to backend
                     isTimerRunning = false
-                    // Reset to initial duration instead of default
+                    
+                    // Calculate actual elapsed time in minutes
+                    val elapsedMillis = System.currentTimeMillis() - timerStartTime
+                    val elapsedMinutes = (elapsedMillis / 1000 / 60).toInt()
+                    
+                    // Save to statistics for local tracking (only if timer was actually running)
+                    if (timerStartTime > 0 && elapsedMinutes > 0) {
+                        statisticsRepository.saveSession(elapsedMinutes)
+                    }
+                    
+                    // End session in backend
+                    currentSession?.let { session ->
+                        sessionViewModel.endSession()
+                    }
+                    
+                    // Reset timer state
                     timerSeconds = initialTimerSeconds
+                    timerStartTime = 0L
                 },
                 onNavigateToSettings = onNavigateToSettings,
                 clockFontFamily = clockFontFamily,

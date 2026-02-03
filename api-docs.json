@@ -1,0 +1,289 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Focus Session API",
+    "version": "1.0.0",
+    "description": "API for managing focus sessions in the Focus App. This API allows creating, updating, and completing focus sessions with support for Bearer token authentication."
+  },
+  "servers": [
+    {
+      "url": "http://10.0.2.2:8080",
+      "description": "Android Emulator Localhost (default)"
+    },
+    {
+      "url": "http://localhost:8080",
+      "description": "Local Development Server"
+    }
+  ],
+  "paths": {
+    "/api/sessions": {
+      "post": {
+        "summary": "Create a new focus session",
+        "operationId": "createSession",
+        "description": "Creates a new focus session when a user starts a timer. The session is created with a start time and optional break indicator.",
+        "tags": ["Sessions"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FocusSessionRequest"
+              },
+              "example": {
+                "startTime": "2024-02-03T14:30:00",
+                "endTime": null,
+                "durationSeconds": null,
+                "isBreak": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FocusSessionResponse"
+                },
+                "example": {
+                  "id": 123,
+                  "startTime": "2024-02-03T14:30:00",
+                  "endTime": null,
+                  "durationSeconds": null,
+                  "isBreak": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing bearer token"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{id}/complete": {
+      "post": {
+        "summary": "Mark a session as completed",
+        "operationId": "completeSession",
+        "description": "Marks a focus session as completed. Called when the timer reaches zero or when the user manually finishes the session using the finish button.",
+        "tags": ["Sessions"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the session to mark as complete",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 123
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Session completed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FocusSessionResponse"
+                },
+                "example": {
+                  "id": 123,
+                  "startTime": "2024-02-03T14:30:00",
+                  "endTime": "2024-02-03T15:00:00",
+                  "durationSeconds": 1800,
+                  "isBreak": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing bearer token"
+          },
+          "404": {
+            "description": "Session not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/sessions/{id}": {
+      "put": {
+        "summary": "Update an existing session",
+        "operationId": "updateSession",
+        "description": "Updates an existing focus session with new data. This endpoint is available for future use cases where session details need to be modified.",
+        "tags": ["Sessions"],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "The ID of the session to update",
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "example": 123
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FocusSessionRequest"
+              },
+              "example": {
+                "startTime": "2024-02-03T14:30:00",
+                "endTime": "2024-02-03T15:00:00",
+                "durationSeconds": 1800,
+                "isBreak": false
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Session updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FocusSessionResponse"
+                },
+                "example": {
+                  "id": 123,
+                  "startTime": "2024-02-03T14:30:00",
+                  "endTime": "2024-02-03T15:00:00",
+                  "durationSeconds": 1800,
+                  "isBreak": false
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - Invalid or missing bearer token"
+          },
+          "404": {
+            "description": "Session not found"
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "FocusSessionRequest": {
+        "type": "object",
+        "required": ["startTime", "isBreak"],
+        "properties": {
+          "startTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 formatted start time of the session",
+            "example": "2024-02-03T14:30:00"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "ISO 8601 formatted end time of the session (null for ongoing sessions)",
+            "example": "2024-02-03T15:00:00"
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "Duration of the session in seconds (null for ongoing sessions)",
+            "example": 1800
+          },
+          "isBreak": {
+            "type": "boolean",
+            "description": "Whether this session is a break (true) or work session (false)",
+            "example": false
+          }
+        }
+      },
+      "FocusSessionResponse": {
+        "type": "object",
+        "required": ["id", "startTime", "isBreak"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Unique identifier for the session assigned by the server",
+            "example": 123
+          },
+          "startTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 formatted start time of the session",
+            "example": "2024-02-03T14:30:00"
+          },
+          "endTime": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "description": "ISO 8601 formatted end time of the session (null for ongoing sessions)",
+            "example": "2024-02-03T15:00:00"
+          },
+          "durationSeconds": {
+            "type": "integer",
+            "format": "int64",
+            "nullable": true,
+            "description": "Duration of the session in seconds (null for ongoing sessions)",
+            "example": 1800
+          },
+          "isBreak": {
+            "type": "boolean",
+            "description": "Whether this session is a break (true) or work session (false)",
+            "example": false
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT Bearer token authentication. Include the token in the Authorization header as: `Authorization: Bearer <token>`"
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "Sessions",
+      "description": "Operations for managing focus sessions"
+    }
+  ]
+}
