@@ -41,8 +41,16 @@ class StatisticsRepository(context: Context) {
      * This is called asynchronously as a fire-and-forget operation.
      * Failures are logged but don't affect the local operation.
      * 
-     * Note: Uses GlobalScope since this repository doesn't have lifecycle awareness
-     * and the operation should complete even if the calling context is destroyed.
+     * Note: Uses GlobalScope because:
+     * 1. StatisticsRepository has no lifecycle awareness (it's a plain class, not a ViewModel)
+     * 2. This is a fire-and-forget operation that should complete even if the caller is destroyed
+     * 3. The operation is fast (single HTTP request) and will complete or timeout quickly
+     * 4. No cancellation needed - we want the backend sync to complete regardless of UI state
+     * 
+     * For a production app with more complex lifecycle requirements, consider:
+     * - Injecting a CoroutineScope via dependency injection
+     * - Using WorkManager for reliable background sync
+     * - Implementing a retry queue for failed syncs
      */
     private fun sendSessionToBackend(startTime: Long, durationMinutes: Int) {
         GlobalScope.launch(Dispatchers.IO) {

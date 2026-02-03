@@ -6,8 +6,9 @@ import com.focusapp.data.local.AppDatabase
 import com.focusapp.data.local.SessionEntity
 import com.focusapp.data.model.*
 import com.focusapp.data.network.RetrofitClient
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -62,8 +63,10 @@ class SessionRepository(context: Context) {
                     isBreak = session.isBreak
                 )
                 
-                // Send to backend asynchronously (don't block on failure)
-                sendSessionToBackend(sessionResponse)
+                // Send to backend asynchronously (fire-and-forget)
+                CoroutineScope(Dispatchers.IO).launch {
+                    sendSessionToBackend(sessionResponse)
+                }
                 
                 Result.success(sessionResponse)
             } else {
