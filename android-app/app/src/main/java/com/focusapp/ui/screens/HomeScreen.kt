@@ -80,6 +80,7 @@ fun HomeScreen(
     var isTimerRunning by remember { mutableStateOf(false) }
     var timerSeconds by remember { mutableStateOf(25 * 60) } // Default 25 minutes
     var initialTimerSeconds by remember { mutableStateOf(25 * 60) } // Track initial duration
+    var timerStartTime by remember { mutableStateOf(0L) } // Track when timer actually started
     var showDurationPicker by remember { mutableStateOf(false) }
     
     // Update clock every second
@@ -176,6 +177,7 @@ fun HomeScreen(
                     } else {
                         // Starting timer - capture initial duration and start session
                         initialTimerSeconds = timerSeconds
+                        timerStartTime = System.currentTimeMillis()
                         isTimerRunning = true
                         // Start a session in the backend
                         sessionViewModel.startSession(isBreak = false)
@@ -190,9 +192,12 @@ fun HomeScreen(
                     // Finish/end the session - send to backend
                     isTimerRunning = false
                     
-                    // Save to statistics for local tracking
-                    val elapsedMinutes = (initialTimerSeconds - timerSeconds) / 60
-                    if (elapsedMinutes > 0) {
+                    // Calculate actual elapsed time in minutes
+                    val elapsedMillis = System.currentTimeMillis() - timerStartTime
+                    val elapsedMinutes = (elapsedMillis / 1000 / 60).toInt()
+                    
+                    // Save to statistics for local tracking (only if timer was actually running)
+                    if (timerStartTime > 0 && elapsedMinutes > 0) {
                         statisticsRepository.saveSession(elapsedMinutes)
                     }
                     
@@ -201,8 +206,9 @@ fun HomeScreen(
                         sessionViewModel.endSession()
                     }
                     
-                    // Reset to initial duration
+                    // Reset timer state
                     timerSeconds = initialTimerSeconds
+                    timerStartTime = 0L
                 },
                 onNavigateToSettings = onNavigateToSettings,
                 clockFontFamily = clockFontFamily,

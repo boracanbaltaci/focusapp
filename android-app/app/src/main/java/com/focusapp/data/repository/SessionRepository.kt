@@ -50,7 +50,12 @@ class SessionRepository(context: Context) {
                 )
                 val response = apiService.createSession(request)
                 if (response.isSuccessful && response.body() != null) {
-                    Log.d(TAG, "Session created on backend with ID: ${response.body()?.id}")
+                    val serverSession = response.body()!!
+                    Log.d(TAG, "Session created on backend with ID: ${serverSession.id}")
+                    
+                    // Update local session with server ID
+                    val updatedSession = session.copy(id = localId, serverId = serverSession.id)
+                    sessionDao.updateSession(updatedSession)
                 } else {
                     Log.w(TAG, "Failed to create session on backend: ${response.code()} ${response.message()}")
                 }
@@ -86,9 +91,11 @@ class SessionRepository(context: Context) {
                     isBreak = session.isBreak
                 )
                 
-                // Try to send completion to backend
+                // Try to send completion to backend using server ID if available
                 try {
-                    val response = apiService.completeSession(sessionId)
+                    // Use server ID if available, otherwise fall back to local ID
+                    val backendId = session.serverId ?: sessionId
+                    val response = apiService.completeSession(backendId)
                     if (response.isSuccessful && response.body() != null) {
                         Log.d(TAG, "Session completed on backend: ${response.body()?.id}")
                     } else {
