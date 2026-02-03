@@ -78,6 +78,7 @@ fun HomeScreen(
     var timerSeconds by remember { mutableStateOf(25 * 60) } // Default 25 minutes
     var initialTimerSeconds by remember { mutableStateOf(25 * 60) } // Track initial duration
     var showDurationPicker by remember { mutableStateOf(false) }
+    var isTimerSessionActive by remember { mutableStateOf(false) } // Track if timer has an active session
     
     // Update clock every second
     LaunchedEffect(Unit) {
@@ -95,7 +96,12 @@ fun HomeScreen(
         }
         if (timerSeconds == 0) {
             isTimerRunning = false
-            // Save completed session
+            // Complete the session and sync to backend
+            if (isTimerSessionActive) {
+                sessionViewModel.endSession()
+                isTimerSessionActive = false
+            }
+            // Also save to legacy statistics for compatibility
             val durationMinutes = initialTimerSeconds / 60
             statisticsRepository.saveSession(durationMinutes)
         }
@@ -164,10 +170,17 @@ fun HomeScreen(
                 seconds = timerSeconds,
                 onStartStop = { 
                     if (isTimerRunning) {
+                        // Stopping timer - end the session and sync to backend
                         isTimerRunning = false
+                        if (isTimerSessionActive) {
+                            sessionViewModel.endSession()
+                            isTimerSessionActive = false
+                        }
                     } else {
-                        // Starting timer - capture initial duration
+                        // Starting timer - start a new session
                         initialTimerSeconds = timerSeconds
+                        sessionViewModel.startSession(isBreak = false)
+                        isTimerSessionActive = true
                         isTimerRunning = true
                     }
                 },
@@ -177,9 +190,18 @@ fun HomeScreen(
                     }
                 },
                 onFinish = {
-                    // Finish/end the session
+                    // Finish/end the session via "bitir" button and sync to backend
                     isTimerRunning = false
-                    // Reset to initial duration instead of default
+                    if (isTimerSessionActive) {
+                        sessionViewModel.endSession()
+                        isTimerSessionActive = false
+                    }
+                    // Also save to legacy statistics for compatibility
+                    val durationMinutes = (initialTimerSeconds - timerSeconds) / 60
+                    if (durationMinutes > 0) {
+                        statisticsRepository.saveSession(durationMinutes)
+                    }
+                    // Reset to initial duration
                     timerSeconds = initialTimerSeconds
                 },
                 onNavigateToSettings = onNavigateToSettings,

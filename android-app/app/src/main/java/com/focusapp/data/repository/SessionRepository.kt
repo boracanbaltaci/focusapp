@@ -1,9 +1,11 @@
 package com.focusapp.data.repository
 
 import android.content.Context
+import android.util.Log
 import com.focusapp.data.local.AppDatabase
 import com.focusapp.data.local.SessionEntity
 import com.focusapp.data.model.*
+import com.focusapp.data.network.RetrofitClient
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -12,6 +14,11 @@ class SessionRepository(context: Context) {
     
     private val sessionDao = AppDatabase.getDatabase(context).sessionDao()
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+    private val apiService = RetrofitClient.getApiService()
+    
+    companion object {
+        private const val TAG = "SessionRepository"
+    }
     
     suspend fun startSession(isBreak: Boolean = false): Result<SessionResponse> {
         return try {
@@ -44,18 +51,58 @@ class SessionRepository(context: Context) {
                     durationSeconds = durationSeconds
                 )
                 sessionDao.updateSession(updatedSession)
-                Result.success(SessionResponse(
+                
+                val sessionResponse = SessionResponse(
                     id = session.id,
                     startTime = dateFormat.format(Date(session.startTime)),
                     endTime = dateFormat.format(Date(endTime)),
                     durationSeconds = durationSeconds,
                     isBreak = session.isBreak
-                ))
+                )
+                
+                // Send completed session to backend
+                sendSessionToBackend(sessionResponse)
+                
+                Result.success(sessionResponse)
             } else {
                 Result.failure(Exception("Session not found"))
             }
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+    
+    /**
+     * Send completed session data to the backend.
+     * This is called when a session ends (either automatically or via the "bitir" button).
+     * The session is created on the backend with complete data (startTime, endTime, duration).
+     */
+    private suspend fun sendSessionToBackend(session: SessionResponse) {
+        try {
+            // Create session request with complete data
+            val request = FocusSessionRequest(
+                startTime = session.startTime,
+                endTime = session.endTime,
+                durationSeconds = session.durationSeconds,
+                isBreak = session.isBreak
+            )
+            
+            // Create the session on the backend with all completion data
+            val createResponse = apiService.createSession(request)
+            
+            if (createResponse.isSuccessful) {
+                val backendSession = createResponse.body()
+                if (backendSession != null) {
+                    Log.d(TAG, "Session created on backend with ID: ${backendSession.id}")
+                } else {
+                    Log.w(TAG, "Session created but no response body")
+                }
+            } else {
+                Log.w(TAG, "Failed to create session on backend: ${createResponse.code()}")
+            }
+        } catch (e: Exception) {
+            // Log error but don't fail the local operation
+            Log.e(TAG, "Error sending session to backend: ${e.message}", e)
         }
     }
     
