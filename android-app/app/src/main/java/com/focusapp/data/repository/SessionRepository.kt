@@ -1,6 +1,8 @@
 package com.focusapp.data.repository
 
 import android.content.Context
+import android.util.Log
+import com.focusapp.data.api.RetrofitClient
 import com.focusapp.data.local.AppDatabase
 import com.focusapp.data.local.SessionEntity
 import com.focusapp.data.model.*
@@ -12,23 +14,52 @@ class SessionRepository(context: Context) {
     
     private val sessionDao = AppDatabase.getDatabase(context).sessionDao()
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
+    private val apiService = RetrofitClient.apiService
+    
+    companion object {
+        private const val TAG = "SessionRepository"
+    }
     
     suspend fun startSession(isBreak: Boolean = false): Result<SessionResponse> {
         return try {
             val currentTime = System.currentTimeMillis()
+            val startTimeStr = dateFormat.format(Date(currentTime))
+            
+            // Save to local database first
             val session = SessionEntity(
                 startTime = currentTime,
                 isBreak = isBreak
             )
-            val id = sessionDao.insertSession(session)
+            val localId = sessionDao.insertSession(session)
+            
+            // Try to send to backend API
+            var backendId = localId
+            try {
+                val request = FocusSessionRequest(
+                    startTime = startTimeStr,
+                    isBreak = isBreak
+                )
+                val response = apiService.createSession(request)
+                
+                if (response.isSuccessful && response.body() != null) {
+                    backendId = response.body()!!.id
+                    Log.d(TAG, "Session created on backend with ID: $backendId")
+                } else {
+                    Log.w(TAG, "Failed to create session on backend: ${response.code()} - ${response.message()}")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error creating session on backend (will use local only): ${e.message}", e)
+            }
+            
             Result.success(SessionResponse(
-                id = id,
-                startTime = dateFormat.format(Date(currentTime)),
+                id = backendId,
+                startTime = startTimeStr,
                 endTime = null,
                 durationSeconds = null,
                 isBreak = isBreak
             ))
         } catch (e: Exception) {
+            Log.e(TAG, "Error starting session: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -39,11 +70,28 @@ class SessionRepository(context: Context) {
             if (session != null) {
                 val endTime = System.currentTimeMillis()
                 val durationSeconds = TimeUnit.MILLISECONDS.toSeconds(endTime - session.startTime)
+                
+                // Update local database
                 val updatedSession = session.copy(
                     endTime = endTime,
                     durationSeconds = durationSeconds
                 )
                 sessionDao.updateSession(updatedSession)
+                
+                // Try to complete session on backend
+                try {
+                    val response = apiService.completeSession(sessionId)
+                    
+                    if (response.isSuccessful && response.body() != null) {
+                        val backendSession = response.body()!!
+                        Log.d(TAG, "Session completed on backend: ID=$sessionId, duration=${backendSession.durationSeconds}s")
+                    } else {
+                        Log.w(TAG, "Failed to complete session on backend: ${response.code()} - ${response.message()}")
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error completing session on backend (local update successful): ${e.message}", e)
+                }
+                
                 Result.success(SessionResponse(
                     id = session.id,
                     startTime = dateFormat.format(Date(session.startTime)),
@@ -55,6 +103,7 @@ class SessionRepository(context: Context) {
                 Result.failure(Exception("Session not found"))
             }
         } catch (e: Exception) {
+            Log.e(TAG, "Error ending session: ${e.message}", e)
             Result.failure(e)
         }
     }

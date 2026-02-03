@@ -19,6 +19,10 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        
+        // Backend API base URL - Set to 10.0.2.2 for Android emulator to access localhost
+        // Change this to your production URL for release builds
+        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8080/\"")
     }
 
     buildTypes {
@@ -39,6 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"
@@ -75,6 +80,12 @@ dependencies {
     
     // Gson for JSON serialization
     implementation("com.google.code.gson:gson:2.10.1")
+    
+    // Networking - Retrofit and OkHttp
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     
     // Testing
     testImplementation("junit:junit:4.13.2")
