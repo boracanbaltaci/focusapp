@@ -11,6 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.focusapp.data.network.RetrofitClient
 import com.focusapp.data.repository.SettingsRepository
 import com.focusapp.ui.screens.*
 import com.focusapp.ui.theme.FocusAppTheme
@@ -19,6 +20,9 @@ import java.util.*
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Initialize Retrofit client for backend communication
+        RetrofitClient.initialize(this)
         
         // Apply saved language on activity creation
         applySavedLanguage()
