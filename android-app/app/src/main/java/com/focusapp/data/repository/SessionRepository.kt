@@ -79,38 +79,36 @@ class SessionRepository(context: Context) {
      * This is called asynchronously and failures are logged but don't affect the local operation.
      */
     private suspend fun sendSessionToBackend(session: SessionResponse) {
-        withContext(Dispatchers.IO) {
-            try {
-                // Create the session on backend
-                val request = FocusSessionRequest(
-                    startTime = session.startTime,
-                    endTime = session.endTime,
-                    durationSeconds = session.durationSeconds,
-                    isBreak = session.isBreak
-                )
-                
-                val createResponse = apiService.createSession(request)
-                
-                if (createResponse.isSuccessful) {
-                    val backendSession = createResponse.body()
-                    if (backendSession != null) {
-                        Log.d(TAG, "Session created on backend with ID: ${backendSession.id}")
-                        
-                        // Mark as completed on backend
-                        val completeResponse = apiService.completeSession(backendSession.id)
-                        if (completeResponse.isSuccessful) {
-                            Log.d(TAG, "Session ${backendSession.id} marked as completed on backend")
-                        } else {
-                            Log.w(TAG, "Failed to mark session as completed on backend: ${completeResponse.code()}")
-                        }
+        try {
+            // Create the session on backend
+            val request = FocusSessionRequest(
+                startTime = session.startTime,
+                endTime = session.endTime,
+                durationSeconds = session.durationSeconds,
+                isBreak = session.isBreak
+            )
+            
+            val createResponse = apiService.createSession(request)
+            
+            if (createResponse.isSuccessful) {
+                val backendSession = createResponse.body()
+                if (backendSession != null) {
+                    Log.d(TAG, "Session created on backend with ID: ${backendSession.id}")
+                    
+                    // Mark as completed on backend
+                    val completeResponse = apiService.completeSession(backendSession.id)
+                    if (completeResponse.isSuccessful) {
+                        Log.d(TAG, "Session ${backendSession.id} marked as completed on backend")
+                    } else {
+                        Log.w(TAG, "Failed to mark session as completed on backend: ${completeResponse.code()}")
                     }
-                } else {
-                    Log.w(TAG, "Failed to create session on backend: ${createResponse.code()}")
                 }
-            } catch (e: Exception) {
-                // Log error but don't propagate - backend sync is best-effort
-                Log.e(TAG, "Error sending session to backend", e)
+            } else {
+                Log.w(TAG, "Failed to create session on backend: ${createResponse.code()}")
             }
+        } catch (e: Exception) {
+            // Log error but don't propagate - backend sync is best-effort
+            Log.e(TAG, "Error sending session to backend", e)
         }
     }
     

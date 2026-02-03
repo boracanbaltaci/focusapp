@@ -7,7 +7,7 @@ import com.focusapp.data.model.FocusSessionRequest
 import com.focusapp.data.network.RetrofitClient
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -38,10 +38,14 @@ class StatisticsRepository(context: Context) {
     
     /**
      * Send completed session data to backend.
-     * This is called asynchronously and failures are logged but don't affect the local operation.
+     * This is called asynchronously as a fire-and-forget operation.
+     * Failures are logged but don't affect the local operation.
+     * 
+     * Note: Uses GlobalScope since this repository doesn't have lifecycle awareness
+     * and the operation should complete even if the calling context is destroyed.
      */
     private fun sendSessionToBackend(startTime: Long, durationMinutes: Int) {
-        CoroutineScope(Dispatchers.IO).launch {
+        GlobalScope.launch(Dispatchers.IO) {
             try {
                 // Calculate end time based on duration
                 val durationSeconds = durationMinutes * 60L
