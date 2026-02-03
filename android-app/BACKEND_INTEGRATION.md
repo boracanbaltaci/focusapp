@@ -135,6 +135,15 @@ implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
 ## Troubleshooting
 
+### Cleartext HTTP Traffic Blocked
+- **Error**: `CLEARTEXT communication to 10.0.2.2 not permitted by network security policy`
+- **Cause**: Android 9+ (API 28+) blocks HTTP traffic by default for security
+- **Solution**: The app includes a network security configuration (`network_security_config.xml`) that allows HTTP traffic to:
+  - `10.0.2.2` (Android emulator localhost)
+  - `localhost` and `127.0.0.1` (for physical device testing)
+- **For Production**: Consider using HTTPS or remove the cleartext permission
+- **Location**: `app/src/main/res/xml/network_security_config.xml`
+
 ### Backend Connection Issues
 - **Error**: `Backend not available, session saved locally only`
 - **Solution**: 

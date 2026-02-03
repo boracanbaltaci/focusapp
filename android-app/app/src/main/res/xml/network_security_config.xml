@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <!-- 
+        Allow cleartext (HTTP) traffic for local development.
+        This is required for Android 9+ (API 28+) which blocks HTTP by default.
+        
+        For production, consider using HTTPS or remove this configuration.
+    -->
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Android emulator localhost (10.0.2.2) -->
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        
+        <!-- Optional: Allow localhost for physical device testing -->
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+    </domain-config>
+    
+    <!-- Default: Block cleartext traffic for all other domains (secure by default) -->
+    <base-config cleartextTrafficPermitted="false" />
+</network-security-config>
