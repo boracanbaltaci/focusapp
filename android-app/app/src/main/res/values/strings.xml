@@ -20,4 +20,27 @@
     <string name="logout">Logout</string>
     <string name="home">Home</string>
     <string name="default_style">Default</string>
+    
+    <!-- New strings for Phase 3 -->
+    <string name="select_duration">Select Duration</string>
+    <string name="clock_font">Clock Font</string>
+    <string name="theme">Theme</string>
+    <string name="light">Light</string>
+    <string name="dark">Dark</string>
+    <string name="am">am</string>
+    <string name="pm">pm</string>
+    <string name="hour_singular">hour</string>
+    <string name="hours_plural">hours</string>
+    
+    <!-- Language names -->
+    <string name="lang_english">English</string>
+    <string name="lang_turkish">Turkish</string>
+    <string name="lang_french">French</string>
+    <string name="lang_spanish">Spanish</string>
+    <string name="lang_italian">Italian</string>
+    <string name="lang_german">German</string>
+    
+    <!-- Font names -->
+    <string name="font_menil">Menil-Étroit (Default)</string>
+    <string name="font_avocado">LT Avocado</string>
 </resources>

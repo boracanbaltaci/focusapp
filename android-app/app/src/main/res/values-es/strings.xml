@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Focus App</string>
+    <string name="login">Iniciar sesión</string>
+    <string name="register">Registrarse</string>
+    <string name="username">Nombre de usuario</string>
+    <string name="password">Contraseña</string>
+    <string name="start_session">Comenzar sesión</string>
+    <string name="stop_session">Detener sesión</string>
+    <string name="start_break">Tomar descanso</string>
+    <string name="settings">Configuración</string>
+    <string name="weekly_stats">Estadísticas semanales</string>
+    <string name="hourly_stats">Estadísticas por hora</string>
+    <string name="clock_type">Tipo de reloj</string>
+    <string name="digital">Digital</string>
+    <string name="analog">Analógico</string>
+    <string name="style">Estilo</string>
+    <string name="background">Fondo</string>
+    <string name="language">Idioma</string>
+    <string name="logout">Cerrar sesión</string>
+    <string name="home">Inicio</string>
+    <string name="default_style">Predeterminado</string>
+    
+    <!-- New strings for Phase 3 -->
+    <string name="select_duration">Seleccionar duración</string>
+    <string name="clock_font">Fuente del reloj</string>
+    <string name="theme">Tema</string>
+    <string name="light">Claro</string>
+    <string name="dark">Oscuro</string>
+    <string name="am">a.m.</string>
+    <string name="pm">p.m.</string>
+    <string name="hour_singular">hora</string>
+    <string name="hours_plural">horas</string>
+    
+    <!-- Language names -->
+    <string name="lang_english">Inglés</string>
+    <string name="lang_turkish">Turco</string>
+    <string name="lang_french">Francés</string>
+    <string name="lang_spanish">Español</string>
+    <string name="lang_italian">Italiano</string>
+    <string name="lang_german">Alemán</string>
+    
+    <!-- Font names -->
+    <string name="font_menil">Menil-Étroit (Predeterminado)</string>
+    <string name="font_avocado">LT Avocado</string>
+</resources>
