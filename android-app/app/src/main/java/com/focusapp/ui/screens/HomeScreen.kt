@@ -179,8 +179,8 @@ fun HomeScreen(
                 onFinish = {
                     // Finish/end the session
                     isTimerRunning = false
-                    timerSeconds = 25 * 60 // Reset to default 25 minutes
-                    initialTimerSeconds = 25 * 60
+                    // Reset to initial duration instead of default
+                    timerSeconds = initialTimerSeconds
                 },
                 onNavigateToSettings = onNavigateToSettings,
                 clockFontFamily = clockFontFamily,
@@ -559,13 +559,13 @@ private fun DurationPickerDialog(
         Pair("20:00", 20 * 60),
         Pair("30:00", 30 * 60),
         Pair("45:00", 45 * 60),
-        Pair("1 $hourStr 00", 60 * 60),
+        Pair("1 $hourStr", 60 * 60),
         Pair("1 $hourStr 10", 70 * 60),
         Pair("1 $hourStr 15", 75 * 60),
         Pair("1 $hourStr 20", 80 * 60),
         Pair("1 $hourStr 30", 90 * 60),
         Pair("1 $hourStr 45", 105 * 60),
-        Pair("2 $hoursStr 00", 120 * 60)
+        Pair("2 $hoursStr", 120 * 60)
     )
     
     // Simple state to track selected index - default to 5:00 (index 0)
@@ -670,7 +670,7 @@ private fun DurationPickerDialog(
                     shape = RoundedCornerShape(12.dp)
                 ) {
                     Text(
-                        text = "Confirm",
+                        text = stringResource(R.string.confirm),
                         style = TextStyle(
                             fontFamily = GeistFontFamily,
                             fontSize = 18.sp,

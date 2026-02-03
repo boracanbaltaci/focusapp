@@ -31,6 +31,7 @@
     <string name="pm">pm</string>
     <string name="hour_singular">heure</string>
     <string name="hours_plural">heures</string>
+    <string name="confirm">Confirmer</string>
     
     <!-- Language names -->
     <string name="lang_english">Anglais</string>

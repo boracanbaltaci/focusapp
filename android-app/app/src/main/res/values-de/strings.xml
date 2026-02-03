@@ -31,6 +31,7 @@
     <string name="pm">nachm.</string>
     <string name="hour_singular">Stunde</string>
     <string name="hours_plural">Stunden</string>
+    <string name="confirm">Bestätigen</string>
     
     <!-- Language names -->
     <string name="lang_english">Englisch</string>
