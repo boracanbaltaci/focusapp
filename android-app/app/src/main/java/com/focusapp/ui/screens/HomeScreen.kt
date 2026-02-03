@@ -56,6 +56,9 @@ fun HomeScreen(
     val clockFont by settingsViewModel.clockFont.collectAsState()
     val theme by settingsViewModel.theme.collectAsState()
     
+    // Collect session state from ViewModel
+    val currentSession by sessionViewModel.currentSession.collectAsState()
+    
     // Theme-based colors
     val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
     val textColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
@@ -95,9 +98,14 @@ fun HomeScreen(
         }
         if (timerSeconds == 0) {
             isTimerRunning = false
-            // Save completed session
+            // Save completed session to both repositories
             val durationMinutes = initialTimerSeconds / 60
             statisticsRepository.saveSession(durationMinutes)
+            
+            // End session in backend (if session was started)
+            currentSession?.let { session ->
+                sessionViewModel.endSession()
+            }
         }
     }
     
@@ -166,9 +174,11 @@ fun HomeScreen(
                     if (isTimerRunning) {
                         isTimerRunning = false
                     } else {
-                        // Starting timer - capture initial duration
+                        // Starting timer - capture initial duration and start session
                         initialTimerSeconds = timerSeconds
                         isTimerRunning = true
+                        // Start a session in the backend
+                        sessionViewModel.startSession(isBreak = false)
                     }
                 },
                 onTimerClick = { 
@@ -177,9 +187,21 @@ fun HomeScreen(
                     }
                 },
                 onFinish = {
-                    // Finish/end the session
+                    // Finish/end the session - send to backend
                     isTimerRunning = false
-                    // Reset to initial duration instead of default
+                    
+                    // Save to statistics for local tracking
+                    val elapsedMinutes = (initialTimerSeconds - timerSeconds) / 60
+                    if (elapsedMinutes > 0) {
+                        statisticsRepository.saveSession(elapsedMinutes)
+                    }
+                    
+                    // End session in backend
+                    currentSession?.let { session ->
+                        sessionViewModel.endSession()
+                    }
+                    
+                    // Reset to initial duration
                     timerSeconds = initialTimerSeconds
                 },
                 onNavigateToSettings = onNavigateToSettings,
