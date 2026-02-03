@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.focusapp.R
 import com.focusapp.ui.theme.MenilFontFamily
-import com.focusapp.ui.theme.CareerFontFamily
+import com.focusapp.ui.theme.GeistFontFamily
 import java.util.*
 
 @Composable
@@ -122,7 +122,7 @@ fun SettingsScreen(
                 Text(
                     text = stringResource(R.string.settings),
                     style = TextStyle(
-                        fontFamily = CareerFontFamily,
+                        fontFamily = GeistFontFamily,
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Normal,
                         color = textColor
@@ -247,7 +247,7 @@ private fun ClickableSettingItem(
             Text(
                 text = title,
                 style = TextStyle(
-                    fontFamily = CareerFontFamily,
+                    fontFamily = GeistFontFamily,
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Normal,
                     color = textColor
@@ -256,7 +256,7 @@ private fun ClickableSettingItem(
             Text(
                 text = subtitle,
                 style = TextStyle(
-                    fontFamily = CareerFontFamily,
+                    fontFamily = GeistFontFamily,
                     fontSize = 14.sp,
                     color = textColor.copy(alpha = 0.6f)
                 )
@@ -301,7 +301,7 @@ private fun ThemeSettingItem(
         Text(
             text = stringResource(R.string.theme),  // Use string resource
             style = TextStyle(
-                fontFamily = CareerFontFamily,
+                fontFamily = GeistFontFamily,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Normal,
                 color = textColor
@@ -315,7 +315,7 @@ private fun ThemeSettingItem(
             Text(
                 text = if (isDark) stringResource(R.string.dark) else stringResource(R.string.light),
                 style = TextStyle(
-                    fontFamily = CareerFontFamily,
+                    fontFamily = GeistFontFamily,
                     fontSize = 14.sp,
                     color = textColor.copy(alpha = 0.6f)
                 )
@@ -382,7 +382,7 @@ private fun FontSubmenu(
             Text(
                 text = "Font Selection",
                 style = TextStyle(
-                    fontFamily = CareerFontFamily,
+                    fontFamily = GeistFontFamily,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Normal,
                     color = textColor
@@ -417,7 +417,7 @@ private fun FontSubmenu(
                     Text(
                         text = label,
                         style = TextStyle(
-                            fontFamily = CareerFontFamily,
+                            fontFamily = GeistFontFamily,
                             fontSize = 16.sp,
                             color = textColor.copy(alpha = if (selectedFont == value) 1f else 0.6f),
                             fontWeight = if (selectedFont == value) FontWeight.Bold else FontWeight.Normal
@@ -496,7 +496,7 @@ private fun LanguageSubmenu(
             Text(
                 text = stringResource(R.string.language),
                 style = TextStyle(
-                    fontFamily = CareerFontFamily,
+                    fontFamily = GeistFontFamily,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Normal,
                     color = textColor
@@ -534,7 +534,7 @@ private fun LanguageSubmenu(
                     Text(
                         text = label,
                         style = TextStyle(
-                            fontFamily = CareerFontFamily,
+                            fontFamily = GeistFontFamily,
                             fontSize = 16.sp,
                             color = textColor.copy(alpha = if (selectedLanguage == value) 1f else 0.6f),
                             fontWeight = if (selectedLanguage == value) FontWeight.Bold else FontWeight.Normal
@@ -580,7 +580,7 @@ private fun SettingItem(
         Text(
             text = title,
             style = TextStyle(
-                fontFamily = CareerFontFamily,
+                fontFamily = GeistFontFamily,
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Normal,
                 color = textColor
@@ -605,7 +605,7 @@ private fun SettingItem(
                     Text(
                         text = label,
                         style = TextStyle(
-                            fontFamily = CareerFontFamily,
+                            fontFamily = GeistFontFamily,
                             fontSize = 16.sp,
                             color = textColor.copy(alpha = if (selectedValue == value) 1f else 0.6f),
                             fontWeight = if (selectedValue == value) FontWeight.Bold else FontWeight.Normal
