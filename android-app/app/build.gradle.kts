@@ -22,12 +22,18 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Base URL for emulator - accessible via 10.0.2.2
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Base URL for production - can be changed later
+            buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
         }
     }
     compileOptions {
@@ -39,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"
@@ -75,6 +82,12 @@ dependencies {
     
     // Gson for JSON serialization
     implementation("com.google.code.gson:gson:2.10.1")
+    
+    // Retrofit for networking
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     
     // Testing
     testImplementation("junit:junit:4.13.2")
