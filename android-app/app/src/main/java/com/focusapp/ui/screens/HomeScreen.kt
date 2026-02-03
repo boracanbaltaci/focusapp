@@ -56,6 +56,10 @@ fun HomeScreen(
     val clockFont by settingsViewModel.clockFont.collectAsState()
     val theme by settingsViewModel.theme.collectAsState()
     
+    // Session state for timer
+    val sessionState by sessionViewModel.sessionState.collectAsState()
+    val currentSession by sessionViewModel.currentSession.collectAsState()
+    
     // Theme-based colors
     val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
     val textColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
@@ -78,6 +82,7 @@ fun HomeScreen(
     var timerSeconds by remember { mutableStateOf(25 * 60) } // Default 25 minutes
     var initialTimerSeconds by remember { mutableStateOf(25 * 60) } // Track initial duration
     var showDurationPicker by remember { mutableStateOf(false) }
+    var timerSessionStarted by remember { mutableStateOf(false) }
     
     // Update clock every second
     LaunchedEffect(Unit) {
@@ -93,9 +98,14 @@ fun HomeScreen(
             delay(1000)
             timerSeconds--
         }
-        if (timerSeconds == 0) {
+        if (timerSeconds == 0 && timerSessionStarted) {
             isTimerRunning = false
-            // Save completed session
+            // Session completed automatically - send to backend
+            currentSession?.let { session ->
+                sessionViewModel.endSession()
+            }
+            timerSessionStarted = false
+            // Also save to old statistics for backward compatibility
             val durationMinutes = initialTimerSeconds / 60
             statisticsRepository.saveSession(durationMinutes)
         }
@@ -164,11 +174,18 @@ fun HomeScreen(
                 seconds = timerSeconds,
                 onStartStop = { 
                     if (isTimerRunning) {
+                        // Pause timer
                         isTimerRunning = false
                     } else {
-                        // Starting timer - capture initial duration
+                        // Starting timer - capture initial duration and start backend session
                         initialTimerSeconds = timerSeconds
                         isTimerRunning = true
+                        
+                        // Start session on backend
+                        if (!timerSessionStarted) {
+                            sessionViewModel.startSession(isBreak = false)
+                            timerSessionStarted = true
+                        }
                     }
                 },
                 onTimerClick = { 
@@ -177,8 +194,15 @@ fun HomeScreen(
                     }
                 },
                 onFinish = {
-                    // Finish/end the session
+                    // Finish/end the session manually via button press
                     isTimerRunning = false
+                    
+                    // Complete session on backend if it was started
+                    if (timerSessionStarted && currentSession != null) {
+                        sessionViewModel.endSession()
+                        timerSessionStarted = false
+                    }
+                    
                     // Reset to initial duration instead of default
                     timerSeconds = initialTimerSeconds
                 },
