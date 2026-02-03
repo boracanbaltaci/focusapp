@@ -75,10 +75,11 @@ class SessionRepository(context: Context) {
     /**
      * Send completed session data to the backend.
      * This is called when a session ends (either automatically or via the "bitir" button).
+     * The session is created on the backend with complete data (startTime, endTime, duration).
      */
     private suspend fun sendSessionToBackend(session: SessionResponse) {
         try {
-            // Create session request
+            // Create session request with complete data
             val request = FocusSessionRequest(
                 startTime = session.startTime,
                 endTime = session.endTime,
@@ -86,22 +87,15 @@ class SessionRepository(context: Context) {
                 isBreak = session.isBreak
             )
             
-            // First, create the session on the backend
+            // Create the session on the backend with all completion data
             val createResponse = apiService.createSession(request)
             
             if (createResponse.isSuccessful) {
                 val backendSession = createResponse.body()
                 if (backendSession != null) {
                     Log.d(TAG, "Session created on backend with ID: ${backendSession.id}")
-                    
-                    // Mark the session as completed on the backend
-                    val completeResponse = apiService.completeSession(backendSession.id)
-                    
-                    if (completeResponse.isSuccessful) {
-                        Log.d(TAG, "Session completed on backend: ${backendSession.id}")
-                    } else {
-                        Log.w(TAG, "Failed to mark session as completed: ${completeResponse.code()}")
-                    }
+                } else {
+                    Log.w(TAG, "Session created but no response body")
                 }
             } else {
                 Log.w(TAG, "Failed to create session on backend: ${createResponse.code()}")
