@@ -37,6 +37,7 @@ import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.AvocadoFontFamily
 import com.focusapp.ui.theme.GeistFontFamily
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -51,6 +52,7 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val statisticsRepository = remember { StatisticsRepository(context) }
+    val coroutineScope = rememberCoroutineScope()
     
     // Collect settings
     val clockFont by settingsViewModel.clockFont.collectAsState()
@@ -78,6 +80,7 @@ fun HomeScreen(
     var timerSeconds by remember { mutableStateOf(25 * 60) } // Default 25 minutes
     var initialTimerSeconds by remember { mutableStateOf(25 * 60) } // Track initial duration
     var showDurationPicker by remember { mutableStateOf(false) }
+    var timerSessionId by remember { mutableStateOf<Long?>(null) } // Track session ID for backend sync
     
     // Update clock every second
     LaunchedEffect(Unit) {
@@ -95,9 +98,14 @@ fun HomeScreen(
         }
         if (timerSeconds == 0) {
             isTimerRunning = false
-            // Save completed session
+            // Complete the session and sync to backend
+            timerSessionId?.let { sessionId ->
+                sessionViewModel.endSession()
+            }
+            // Also save to legacy statistics for compatibility
             val durationMinutes = initialTimerSeconds / 60
             statisticsRepository.saveSession(durationMinutes)
+            timerSessionId = null
         }
     }
     
@@ -164,10 +172,21 @@ fun HomeScreen(
                 seconds = timerSeconds,
                 onStartStop = { 
                     if (isTimerRunning) {
+                        // Stopping timer - end the session and sync to backend
                         isTimerRunning = false
+                        timerSessionId?.let { sessionId ->
+                            sessionViewModel.endSession()
+                        }
+                        timerSessionId = null
                     } else {
-                        // Starting timer - capture initial duration
+                        // Starting timer - start a new session
                         initialTimerSeconds = timerSeconds
+                        sessionViewModel.startSession(isBreak = false)
+                        // Store the session ID after it's created
+                        coroutineScope.launch {
+                            delay(100) // Wait for session to be created
+                            timerSessionId = sessionViewModel.currentSession.value?.id
+                        }
                         isTimerRunning = true
                     }
                 },
@@ -177,10 +196,19 @@ fun HomeScreen(
                     }
                 },
                 onFinish = {
-                    // Finish/end the session
+                    // Finish/end the session via "bitir" button and sync to backend
                     isTimerRunning = false
-                    // Reset to initial duration instead of default
+                    timerSessionId?.let { sessionId ->
+                        sessionViewModel.endSession()
+                    }
+                    // Also save to legacy statistics for compatibility
+                    val durationMinutes = (initialTimerSeconds - timerSeconds) / 60
+                    if (durationMinutes > 0) {
+                        statisticsRepository.saveSession(durationMinutes)
+                    }
+                    // Reset to initial duration
                     timerSeconds = initialTimerSeconds
+                    timerSessionId = null
                 },
                 onNavigateToSettings = onNavigateToSettings,
                 clockFontFamily = clockFontFamily,
