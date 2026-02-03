@@ -35,6 +35,7 @@ import com.focusapp.R
 import com.focusapp.data.StatisticsRepository
 import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.AvocadoFontFamily
+import com.focusapp.ui.theme.GeistFontFamily
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -420,31 +421,29 @@ private fun TimerScreen(
                 }
             }
             
-            // Finish button on the far right (only when running)
-            if (isRunning) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.CenterEnd
+            // Finish button on the far right (always visible)
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Button(
+                    onClick = onFinish,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF9E9E9E) // Gray color for finish
+                    ),
+                    modifier = Modifier
+                        .padding(end = 24.dp)
+                        .size(56.dp),
+                    shape = CircleShape,
+                    contentPadding = PaddingValues(0.dp)
                 ) {
-                    Button(
-                        onClick = onFinish,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF9E9E9E) // Gray color for finish
-                        ),
-                        modifier = Modifier
-                            .padding(end = 24.dp)
-                            .size(56.dp),
-                        shape = CircleShape,
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        // Stop/Finish icon (square) using Canvas
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            drawRect(
-                                color = Color.White,
-                                topLeft = Offset(0f, 0f),
-                                size = Size(size.width, size.height)
-                            )
-                        }
+                    // Stop/Finish icon (square) using Canvas
+                    Canvas(modifier = Modifier.size(20.dp)) {
+                        drawRect(
+                            color = Color.White,
+                            topLeft = Offset(0f, 0f),
+                            size = Size(size.width, size.height)
+                        )
                     }
                 }
             }
@@ -569,8 +568,8 @@ private fun DurationPickerDialog(
         Pair("2 $hoursStr 00", 120 * 60)
     )
     
-    // Simple state to track selected index - default to 30:00 (index 4)
-    var selectedIndex by remember { mutableStateOf(4) }
+    // Simple state to track selected index - default to 5:00 (index 0)
+    var selectedIndex by remember { mutableStateOf(0) }
     
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -587,7 +586,7 @@ private fun DurationPickerDialog(
                 Text(
                     text = stringResource(R.string.select_duration),
                     style = TextStyle(
-                        fontFamily = MenilFontFamily,
+                        fontFamily = GeistFontFamily,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Normal,
                         color = Color.Black
@@ -628,7 +627,7 @@ private fun DurationPickerDialog(
                             Text(
                                 text = label,
                                 style = TextStyle(
-                                    fontFamily = MenilFontFamily,
+                                    fontFamily = GeistFontFamily,
                                     fontSize = 20.sp,
                                     color = Color.Black,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
@@ -673,7 +672,7 @@ private fun DurationPickerDialog(
                     Text(
                         text = "Confirm",
                         style = TextStyle(
-                            fontFamily = MenilFontFamily,
+                            fontFamily = GeistFontFamily,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White

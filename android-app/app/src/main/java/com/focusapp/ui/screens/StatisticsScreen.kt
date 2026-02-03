@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.focusapp.data.StatisticsRepository
+import com.focusapp.ui.theme.GeistFontFamily
 import java.util.*
 
 enum class ViewMode {
@@ -62,6 +63,7 @@ fun StatisticsScreen(
                 text = "Statistics",
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
+                fontFamily = GeistFontFamily,
                 color = textColor
             )
             
@@ -99,6 +101,7 @@ fun StatisticsScreen(
                 text = "Total: ${hours}h ${minutes}m",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold,
+                fontFamily = GeistFontFamily,
                 color = textColor
             )
             
@@ -147,6 +150,7 @@ fun ViewModeButton(
             text = text,
             fontSize = 14.sp,
             fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            fontFamily = GeistFontFamily,
             color = if (selected) Color.White else textColor
         )
     }
@@ -237,6 +241,7 @@ fun ChartLabels(
             Text(
                 text = label,
                 fontSize = 12.sp,
+                fontFamily = GeistFontFamily,
                 color = textColor,
                 modifier = Modifier.weight(1f)
             )
