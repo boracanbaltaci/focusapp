@@ -25,6 +25,40 @@ class StatisticsRepository(context: Context) {
         return gson.fromJson(json, type) ?: emptyList()
     }
     
+    fun getDailyData(): Map<Int, Int> {
+        val calendar = Calendar.getInstance()
+        
+        // Set calendar to start of today
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val dayStart = calendar.timeInMillis
+        
+        // Set calendar to end of today
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val dayEnd = calendar.timeInMillis
+        
+        val sessions = getAllSessions().filter { it.date >= dayStart && it.date <= dayEnd }
+        val hourlyData = mutableMapOf<Int, Int>()
+        
+        // Initialize all 24 hours with 0
+        for (i in 0..23) {
+            hourlyData[i] = 0
+        }
+        
+        sessions.forEach { session ->
+            calendar.timeInMillis = session.date
+            val hour = calendar.get(Calendar.HOUR_OF_DAY)
+            hourlyData[hour] = hourlyData.getValue(hour) + session.durationMinutes
+        }
+        
+        return hourlyData
+    }
+    
     fun getWeeklyData(): Map<Int, Int> {
         val calendar = Calendar.getInstance()
         val today = calendar.get(Calendar.DAY_OF_WEEK)
@@ -44,7 +78,7 @@ class StatisticsRepository(context: Context) {
             val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
             // Convert Sunday=1 to Monday=1 system
             val adjustedDay = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
-            weekData[adjustedDay] = weekData[adjustedDay]!! + session.durationMinutes
+            weekData[adjustedDay] = weekData.getValue(adjustedDay) + session.durationMinutes
         }
         
         return weekData
@@ -75,7 +109,7 @@ class StatisticsRepository(context: Context) {
         sessions.forEach { session ->
             calendar.timeInMillis = session.date
             val day = calendar.get(Calendar.DAY_OF_MONTH)
-            monthData[day] = monthData[day]!! + session.durationMinutes
+            monthData[day] = monthData.getValue(day) + session.durationMinutes
         }
         
         return monthData
@@ -100,7 +134,7 @@ class StatisticsRepository(context: Context) {
         sessions.forEach { session ->
             calendar.timeInMillis = session.date
             val month = calendar.get(Calendar.MONTH) + 1 // 0-based to 1-based
-            yearData[month] = yearData[month]!! + session.durationMinutes
+            yearData[month] = yearData.getValue(month) + session.durationMinutes
         }
         
         return yearData
