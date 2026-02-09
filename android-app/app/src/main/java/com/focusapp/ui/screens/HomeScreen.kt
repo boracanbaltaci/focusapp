@@ -1,5 +1,7 @@
 package com.focusapp.ui.screens
 
+import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,13 +23,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -155,37 +160,79 @@ fun HomeScreen(
             )
         }
         
-        // Screen content based on current screen
-        when (currentScreen) {
-            0 -> StatisticsScreen(onNavigateToSettings, textColor)
-            1 -> ClockScreen(currentTime, onNavigateToSettings, clockFontFamily, textColor)
-            2 -> TimerScreen(
-                isRunning = isTimerRunning,
-                seconds = timerSeconds,
-                onStartStop = { 
-                    if (isTimerRunning) {
+        // Screen content with animated transitions
+        val density = LocalDensity.current
+        
+        AnimatedContent(
+            targetState = currentScreen,
+            transitionSpec = {
+                // Determine slide direction based on navigation
+                val direction = if (targetState > initialState) {
+                    // Moving forward (right to left)
+                    AnimatedContentTransitionScope.SlideDirection.Left
+                } else {
+                    // Moving backward (left to right)
+                    AnimatedContentTransitionScope.SlideDirection.Right
+                }
+                
+                // Slide animation with fade
+                slideIntoContainer(
+                    towards = direction,
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
+                    )
+                ) + fadeIn(
+                    animationSpec = tween(durationMillis = 300)
+                ) togetherWith slideOutOfContainer(
+                    towards = direction,
+                    animationSpec = tween(
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
+                    )
+                ) + fadeOut(
+                    animationSpec = tween(durationMillis = 300)
+                )
+            },
+            label = "screen_transition",
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    // Apply swipe offset for interactive dragging effect
+                    translationX = offsetX
+                }
+        ) { screen ->
+            when (screen) {
+                0 -> StatisticsScreen(onNavigateToSettings, textColor)
+                1 -> ClockScreen(currentTime, onNavigateToSettings, clockFontFamily, textColor)
+                2 -> TimerScreen(
+                    isRunning = isTimerRunning,
+                    seconds = timerSeconds,
+                    onStartStop = { 
+                        if (isTimerRunning) {
+                            isTimerRunning = false
+                        } else {
+                            // Starting timer - capture initial duration
+                            initialTimerSeconds = timerSeconds
+                            isTimerRunning = true
+                        }
+                    },
+                    onTimerClick = { 
+                        if (!isTimerRunning) {
+                            showDurationPicker = true 
+                        }
+                    },
+                    onFinish = {
+                        // Finish/end the session
                         isTimerRunning = false
-                    } else {
-                        // Starting timer - capture initial duration
-                        initialTimerSeconds = timerSeconds
-                        isTimerRunning = true
-                    }
-                },
-                onTimerClick = { 
-                    if (!isTimerRunning) {
-                        showDurationPicker = true 
-                    }
-                },
-                onFinish = {
-                    // Finish/end the session
-                    isTimerRunning = false
-                    // Reset to initial duration instead of default
-                    timerSeconds = initialTimerSeconds
-                },
-                onNavigateToSettings = onNavigateToSettings,
-                clockFontFamily = clockFontFamily,
-                textColor = textColor
-            )
+                        // Reset to initial duration instead of default
+                        timerSeconds = initialTimerSeconds
+                    },
+                    onNavigateToSettings = onNavigateToSettings,
+                    clockFontFamily = clockFontFamily,
+                    textColor = textColor
+                )
+            }
         }
         
         // Duration picker dialog
