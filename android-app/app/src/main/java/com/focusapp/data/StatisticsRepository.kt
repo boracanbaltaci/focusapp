@@ -27,7 +27,6 @@ class StatisticsRepository(context: Context) {
     
     fun getDailyData(): Map<Int, Int> {
         val calendar = Calendar.getInstance()
-        val today = calendar.timeInMillis
         
         // Set calendar to start of today
         calendar.set(Calendar.HOUR_OF_DAY, 0)
