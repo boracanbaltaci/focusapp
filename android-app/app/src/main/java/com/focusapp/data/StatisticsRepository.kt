@@ -25,6 +25,41 @@ class StatisticsRepository(context: Context) {
         return gson.fromJson(json, type) ?: emptyList()
     }
     
+    fun getDailyData(): Map<Int, Int> {
+        val calendar = Calendar.getInstance()
+        val today = calendar.timeInMillis
+        
+        // Set calendar to start of today
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val dayStart = calendar.timeInMillis
+        
+        // Set calendar to end of today
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        calendar.set(Calendar.SECOND, 59)
+        calendar.set(Calendar.MILLISECOND, 999)
+        val dayEnd = calendar.timeInMillis
+        
+        val sessions = getAllSessions().filter { it.date >= dayStart && it.date <= dayEnd }
+        val hourlyData = mutableMapOf<Int, Int>()
+        
+        // Initialize all 24 hours with 0
+        for (i in 0..23) {
+            hourlyData[i] = 0
+        }
+        
+        sessions.forEach { session ->
+            calendar.timeInMillis = session.date
+            val hour = calendar.get(Calendar.HOUR_OF_DAY)
+            hourlyData[hour] = hourlyData[hour]!! + session.durationMinutes
+        }
+        
+        return hourlyData
+    }
+    
     fun getWeeklyData(): Map<Int, Int> {
         val calendar = Calendar.getInstance()
         val today = calendar.get(Calendar.DAY_OF_WEEK)

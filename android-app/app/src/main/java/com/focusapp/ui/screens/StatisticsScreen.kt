@@ -22,7 +22,7 @@ import com.focusapp.ui.theme.GeistFontFamily
 import java.util.*
 
 enum class ViewMode {
-    WEEK, MONTH, YEAR
+    DAY, WEEK, MONTH, YEAR
 }
 
 @Composable
@@ -36,6 +36,7 @@ fun StatisticsScreen(
     
     val data = remember(viewMode) {
         when (viewMode) {
+            ViewMode.DAY -> statisticsRepository.getDailyData()
             ViewMode.WEEK -> statisticsRepository.getWeeklyData()
             ViewMode.MONTH -> statisticsRepository.getMonthlyData()
             ViewMode.YEAR -> statisticsRepository.getYearlyData()
@@ -74,6 +75,12 @@ fun StatisticsScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                ViewModeButton(
+                    text = "Day",
+                    selected = viewMode == ViewMode.DAY,
+                    onClick = { viewMode = ViewMode.DAY },
+                    textColor = textColor
+                )
                 ViewModeButton(
                     text = "Week",
                     selected = viewMode == ViewMode.WEEK,
@@ -204,6 +211,10 @@ fun ChartLabels(
     ) {
         data.keys.sorted().forEach { key ->
             val label = when (viewMode) {
+                ViewMode.DAY -> {
+                    // Show hours: 0, 4, 8, 12, 16, 20
+                    if (key % 4 == 0) String.format("%02d", key) else ""
+                }
                 ViewMode.WEEK -> {
                     when (key) {
                         1 -> "Mon"
