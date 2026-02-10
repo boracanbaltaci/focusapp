@@ -11,9 +11,11 @@ class StatisticsRepository(context: Context) {
         context.getSharedPreferences("statistics_prefs", Context.MODE_PRIVATE)
     private val gson = Gson()
     
-    fun saveSession(durationMinutes: Int) {
+    fun saveSession(durationMinutes: Int, elapsedSeconds: Int = 0) {
         val sessions = getAllSessions().toMutableList()
-        sessions.add(SessionData(System.currentTimeMillis(), durationMinutes))
+        // Save at least 1 minute if any time was spent
+        val effectiveMinutes = if (durationMinutes == 0 && elapsedSeconds > 0) 1 else durationMinutes.coerceAtLeast(if (elapsedSeconds > 0) 1 else 0)
+        sessions.add(SessionData(System.currentTimeMillis(), effectiveMinutes))
         
         val json = gson.toJson(sessions)
         prefs.edit().putString("sessions", json).apply()

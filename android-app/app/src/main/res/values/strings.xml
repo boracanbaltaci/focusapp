@@ -44,4 +44,36 @@
     <!-- Font names -->
     <string name="font_menil">Menil-Étroit (Default)</string>
     <string name="font_avocado">LT Avocado</string>
+
+    <!-- Statistics Screen -->
+    <string name="statistics_title">Statistics</string>
+    <string name="stat_week">Week</string>
+    <string name="stat_month">Month</string>
+    <string name="stat_year">Year</string>
+    <string name="stat_hours">h</string>
+    <string name="stat_minutes">m</string>
+    <string name="stat_total_focus">total focus time</string>
+
+    <!-- Day abbreviations -->
+    <string name="day_mon">Mon</string>
+    <string name="day_tue">Tue</string>
+    <string name="day_wed">Wed</string>
+    <string name="day_thu">Thu</string>
+    <string name="day_fri">Fri</string>
+    <string name="day_sat">Sat</string>
+    <string name="day_sun">Sun</string>
+
+    <!-- Month abbreviations -->
+    <string name="month_jan">Jan</string>
+    <string name="month_feb">Feb</string>
+    <string name="month_mar">Mar</string>
+    <string name="month_apr">Apr</string>
+    <string name="month_may">May</string>
+    <string name="month_jun">Jun</string>
+    <string name="month_jul">Jul</string>
+    <string name="month_aug">Aug</string>
+    <string name="month_sep">Sep</string>
+    <string name="month_oct">Oct</string>
+    <string name="month_nov">Nov</string>
+    <string name="month_dec">Dec</string>
 </resources>

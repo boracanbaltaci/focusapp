@@ -3,8 +3,7 @@ package com.focusapp.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.gestures.scrollBy
+
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -99,9 +98,8 @@ fun HomeScreen(
         }
         if (timerSeconds == 0) {
             isTimerRunning = false
-            // Save completed session
-            val durationMinutes = initialTimerSeconds / 60
-            statisticsRepository.saveSession(durationMinutes)
+            // Save completed session (full duration)
+            statisticsRepository.saveSession(initialTimerSeconds / 60, initialTimerSeconds)
         }
     }
     
@@ -158,7 +156,12 @@ fun HomeScreen(
                     seconds = timerSeconds,
                     onStartStop = { 
                         if (isTimerRunning) {
+                            // Pausing timer - save the elapsed time
                             isTimerRunning = false
+                            val elapsedSeconds = initialTimerSeconds - timerSeconds
+                            if (elapsedSeconds > 0) {
+                                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds)
+                            }
                         } else {
                             // Starting timer - capture initial duration
                             initialTimerSeconds = timerSeconds
@@ -171,9 +174,13 @@ fun HomeScreen(
                         }
                     },
                     onFinish = {
-                        // Finish/end the session
+                        // Finish/end the session - save elapsed time
+                        val elapsedSeconds = initialTimerSeconds - timerSeconds
                         isTimerRunning = false
-                        // Reset to initial duration instead of default
+                        if (elapsedSeconds > 0) {
+                            statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds)
+                        }
+                        // Reset to initial duration
                         timerSeconds = initialTimerSeconds
                     },
                     onNavigateToSettings = onNavigateToSettings,

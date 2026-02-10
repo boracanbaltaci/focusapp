@@ -44,4 +44,36 @@
     <!-- Font names -->
     <string name="font_menil">Menil-Étroit (Varsayılan)</string>
     <string name="font_avocado">LT Avocado</string>
+
+    <!-- Statistics Screen -->
+    <string name="statistics_title">İstatistikler</string>
+    <string name="stat_week">Hafta</string>
+    <string name="stat_month">Ay</string>
+    <string name="stat_year">Yıl</string>
+    <string name="stat_hours">sa</string>
+    <string name="stat_minutes">dk</string>
+    <string name="stat_total_focus">toplam odaklanma süresi</string>
+
+    <!-- Day abbreviations -->
+    <string name="day_mon">Pzt</string>
+    <string name="day_tue">Sal</string>
+    <string name="day_wed">Çar</string>
+    <string name="day_thu">Per</string>
+    <string name="day_fri">Cum</string>
+    <string name="day_sat">Cmt</string>
+    <string name="day_sun">Paz</string>
+
+    <!-- Month abbreviations -->
+    <string name="month_jan">Oca</string>
+    <string name="month_feb">Şub</string>
+    <string name="month_mar">Mar</string>
+    <string name="month_apr">Nis</string>
+    <string name="month_may">May</string>
+    <string name="month_jun">Haz</string>
+    <string name="month_jul">Tem</string>
+    <string name="month_aug">Ağu</string>
+    <string name="month_sep">Eyl</string>
+    <string name="month_oct">Eki</string>
+    <string name="month_nov">Kas</string>
+    <string name="month_dec">Ara</string>
 </resources>
