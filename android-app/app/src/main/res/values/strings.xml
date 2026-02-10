@@ -52,6 +52,7 @@
     <string name="stat_year">Year</string>
     <string name="stat_hours">h</string>
     <string name="stat_minutes">m</string>
+    <string name="stat_hour_grid">h</string>
     <string name="stat_total_focus">total focus time</string>
 
     <!-- Day abbreviations -->
