@@ -5,10 +5,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -37,12 +40,14 @@ import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.AvocadoFontFamily
 import com.focusapp.ui.theme.GeistFontFamily
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     sessionViewModel: SessionViewModel,
@@ -64,11 +69,10 @@ fun HomeScreen(
     // Font selection
     val clockFontFamily = if (clockFont == "avocado") AvocadoFontFamily else MenilFontFamily
     
-    // Navigation state (1 = middle screen with clock, 2 = timer screen)
-    var currentScreen by remember { mutableStateOf(1) }
-    
-    // Swipe gesture state
-    var offsetX by remember { mutableStateOf(0f) }
+    // Pager state (1 = middle screen with clock)
+    // 0 = Statistics, 1 = Clock, 2 = Timer
+    val pagerState = rememberPagerState(initialPage = 1, pageCount = { 3 })
+    val coroutineScope = rememberCoroutineScope()
     
     // Real-time clock
     var currentTime by remember { mutableStateOf(getCurrentTimeString()) }
@@ -105,20 +109,6 @@ fun HomeScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(backgroundColor)
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onDragEnd = {
-                        when {
-                            offsetX > 100 && currentScreen > 0 -> currentScreen--
-                            offsetX < -100 && currentScreen < 2 -> currentScreen++
-                        }
-                        offsetX = 0f
-                    },
-                    onHorizontalDrag = { _, dragAmount ->
-                        offsetX += dragAmount
-                    }
-                )
-            }
     ) {
         // Decorative arcs in background
         Canvas(
@@ -155,37 +145,42 @@ fun HomeScreen(
             )
         }
         
-        // Screen content based on current screen
-        when (currentScreen) {
-            0 -> StatisticsScreen(onNavigateToSettings, textColor)
-            1 -> ClockScreen(currentTime, onNavigateToSettings, clockFontFamily, textColor)
-            2 -> TimerScreen(
-                isRunning = isTimerRunning,
-                seconds = timerSeconds,
-                onStartStop = { 
-                    if (isTimerRunning) {
+        // Screen content based on pager state
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            when (page) {
+                0 -> StatisticsScreen(onNavigateToSettings, textColor)
+                1 -> ClockScreen(currentTime, onNavigateToSettings, clockFontFamily, textColor)
+                2 -> TimerScreen(
+                    isRunning = isTimerRunning,
+                    seconds = timerSeconds,
+                    onStartStop = { 
+                        if (isTimerRunning) {
+                            isTimerRunning = false
+                        } else {
+                            // Starting timer - capture initial duration
+                            initialTimerSeconds = timerSeconds
+                            isTimerRunning = true
+                        }
+                    },
+                    onTimerClick = { 
+                        if (!isTimerRunning) {
+                            showDurationPicker = true 
+                        }
+                    },
+                    onFinish = {
+                        // Finish/end the session
                         isTimerRunning = false
-                    } else {
-                        // Starting timer - capture initial duration
-                        initialTimerSeconds = timerSeconds
-                        isTimerRunning = true
-                    }
-                },
-                onTimerClick = { 
-                    if (!isTimerRunning) {
-                        showDurationPicker = true 
-                    }
-                },
-                onFinish = {
-                    // Finish/end the session
-                    isTimerRunning = false
-                    // Reset to initial duration instead of default
-                    timerSeconds = initialTimerSeconds
-                },
-                onNavigateToSettings = onNavigateToSettings,
-                clockFontFamily = clockFontFamily,
-                textColor = textColor
-            )
+                        // Reset to initial duration instead of default
+                        timerSeconds = initialTimerSeconds
+                    },
+                    onNavigateToSettings = onNavigateToSettings,
+                    clockFontFamily = clockFontFamily,
+                    textColor = textColor
+                )
+            }
         }
         
         // Duration picker dialog
@@ -212,8 +207,12 @@ fun HomeScreen(
         ) {
             repeat(3) { index ->
                 NavigationDot(
-                    isActive = index == currentScreen,
-                    onClick = { currentScreen = index }
+                    isActive = index == pagerState.currentPage,
+                    onClick = { 
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(index)
+                        }
+                    }
                 )
                 if (index < 2) {
                     Spacer(modifier = Modifier.width(16.dp))

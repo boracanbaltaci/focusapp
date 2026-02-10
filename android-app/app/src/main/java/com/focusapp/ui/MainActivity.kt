@@ -12,6 +12,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.focusapp.data.repository.SettingsRepository
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import com.focusapp.ui.screens.*
 import com.focusapp.ui.theme.FocusAppTheme
 import java.util.*
@@ -58,19 +63,30 @@ fun FocusApp() {
     val sessionViewModel = remember { SessionViewModel(context) }
     val settingsViewModel = remember { SettingsViewModel(context) }
     
-    var currentScreen by remember { mutableStateOf("home") }
+    val navController = rememberNavController()
     
     // Show main app screens directly (no authentication required)
-    when (currentScreen) {
-        "home" -> HomeScreen(
-            sessionViewModel = sessionViewModel,
-            settingsViewModel = settingsViewModel,
-            onNavigateToSettings = { currentScreen = "settings" }
-        )
+    NavHost(
+        navController = navController,
+        startDestination = "home",
+        enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
+        exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
+        popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },
+        popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) }
+    ) {
+        composable("home") {
+            HomeScreen(
+                sessionViewModel = sessionViewModel,
+                settingsViewModel = settingsViewModel,
+                onNavigateToSettings = { navController.navigate("settings") }
+            )
+        }
         
-        "settings" -> SettingsScreen(
-            settingsViewModel = settingsViewModel,
-            onBack = { currentScreen = "home" }
-        )
+        composable("settings") {
+            SettingsScreen(
+                settingsViewModel = settingsViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
     }
 }
