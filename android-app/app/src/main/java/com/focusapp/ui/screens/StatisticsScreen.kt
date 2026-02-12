@@ -1,9 +1,15 @@
 package com.focusapp.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -15,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -265,6 +272,7 @@ fun StatisticsScreen(
                         BarItem(
                             fraction = fraction,
                             label = label,
+                            totalMinutes = entry.value,
                             gradientStart = gradientStart,
                             gradientEnd = gradientEnd,
                             subtleTextColor = subtleTextColor,
@@ -284,6 +292,7 @@ fun StatisticsScreen(
 private fun RowScope.BarItem(
     fraction: Float,
     label: String,
+    totalMinutes: Int,
     gradientStart: Color,
     gradientEnd: Color,
     subtleTextColor: Color,
@@ -303,6 +312,18 @@ private fun RowScope.BarItem(
             barCount <= 12 -> 12.dp
             else -> 8.dp
         }
+    }
+
+    // Tooltip state
+    var showTooltip by remember { mutableStateOf(false) }
+    val h = totalMinutes / 60
+    val m = totalMinutes % 60
+    val hourLabel = stringResource(R.string.stat_hours)
+    val minuteLabel = stringResource(R.string.stat_minutes)
+    val tooltipText = when {
+        h > 0 && m > 0 -> "$h$hourLabel $m$minuteLabel"
+        h > 0 -> "$h$hourLabel"
+        else -> "$m$minuteLabel"
     }
 
     Column(
@@ -332,7 +353,44 @@ private fun RowScope.BarItem(
                                 colors = listOf(gradientStart, gradientEnd)
                             )
                         )
+                        .pointerInput(Unit) {
+                            awaitEachGesture {
+                                awaitFirstDown(requireUnconsumed = false)
+                                showTooltip = true
+                                waitForUpOrCancellation()
+                                showTooltip = false
+                            }
+                        }
                 )
+            }
+
+            // Tooltip popup above the bar
+            androidx.compose.animation.AnimatedVisibility(
+                visible = showTooltip && totalMinutes > 0,
+                enter = fadeIn(animationSpec = tween(150)),
+                exit = fadeOut(animationSpec = tween(150)),
+                modifier = Modifier.align(Alignment.TopCenter)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .offset(y = (-6).dp)
+                        .background(
+                            color = Color.Black.copy(alpha = 0.82f),
+                            shape = RoundedCornerShape(6.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = tooltipText,
+                        style = TextStyle(
+                            fontFamily = GeistFontFamily,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.White
+                        ),
+                        maxLines = 1
+                    )
+                }
             }
         }
 
