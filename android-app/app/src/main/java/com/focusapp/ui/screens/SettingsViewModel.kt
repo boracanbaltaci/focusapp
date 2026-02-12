@@ -57,4 +57,20 @@ class SettingsViewModel(context: Context) : ViewModel() {
         _theme.value = theme
         settingsRepository.setTheme(theme)
     }
+    
+    private val _autoBreakEnabled = MutableStateFlow(settingsRepository.getAutoBreakEnabled())
+    val autoBreakEnabled: StateFlow<Boolean> = _autoBreakEnabled
+    
+    private val _breakDurationMinutes = MutableStateFlow(settingsRepository.getBreakDurationMinutes())
+    val breakDurationMinutes: StateFlow<Int> = _breakDurationMinutes
+    
+    fun setAutoBreakEnabled(enabled: Boolean) {
+        _autoBreakEnabled.value = enabled
+        settingsRepository.setAutoBreakEnabled(enabled)
+    }
+    
+    fun setBreakDurationMinutes(minutes: Int) {
+        _breakDurationMinutes.value = minutes
+        settingsRepository.setBreakDurationMinutes(minutes)
+    }
 }

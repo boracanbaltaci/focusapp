@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -21,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.focusapp.R
@@ -39,9 +41,12 @@ fun SettingsScreen(
     val clockFont by settingsViewModel.clockFont.collectAsState()
     val theme by settingsViewModel.theme.collectAsState()
     val language by settingsViewModel.language.collectAsState()
+    val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
+    val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
     
     var showFontSubmenu by remember { mutableStateOf(false) }
     var showLanguageSubmenu by remember { mutableStateOf(false) }
+    var showBreakSubmenu by remember { mutableStateOf(false) }
     var pendingLanguageChange by remember { mutableStateOf<String?>(null) }
     
     // Handle language change with LaunchedEffect for safe recreation
@@ -71,7 +76,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(48.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Header with back button
             Row(
@@ -146,7 +151,7 @@ fun SettingsScreen(
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())  // Make scrollable
                         .padding(32.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     if (showFontSubmenu) {
                         // Font Selection Submenu
@@ -171,6 +176,16 @@ fun SettingsScreen(
                             onBack = { showLanguageSubmenu = false },
                             textColor = textColor
                         )
+                    } else if (showBreakSubmenu) {
+                        // Break Settings Submenu
+                        BreakSubmenu(
+                            autoBreakEnabled = autoBreakEnabled,
+                            breakDurationMinutes = breakDurationMinutes,
+                            onAutoBreakChange = { settingsViewModel.setAutoBreakEnabled(it) },
+                            onDurationChange = { settingsViewModel.setBreakDurationMinutes(it) },
+                            onBack = { showBreakSubmenu = false },
+                            textColor = textColor
+                        )
                     } else {
                         // Main Settings Menu
                         
@@ -183,7 +198,7 @@ fun SettingsScreen(
                         )
                         
                         Divider(
-                            modifier = Modifier.padding(vertical = 8.dp),
+                            modifier = Modifier.padding(vertical = 4.dp),
                             color = textColor.copy(alpha = 0.1f)
                         )
                         
@@ -197,7 +212,7 @@ fun SettingsScreen(
                         )
                         
                         Divider(
-                            modifier = Modifier.padding(vertical = 8.dp),
+                            modifier = Modifier.padding(vertical = 4.dp),
                             color = textColor.copy(alpha = 0.1f)
                         )
                         
@@ -206,6 +221,19 @@ fun SettingsScreen(
                             title = stringResource(R.string.language),
                             subtitle = getLanguageDisplayName(language),
                             onClick = { showLanguageSubmenu = true },
+                            textColor = textColor
+                        )
+                        
+                        Divider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = textColor.copy(alpha = 0.1f)
+                        )
+                        
+                        // Auto Break Setting (clickable to open submenu)
+                        ClickableSettingItem(
+                            title = stringResource(R.string.auto_break),
+                            subtitle = if (autoBreakEnabled) "$breakDurationMinutes ${stringResource(R.string.break_min_suffix)}" else "Off",
+                            onClick = { showBreakSubmenu = true },
                             textColor = textColor
                         )
                     }
@@ -562,6 +590,264 @@ private fun LanguageSubmenu(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun BreakSubmenu(
+    autoBreakEnabled: Boolean,
+    breakDurationMinutes: Int,
+    onAutoBreakChange: (Boolean) -> Unit,
+    onDurationChange: (Int) -> Unit,
+    onBack: () -> Unit,
+    textColor: Color
+) {
+    var showCustomInput by remember { mutableStateOf(false) }
+    var customMinutes by remember { mutableStateOf("") }
+    
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Back button
+        Row(
+            modifier = Modifier
+                .clickable(onClick = onBack)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Canvas(modifier = Modifier.size(20.dp)) {
+                val arrowColor = textColor
+                val centerY = size.height / 2f
+                val arrowSize = size.width * 0.6f
+                
+                drawLine(
+                    color = arrowColor,
+                    start = Offset(size.width * 0.5f, centerY),
+                    end = Offset(size.width * 0.5f - arrowSize, centerY),
+                    strokeWidth = 2.dp.toPx()
+                )
+                drawLine(
+                    color = arrowColor,
+                    start = Offset(size.width * 0.5f - arrowSize, centerY),
+                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY - arrowSize * 0.4f),
+                    strokeWidth = 2.dp.toPx()
+                )
+                drawLine(
+                    color = arrowColor,
+                    start = Offset(size.width * 0.5f - arrowSize, centerY),
+                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY + arrowSize * 0.4f),
+                    strokeWidth = 2.dp.toPx()
+                )
+            }
+            
+            Text(
+                text = stringResource(R.string.auto_break),
+                style = TextStyle(
+                    fontFamily = GeistFontFamily,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor
+                )
+            )
+        }
+        
+        Divider(color = textColor.copy(alpha = 0.1f))
+        
+        // Break Duration section (always visible)
+        Text(
+            text = stringResource(R.string.break_duration),
+            style = TextStyle(
+                fontFamily = GeistFontFamily,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Normal,
+                color = textColor
+            ),
+            modifier = Modifier.padding(top = 4.dp)
+        )
+        
+        // Duration options
+        val durationOptions = listOf(5, 10, 15, 20, 30)
+        
+        Column(
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            durationOptions.forEach { minutes ->
+                val isSelected = breakDurationMinutes == minutes && !showCustomInput
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            role = Role.RadioButton,
+                            onClick = {
+                                showCustomInput = false
+                                onDurationChange(minutes)
+                            }
+                        )
+                        .padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = "$minutes ${stringResource(R.string.break_min_suffix)}",
+                        style = TextStyle(
+                            fontFamily = GeistFontFamily,
+                            fontSize = 16.sp,
+                            color = textColor.copy(alpha = if (isSelected) 1f else 0.6f),
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                    )
+                    
+                    if (isSelected) {
+                        val checkColor = Color(0xFF4CAF50)
+                        Canvas(modifier = Modifier.size(20.dp)) {
+                            val path = androidx.compose.ui.graphics.Path().apply {
+                                moveTo(size.width * 0.2f, size.height * 0.5f)
+                                lineTo(size.width * 0.4f, size.height * 0.7f)
+                                lineTo(size.width * 0.8f, size.height * 0.2f)
+                            }
+                            drawPath(
+                                path = path,
+                                color = checkColor,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = 3.dp.toPx(),
+                                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+            
+            // Custom option
+            val isCustomSelected = showCustomInput || !durationOptions.contains(breakDurationMinutes)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        role = Role.RadioButton,
+                        onClick = {
+                            showCustomInput = true
+                            customMinutes = if (!durationOptions.contains(breakDurationMinutes)) {
+                                breakDurationMinutes.toString()
+                            } else ""
+                        }
+                    )
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = stringResource(R.string.break_custom),
+                    style = TextStyle(
+                        fontFamily = GeistFontFamily,
+                        fontSize = 16.sp,
+                        color = textColor.copy(alpha = if (isCustomSelected) 1f else 0.6f),
+                        fontWeight = if (isCustomSelected) FontWeight.Bold else FontWeight.Normal
+                    )
+                )
+                
+                if (isCustomSelected) {
+                    val checkColor = Color(0xFF4CAF50)
+                    Canvas(modifier = Modifier.size(20.dp)) {
+                        val path = androidx.compose.ui.graphics.Path().apply {
+                            moveTo(size.width * 0.2f, size.height * 0.5f)
+                            lineTo(size.width * 0.4f, size.height * 0.7f)
+                            lineTo(size.width * 0.8f, size.height * 0.2f)
+                        }
+                        drawPath(
+                            path = path,
+                            color = checkColor,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                width = 3.dp.toPx(),
+                                cap = androidx.compose.ui.graphics.StrokeCap.Round
+                            )
+                        )
+                    }
+                }
+            }
+            
+            // Custom input field
+            if (showCustomInput || !durationOptions.contains(breakDurationMinutes)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = customMinutes,
+                        onValueChange = { newValue ->
+                            if (newValue.all { it.isDigit() } && newValue.length <= 3) {
+                                customMinutes = newValue
+                                newValue.toIntOrNull()?.let { mins ->
+                                    if (mins in 1..999) {
+                                        onDurationChange(mins)
+                                    }
+                                }
+                            }
+                        },
+                        modifier = Modifier.width(100.dp),
+                        textStyle = TextStyle(
+                            fontFamily = GeistFontFamily,
+                            fontSize = 16.sp,
+                            color = textColor
+                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        shape = RoundedCornerShape(8.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF4CAF50),
+                            unfocusedBorderColor = textColor.copy(alpha = 0.3f),
+                            cursorColor = Color(0xFF4CAF50)
+                        )
+                    )
+                    
+                    Text(
+                        text = stringResource(R.string.break_min_suffix),
+                        style = TextStyle(
+                            fontFamily = GeistFontFamily,
+                            fontSize = 16.sp,
+                            color = textColor.copy(alpha = 0.6f)
+                        )
+                    )
+                }
+            }
+        }
+        
+        Divider(color = textColor.copy(alpha = 0.1f))
+        
+        // Auto break toggle (at the bottom)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(R.string.auto_break_start),
+                style = TextStyle(
+                    fontFamily = GeistFontFamily,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor
+                )
+            )
+            
+            Switch(
+                checked = autoBreakEnabled,
+                onCheckedChange = onAutoBreakChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color(0xFF4CAF50),
+                    checkedTrackColor = Color(0xFF4CAF50).copy(alpha = 0.5f),
+                    uncheckedThumbColor = Color.Gray,
+                    uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
+                )
+            )
         }
     }
 }

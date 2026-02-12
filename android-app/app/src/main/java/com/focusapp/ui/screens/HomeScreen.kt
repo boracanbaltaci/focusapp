@@ -81,6 +81,12 @@ fun HomeScreen(
     var timerSeconds by remember { mutableStateOf(25 * 60) } // Default 25 minutes
     var initialTimerSeconds by remember { mutableStateOf(25 * 60) } // Track initial duration
     var showDurationPicker by remember { mutableStateOf(false) }
+    var isOnBreak by remember { mutableStateOf(false) } // Track break state
+    var timerGeneration by remember { mutableStateOf(0) } // Force LaunchedEffect restart
+    
+    // Auto break settings
+    val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
+    val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
     
     // Update clock every second
     LaunchedEffect(Unit) {
@@ -91,15 +97,30 @@ fun HomeScreen(
     }
     
     // Timer countdown
-    LaunchedEffect(isTimerRunning) {
-        while (isTimerRunning && timerSeconds > 0) {
+    LaunchedEffect(isTimerRunning, timerGeneration) {
+        if (!isTimerRunning) return@LaunchedEffect
+        while (timerSeconds > 0) {
             delay(1000)
             timerSeconds--
         }
-        if (timerSeconds == 0) {
-            isTimerRunning = false
-            // Save completed session (full duration)
+        // Timer reached 0
+        isTimerRunning = false
+        if (isOnBreak) {
+            // Break finished - reset to initial focus duration
+            isOnBreak = false
+            timerSeconds = initialTimerSeconds
+        } else {
+            // Focus session finished - save to statistics
             statisticsRepository.saveSession(initialTimerSeconds / 60, initialTimerSeconds)
+            // Always switch to break mode
+            isOnBreak = true
+            timerSeconds = breakDurationMinutes * 60
+            if (autoBreakEnabled) {
+                // Auto-start break countdown
+                isTimerRunning = true
+                timerGeneration++ // Force LaunchedEffect to restart
+            }
+            // If not autoBreakEnabled, timer stays stopped - user must press play
         }
     }
     
@@ -154,34 +175,47 @@ fun HomeScreen(
                 2 -> TimerScreen(
                     isRunning = isTimerRunning,
                     seconds = timerSeconds,
+                    isOnBreak = isOnBreak,
                     onStartStop = { 
                         if (isTimerRunning) {
-                            // Pausing timer - save the elapsed time
+                            // Pausing timer
                             isTimerRunning = false
-                            val elapsedSeconds = initialTimerSeconds - timerSeconds
-                            if (elapsedSeconds > 0) {
-                                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds)
+                            if (!isOnBreak) {
+                                // Only save to stats if it was a focus session
+                                val elapsedSeconds = initialTimerSeconds - timerSeconds
+                                if (elapsedSeconds > 0) {
+                                    statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds)
+                                }
                             }
                         } else {
-                            // Starting timer - capture initial duration
-                            initialTimerSeconds = timerSeconds
+                            // Starting timer - capture initial duration only for focus sessions
+                            if (!isOnBreak) {
+                                initialTimerSeconds = timerSeconds
+                            }
                             isTimerRunning = true
                         }
                     },
                     onTimerClick = { 
-                        if (!isTimerRunning) {
+                        if (!isTimerRunning && !isOnBreak) {
                             showDurationPicker = true 
                         }
                     },
                     onFinish = {
-                        // Finish/end the session - save elapsed time
-                        val elapsedSeconds = initialTimerSeconds - timerSeconds
-                        isTimerRunning = false
-                        if (elapsedSeconds > 0) {
-                            statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds)
+                        if (isOnBreak) {
+                            // Skip/end break - reset to focus duration
+                            isOnBreak = false
+                            isTimerRunning = false
+                            timerSeconds = initialTimerSeconds
+                        } else {
+                            // Finish/end the focus session - save elapsed time
+                            val elapsedSeconds = initialTimerSeconds - timerSeconds
+                            isTimerRunning = false
+                            if (elapsedSeconds > 0) {
+                                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds)
+                            }
+                            // Reset to initial duration
+                            timerSeconds = initialTimerSeconds
                         }
-                        // Reset to initial duration
-                        timerSeconds = initialTimerSeconds
                     },
                     onNavigateToSettings = onNavigateToSettings,
                     clockFontFamily = clockFontFamily,
@@ -294,6 +328,7 @@ private fun ClockScreen(
 private fun TimerScreen(
     isRunning: Boolean,
     seconds: Int,
+    isOnBreak: Boolean,
     onStartStop: () -> Unit,
     onTimerClick: () -> Unit,
     onFinish: () -> Unit,
@@ -320,12 +355,34 @@ private fun TimerScreen(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                // Timer display with hour label - centered
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.clickable(enabled = !isRunning) { onTimerClick() }
+                // Break label + Timer display
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // Show break label when on break
+                    if (isOnBreak) {
+                        Text(
+                            text = stringResource(R.string.on_break_label),
+                            style = TextStyle(
+                                fontFamily = GeistFontFamily,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Normal,
+                                color = textColor.copy(alpha = 0.4f),
+                                letterSpacing = 2.sp
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                    
+                    // Timer color: lighter during break, normal otherwise
+                    val timerColor = if (isOnBreak) textColor.copy(alpha = 0.4f) else textColor
+                    
+                    // Timer display with hour label - centered
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.clickable(enabled = !isRunning && !isOnBreak) { onTimerClick() }
+                    ) {
                 // Calculate remaining time after removing full hours
                 val totalMinutes = seconds / 60
                 val hours = totalMinutes / 60
@@ -345,7 +402,7 @@ private fun TimerScreen(
                             fontFamily = clockFontFamily,
                             fontWeight = FontWeight.Normal,
                             fontSize = 70.sp,
-                            color = textColor,
+                            color = timerColor,
                             textAlign = TextAlign.End
                         ),
                         modifier = Modifier.padding(end = 8.dp)
@@ -366,12 +423,13 @@ private fun TimerScreen(
                         fontFamily = clockFontFamily,
                         fontWeight = FontWeight.Normal,
                         fontSize = 240.sp,
-                        color = textColor,
+                        color = timerColor,
                         textAlign = TextAlign.Center
                     ),
                     modifier = Modifier.widthIn(min = 350.dp) // Fixed minimum width to prevent jitter
                 )
             }
+            } // Close Column wrapping break label + timer
             
             // Start/Stop button on the far left
             Box(

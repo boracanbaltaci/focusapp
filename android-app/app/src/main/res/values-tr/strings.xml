@@ -77,4 +77,12 @@
     <string name="month_oct">Eki</string>
     <string name="month_nov">Kas</string>
     <string name="month_dec">Ara</string>
+
+    <!-- Auto Break -->
+    <string name="auto_break">Mola</string>
+    <string name="auto_break_start">Otomatik Mola</string>
+    <string name="break_duration">Mola Süresi</string>
+    <string name="break_custom">Özel</string>
+    <string name="break_min_suffix">dk</string>
+    <string name="on_break_label">Mola</string>
 </resources>

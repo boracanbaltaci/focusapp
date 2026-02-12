@@ -77,4 +77,12 @@
     <string name="month_oct">Okt</string>
     <string name="month_nov">Nov</string>
     <string name="month_dec">Dez</string>
+
+    <!-- Auto Break -->
+    <string name="auto_break">Pause</string>
+    <string name="auto_break_start">Auto-Pause</string>
+    <string name="break_duration">Pausendauer</string>
+    <string name="break_custom">Benutzerdefiniert</string>
+    <string name="break_min_suffix">Min</string>
+    <string name="on_break_label">Pause</string>
 </resources>

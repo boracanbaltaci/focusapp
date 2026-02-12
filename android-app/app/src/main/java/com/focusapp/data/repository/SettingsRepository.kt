@@ -54,4 +54,20 @@ class SettingsRepository(context: Context) {
     fun setTheme(theme: String) {
         prefs.edit().putString("theme", theme).apply()
     }
+    
+    fun getAutoBreakEnabled(): Boolean {
+        return prefs.getBoolean("auto_break_enabled", false)
+    }
+    
+    fun setAutoBreakEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("auto_break_enabled", enabled).apply()
+    }
+    
+    fun getBreakDurationMinutes(): Int {
+        return prefs.getInt("break_duration_minutes", 5)
+    }
+    
+    fun setBreakDurationMinutes(minutes: Int) {
+        prefs.edit().putInt("break_duration_minutes", minutes).apply()
+    }
 }
