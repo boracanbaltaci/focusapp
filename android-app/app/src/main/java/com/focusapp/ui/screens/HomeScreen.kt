@@ -3,6 +3,10 @@ package com.focusapp.ui.screens
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.gestures.detectTapGestures
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
@@ -74,7 +78,9 @@ fun HomeScreen(
     val coroutineScope = rememberCoroutineScope()
     
     // Real-time clock
-    var currentTime by remember { mutableStateOf(getCurrentTimeString()) }
+    val amString = stringResource(R.string.am)
+    val pmString = stringResource(R.string.pm)
+    var currentTime by remember { mutableStateOf(getCurrentTimeString(amString, pmString)) }
     
     // Timer state
     var isTimerRunning by remember { mutableStateOf(false) }
@@ -89,9 +95,9 @@ fun HomeScreen(
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
     
     // Update clock every second
-    LaunchedEffect(Unit) {
+    LaunchedEffect(amString, pmString) {
         while (true) {
-            currentTime = getCurrentTimeString()
+            currentTime = getCurrentTimeString(amString, pmString)
             delay(1000)
         }
     }
@@ -124,6 +130,23 @@ fun HomeScreen(
         }
     }
     
+    // Immersive Mode Logic
+    var isImmersiveMode by remember { mutableStateOf(false) }
+    
+    // Reset immersive mode when timer stops
+    LaunchedEffect(isTimerRunning) {
+        if (!isTimerRunning) {
+            isImmersiveMode = false
+        }
+    }
+    
+    // Reset immersive mode when scrolling
+    LaunchedEffect(pagerState.isScrollInProgress) {
+        if (pagerState.isScrollInProgress) {
+            isImmersiveMode = false
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -219,7 +242,13 @@ fun HomeScreen(
                     },
                     onNavigateToSettings = onNavigateToSettings,
                     clockFontFamily = clockFontFamily,
-                    textColor = textColor
+                    textColor = textColor,
+                    isImmersiveMode = isImmersiveMode,
+                    onToggleImmersiveMode = { 
+                        if (isTimerRunning) {
+                            isImmersiveMode = !isImmersiveMode
+                        }
+                    }
                 )
             }
         }
@@ -247,14 +276,20 @@ fun HomeScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             repeat(3) { index ->
-                NavigationDot(
-                    isActive = index == pagerState.currentPage,
-                    onClick = { 
-                        coroutineScope.launch {
-                            pagerState.animateScrollToPage(index)
+                AnimatedVisibility(
+                    visible = !isImmersiveMode,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    NavigationDot(
+                        isActive = index == pagerState.currentPage,
+                        onClick = { 
+                            coroutineScope.launch {
+                                pagerState.animateScrollToPage(index)
+                            }
                         }
-                    }
-                )
+                    )
+                }
                 if (index < 2) {
                     Spacer(modifier = Modifier.width(16.dp))
                 }
@@ -334,13 +369,27 @@ private fun TimerScreen(
     onFinish: () -> Unit,
     onNavigateToSettings: () -> Unit,
     clockFontFamily: FontFamily,
-    textColor: Color
+    textColor: Color,
+    isImmersiveMode: Boolean,
+    onToggleImmersiveMode: () -> Unit
 ) {
     val context = LocalContext.current
     
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .pointerInput(Unit) {
+            detectTapGestures(onTap = { onToggleImmersiveMode() })
+        }
+    ) {
         // Settings icon with absolute positioning (7% from top, 7% from right)
-        SettingsIconButton(onNavigateToSettings, textColor)
+        androidx.compose.animation.AnimatedVisibility(
+            visible = !isImmersiveMode,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            SettingsIconButton(onNavigateToSettings, textColor)
+        }
         
         // Main content
         Column(
@@ -361,17 +410,25 @@ private fun TimerScreen(
                 ) {
                     // Show break label when on break
                     if (isOnBreak) {
-                        Text(
-                            text = stringResource(R.string.on_break_label),
-                            style = TextStyle(
-                                fontFamily = GeistFontFamily,
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Normal,
-                                color = textColor.copy(alpha = 0.4f),
-                                letterSpacing = 2.sp
-                            )
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        AnimatedVisibility(
+                            visible = !isImmersiveMode,
+                            enter = fadeIn(),
+                            exit = fadeOut()
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = stringResource(R.string.on_break_label),
+                                    style = TextStyle(
+                                        fontFamily = GeistFontFamily,
+                                        fontSize = 24.sp,
+                                        fontWeight = FontWeight.Normal,
+                                        color = textColor.copy(alpha = 0.4f),
+                                        letterSpacing = 2.sp
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        }
                     }
                     
                     // Timer color: lighter during break, normal otherwise
@@ -436,50 +493,56 @@ private fun TimerScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.CenterStart
             ) {
-                Button(
-                    onClick = onStartStop,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isRunning) Color(0xFFFF4444) else Color(0xFF4CAF50)
-                    ),
-                    modifier = Modifier
-                        .padding(start = 24.dp)
-                        .size(56.dp),
-                    shape = CircleShape,
-                    contentPadding = PaddingValues(0.dp)
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = !isImmersiveMode,
+                    enter = fadeIn(),
+                    exit = fadeOut()
                 ) {
-                    // Play or Pause icon using Canvas
-                    Canvas(modifier = Modifier.size(24.dp)) {
-                        if (isRunning) {
-                            // Pause icon (two vertical lines)
-                            val lineWidth = size.width * 0.15f
-                            val lineHeight = size.height * 0.6f
-                            val topOffset = (size.height - lineHeight) / 2f
-                            
-                            // Left line
-                            drawRect(
-                                color = Color.White,
-                                topLeft = Offset(size.width * 0.3f, topOffset),
-                                size = Size(lineWidth, lineHeight)
-                            )
-                            
-                            // Right line
-                            drawRect(
-                                color = Color.White,
-                                topLeft = Offset(size.width * 0.55f, topOffset),
-                                size = Size(lineWidth, lineHeight)
-                            )
-                        } else {
-                            // Play icon (triangle)
-                            val path = Path().apply {
-                                moveTo(size.width * 0.3f, size.height * 0.2f)
-                                lineTo(size.width * 0.3f, size.height * 0.8f)
-                                lineTo(size.width * 0.75f, size.height * 0.5f)
-                                close()
+                    Button(
+                        onClick = onStartStop,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isRunning) Color(0xFFFF4444) else Color(0xFF4CAF50)
+                        ),
+                        modifier = Modifier
+                            .padding(start = 24.dp)
+                            .size(56.dp),
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        // Play or Pause icon using Canvas
+                        Canvas(modifier = Modifier.size(24.dp)) {
+                            if (isRunning) {
+                                // Pause icon (two vertical lines)
+                                val lineWidth = size.width * 0.15f
+                                val lineHeight = size.height * 0.6f
+                                val topOffset = (size.height - lineHeight) / 2f
+                                
+                                // Left line
+                                drawRect(
+                                    color = Color.White,
+                                    topLeft = Offset(size.width * 0.3f, topOffset),
+                                    size = Size(lineWidth, lineHeight)
+                                )
+                                
+                                // Right line
+                                drawRect(
+                                    color = Color.White,
+                                    topLeft = Offset(size.width * 0.55f, topOffset),
+                                    size = Size(lineWidth, lineHeight)
+                                )
+                            } else {
+                                // Play icon (triangle)
+                                val path = Path().apply {
+                                    moveTo(size.width * 0.3f, size.height * 0.2f)
+                                    lineTo(size.width * 0.3f, size.height * 0.8f)
+                                    lineTo(size.width * 0.75f, size.height * 0.5f)
+                                    close()
+                                }
+                                drawPath(
+                                    path = path,
+                                    color = Color.White
+                                )
                             }
-                            drawPath(
-                                path = path,
-                                color = Color.White
-                            )
                         }
                     }
                 }
@@ -490,24 +553,30 @@ private fun TimerScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.CenterEnd
             ) {
-                Button(
-                    onClick = onFinish,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF9E9E9E) // Gray color for finish
-                    ),
-                    modifier = Modifier
-                        .padding(end = 24.dp)
-                        .size(56.dp),
-                    shape = CircleShape,
-                    contentPadding = PaddingValues(0.dp)
+                androidx.compose.animation.AnimatedVisibility(
+                    visible = !isImmersiveMode,
+                    enter = fadeIn(),
+                    exit = fadeOut()
                 ) {
-                    // Stop/Finish icon (square) using Canvas
-                    Canvas(modifier = Modifier.size(20.dp)) {
-                        drawRect(
-                            color = Color.White,
-                            topLeft = Offset(0f, 0f),
-                            size = Size(size.width, size.height)
-                        )
+                    Button(
+                        onClick = onFinish,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF9E9E9E) // Gray color for finish
+                        ),
+                        modifier = Modifier
+                            .padding(end = 24.dp)
+                            .size(56.dp),
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        // Stop/Finish icon (square) using Canvas
+                        Canvas(modifier = Modifier.size(20.dp)) {
+                            drawRect(
+                                color = Color.White,
+                                topLeft = Offset(0f, 0f),
+                                size = Size(size.width, size.height)
+                            )
+                        }
                     }
                 }
             }
@@ -595,13 +664,13 @@ private fun NavigationDot(
     )
 }
 
-private fun getCurrentTimeString(): String {
+private fun getCurrentTimeString(amString: String, pmString: String): String {
     val calendar = Calendar.getInstance()
     val hour = calendar.get(Calendar.HOUR_OF_DAY)
     val minute = calendar.get(Calendar.MINUTE)
     
-    // Use standard AM/PM
-    val period = if (hour < 12) "am" else "pm"
+    // Use localized AM/PM
+    val period = if (hour < 12) amString else pmString
     
     val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
     return String.format("%02d:%02d\n%s", displayHour, minute, period)
