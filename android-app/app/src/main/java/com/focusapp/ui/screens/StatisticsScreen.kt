@@ -1,10 +1,7 @@
 package com.focusapp.ui.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -23,6 +20,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.window.Popup
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -365,31 +364,30 @@ private fun RowScope.BarItem(
             }
 
             // Tooltip popup above the bar
-            androidx.compose.animation.AnimatedVisibility(
-                visible = showTooltip && totalMinutes > 0,
-                enter = fadeIn(animationSpec = tween(150)),
-                exit = fadeOut(animationSpec = tween(150)),
-                modifier = Modifier.align(Alignment.TopCenter)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .offset(y = (-6).dp)
-                        .background(
-                            color = Color.Black.copy(alpha = 0.82f),
-                            shape = RoundedCornerShape(6.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
+            if (showTooltip && totalMinutes > 0) {
+                Popup(
+                    alignment = Alignment.TopCenter,
+                    offset = IntOffset(0, -48)
                 ) {
-                    Text(
-                        text = tooltipText,
-                        style = TextStyle(
-                            fontFamily = GeistFontFamily,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.White
-                        ),
-                        maxLines = 1
-                    )
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = Color.Black.copy(alpha = 0.85f),
+                                shape = RoundedCornerShape(6.dp)
+                            )
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                    ) {
+                        Text(
+                            text = tooltipText,
+                            style = TextStyle(
+                                fontFamily = GeistFontFamily,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.White
+                            ),
+                            maxLines = 1
+                        )
+                    }
                 }
             }
         }
