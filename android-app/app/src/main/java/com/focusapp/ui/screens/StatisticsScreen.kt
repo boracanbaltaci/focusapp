@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -77,6 +78,8 @@ fun StatisticsScreen(
     val dividerColor = textColor.copy(alpha = 0.08f)
     val gridLineColor = textColor.copy(alpha = 0.06f)
 
+    // Swipe gesture to switch view modes
+    val viewModes = ViewMode.entries
     Box(modifier = Modifier.fillMaxSize()) {
         SettingsIconButton(onClick = onNavigateToSettings, iconColor = textColor)
 
@@ -102,11 +105,30 @@ fun StatisticsScreen(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Pill-style view mode selector
+            // Pill-style view mode selector (swipeable)
             Row(
                 modifier = Modifier
                     .background(chipBg, RoundedCornerShape(20.dp))
-                    .padding(3.dp),
+                    .padding(3.dp)
+                    .pointerInput(viewMode) {
+                        var totalDrag = 0f
+                        detectHorizontalDragGestures(
+                            onDragStart = { totalDrag = 0f },
+                            onDragEnd = {
+                                val currentIndex = viewModes.indexOf(viewMode)
+                                if (totalDrag < -80f && currentIndex < viewModes.lastIndex) {
+                                    viewMode = viewModes[currentIndex + 1]
+                                } else if (totalDrag > 80f && currentIndex > 0) {
+                                    viewMode = viewModes[currentIndex - 1]
+                                }
+                            },
+                            onDragCancel = { totalDrag = 0f },
+                            onHorizontalDrag = { change, dragAmount ->
+                                change.consume()
+                                totalDrag += dragAmount
+                            }
+                        )
+                    },
                 horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -202,33 +224,38 @@ fun StatisticsScreen(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // --- Bar Chart with 5h grid ---
+            // --- Bar Chart with dynamic grid ---
             val sortedEntries = data.entries.sortedBy { it.key }
             val scrollState = rememberScrollState()
             val needsScroll = viewMode == ViewMode.MONTH
-            val gridMaxHours = 5 // Fixed 5-hour scale
             val hourAbbrev = stringResource(R.string.stat_hour_grid)
+
+            // Dynamic grid scale per view mode
+            val gridSteps = when (viewMode) {
+                ViewMode.WEEK -> listOf(1, 2, 3, 4, 5)
+                ViewMode.MONTH -> listOf(5, 10, 15, 20, 25)
+                ViewMode.YEAR -> listOf(5, 10, 15, 20, 25)
+            }
+            val gridMaxMinutes = gridSteps.last() * 60 // max scale in minutes
 
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .padding(bottom = 16.dp) // space between chart and bottom spacer
+                    .padding(bottom = 16.dp)
             ) {
                 // Layer 1: Grid lines with Y-axis labels
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(bottom = 18.dp), // reserve space for x-axis day labels
+                        .padding(bottom = 18.dp),
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // 5 grid rows from top (5h) to bottom (1h)
-                    for (h in gridMaxHours downTo 1) {
+                    for (h in gridSteps.reversed()) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            // Y-axis label
                             Text(
                                 text = "$h$hourAbbrev",
                                 style = TextStyle(
@@ -237,10 +264,9 @@ fun StatisticsScreen(
                                     color = subtleTextColor,
                                     textAlign = TextAlign.End
                                 ),
-                                modifier = Modifier.width(20.dp)
+                                modifier = Modifier.width(24.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            // Grid line
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -255,7 +281,7 @@ fun StatisticsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(start = 24.dp) // offset past Y-axis labels
+                        .padding(start = 28.dp)
                         .then(
                             if (needsScroll) Modifier.horizontalScroll(scrollState)
                             else Modifier
@@ -264,8 +290,7 @@ fun StatisticsScreen(
                     verticalAlignment = Alignment.Bottom
                 ) {
                     sortedEntries.forEach { entry ->
-                        // Fraction based on 5-hour scale
-                        val fraction = (entry.value.toFloat() / (gridMaxHours * 60f)).coerceIn(0f, 1f)
+                        val fraction = (entry.value.toFloat() / gridMaxMinutes.toFloat()).coerceIn(0f, 1f)
                         val label = getLabelForKey(entry.key, viewMode)
 
                         BarItem(
