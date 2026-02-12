@@ -24,6 +24,55 @@ val GeistFontFamily = FontFamily(
     Font(R.font.geist_regular, FontWeight.Normal)
 )
 
+val BreakFontFamily = FontFamily(
+    Font(R.font.break_regular, FontWeight.Normal)
+)
+
+val DxburstFontFamily = FontFamily(
+    Font(R.font.dxburst_smooth, FontWeight.Normal)
+)
+
+val KiyaFontFamily = FontFamily(
+    Font(R.font.kiya_handwrite, FontWeight.Normal)
+)
+
+val FlaviotteFontFamily = FontFamily(
+    Font(R.font.flaviotte, FontWeight.Normal)
+)
+
+val AwesomeWaysFontFamily = FontFamily(
+    Font(R.font.awesome_ways, FontWeight.Normal)
+)
+
+val TeheganFontFamily = FontFamily(
+    Font(R.font.tehegan, FontWeight.Normal)
+)
+
+val WonderiaFontFamily = FontFamily(
+    Font(R.font.wonderia, FontWeight.Normal)
+)
+
+
+val Kino40FontFamily = FontFamily(
+    Font(R.font.kino40, FontWeight.Normal)
+)
+
+val Font1797FontFamily = FontFamily(
+    Font(R.font.font_1797_medium_v2, FontWeight.Normal)
+)
+
+val GlinaFontFamily = FontFamily(
+    Font(R.font.glina_script_em, FontWeight.Normal)
+)
+
+val SentientFontFamily = FontFamily(
+    Font(R.font.sentient_variable, FontWeight.Normal)
+)
+
+val ChillaxFontFamily = FontFamily(
+    Font(R.font.chillax_variable, FontWeight.Normal)
+)
+
 val Typography = Typography(
     displayLarge = TextStyle(
         fontFamily = MenilFontFamily,

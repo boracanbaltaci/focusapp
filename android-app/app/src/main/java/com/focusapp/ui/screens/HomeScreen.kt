@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -39,8 +40,21 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.focusapp.R
 import com.focusapp.data.StatisticsRepository
+import com.focusapp.ui.components.ProportionalScaleBox
 import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.AvocadoFontFamily
+import com.focusapp.ui.theme.BreakFontFamily
+import com.focusapp.ui.theme.DxburstFontFamily
+import com.focusapp.ui.theme.KiyaFontFamily
+import com.focusapp.ui.theme.FlaviotteFontFamily
+import com.focusapp.ui.theme.AwesomeWaysFontFamily
+import com.focusapp.ui.theme.TeheganFontFamily
+import com.focusapp.ui.theme.WonderiaFontFamily
+import com.focusapp.ui.theme.Kino40FontFamily
+import com.focusapp.ui.theme.Font1797FontFamily
+import com.focusapp.ui.theme.GlinaFontFamily
+import com.focusapp.ui.theme.SentientFontFamily
+import com.focusapp.ui.theme.ChillaxFontFamily
 import com.focusapp.ui.theme.GeistFontFamily
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -70,7 +84,22 @@ fun HomeScreen(
     val arcColor = if (theme == "dark") Color(0xFFECDFCC).copy(alpha = 0.3f) else Color(0xFFE5E5E5)
     
     // Font selection
-    val clockFontFamily = if (clockFont == "avocado") AvocadoFontFamily else MenilFontFamily
+    val clockFontFamily = when (clockFont) {
+        "avocado" -> AvocadoFontFamily
+        "break" -> BreakFontFamily
+        "dxburst" -> DxburstFontFamily
+        "kiya" -> KiyaFontFamily
+        "flaviotte" -> FlaviotteFontFamily
+        "awesome" -> AwesomeWaysFontFamily
+        "tehegan" -> TeheganFontFamily
+        "wonderia" -> WonderiaFontFamily
+        "kino40" -> Kino40FontFamily
+        "1797" -> Font1797FontFamily
+        "glina" -> GlinaFontFamily
+        "sentient" -> SentientFontFamily
+        "chillax" -> ChillaxFontFamily
+        else -> MenilFontFamily
+    }
     
     // Pager state (1 = middle screen with clock)
     // 0 = Statistics, 1 = Clock, 2 = Timer
@@ -93,11 +122,12 @@ fun HomeScreen(
     // Auto break settings
     val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
+    val is24HourFormat by settingsViewModel.is24HourFormat.collectAsState()
     
     // Update clock every second
-    LaunchedEffect(amString, pmString) {
+    LaunchedEffect(amString, pmString, is24HourFormat) {
         while (true) {
-            currentTime = getCurrentTimeString(amString, pmString)
+            currentTime = getCurrentTimeString(amString, pmString, is24HourFormat)
             delay(1000)
         }
     }
@@ -194,7 +224,7 @@ fun HomeScreen(
         ) { page ->
             when (page) {
                 0 -> StatisticsScreen(onNavigateToSettings, textColor)
-                1 -> ClockScreen(currentTime, onNavigateToSettings, clockFontFamily, textColor)
+                1 -> ClockScreen(currentTime, onNavigateToSettings, clockFontFamily, textColor, clockFont)
                 2 -> TimerScreen(
                     isRunning = isTimerRunning,
                     seconds = timerSeconds,
@@ -303,7 +333,8 @@ private fun ClockScreen(
     currentTime: String,
     onNavigateToSettings: () -> Unit,
     clockFontFamily: FontFamily,
-    textColor: Color
+    textColor: Color,
+    clockFontKey: String = "menil"
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         // Settings icon with absolute positioning (7% from top, 7% from right)
@@ -313,46 +344,70 @@ private fun ClockScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 48.dp),
+                .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             // Center clock display - perfectly centered
             val timeParts = currentTime.split("\n")
             val time = timeParts[0]
-            val period = if (timeParts.size > 1) timeParts[1] else ""
+            val period = if (timeParts.size > 1) {
+                val rawPeriod = timeParts[1]
+                if (clockFontKey == "break") {
+                    rawPeriod
+                        .replace("ö", "o").replace("Ö", "O")
+                        .replace("ş", "s").replace("Ş", "S")
+                        .replace("ç", "c").replace("Ç", "C")
+                        .replace("ğ", "g").replace("Ğ", "G")
+                        .replace("ı", "i").replace("İ", "I")
+                        .replace("ü", "u").replace("Ü", "U")
+                } else rawPeriod
+            } else ""
             
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = time,
-                    style = TextStyle(
-                        fontFamily = clockFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 240.sp,
-                        lineHeight = 240.sp,
-                        letterSpacing = 2.sp,
-                        color = textColor,
-                        textAlign = TextAlign.Center
-                    ),
-                    modifier = Modifier.widthIn(min = 300.dp) // Fixed minimum width to prevent jitter
-                )
-                
-                if (period.isNotEmpty()) {
-                    Spacer(modifier = Modifier.width(0.5.dp)) // Reduced spacing for closer proximity
+            // Reference text for scale calculation (measures at 240sp to see if it fits)
+            val referenceText = if (period.isNotEmpty()) "$time $period" else time
+            val baseStyle = TextStyle(
+                fontFamily = clockFontFamily,
+                fontWeight = FontWeight.Normal,
+                letterSpacing = 2.sp
+            )
+            
+            ProportionalScaleBox(
+                referenceText = referenceText,
+                referenceStyle = baseStyle,
+                referenceFontSize = 240.sp
+            ) { scale ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
                     Text(
-                        text = period,
+                        text = time,
                         style = TextStyle(
                             fontFamily = clockFontFamily,
                             fontWeight = FontWeight.Normal,
-                            fontSize = 75.sp,
-                            lineHeight = 75.sp,
+                            fontSize = 240.sp * scale,
+                            lineHeight = 240.sp * scale,
+                            letterSpacing = 2.sp,
                             color = textColor,
                             textAlign = TextAlign.Center
                         )
                     )
+                    
+                    if (period.isNotEmpty()) {
+                        Spacer(modifier = Modifier.width((4 * scale).dp))
+                        Text(
+                            text = period,
+                            style = TextStyle(
+                                fontFamily = clockFontFamily,
+                                fontWeight = FontWeight.Normal,
+                                fontSize = 75.sp * scale,
+                                lineHeight = 75.sp * scale,
+                                color = textColor,
+                                textAlign = TextAlign.Center
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -434,58 +489,76 @@ private fun TimerScreen(
                     // Timer color: lighter during break, normal otherwise
                     val timerColor = if (isOnBreak) textColor.copy(alpha = 0.4f) else textColor
                     
-                    // Timer display with hour label - centered
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.clickable(enabled = !isRunning && !isOnBreak) { onTimerClick() }
-                    ) {
-                // Calculate remaining time after removing full hours
-                val totalMinutes = seconds / 60
-                val hours = totalMinutes / 60
-                val remainingMinutes = totalMinutes % 60
-                val remainingSeconds = seconds % 60
-                
-                // Show hour label if >= 1 hour (60 minutes or more)
-                if (totalMinutes >= 60) {
-                    val hourText = if (hours == 1) {
-                        "1 " + context.getString(R.string.hour_singular)
+                    // Timer display with hour label - proportionally scaled
+                    val totalMinutes = seconds / 60
+                    val hours = totalMinutes / 60
+                    val remainingMinutes = totalMinutes % 60
+                    val remainingSeconds = seconds % 60
+                    
+                    // Build reference text for scale calculation
+                    val hourPrefix = if (totalMinutes >= 60) {
+                        if (hours == 1) {
+                            "1 " + context.getString(R.string.hour_singular) + " "
+                        } else {
+                            "$hours " + context.getString(R.string.hours_plural) + " "
+                        }
+                    } else ""
+                    
+                    val timeStr = if (totalMinutes >= 60) {
+                        String.format("%02d:%02d", remainingMinutes, remainingSeconds)
                     } else {
-                        "$hours " + context.getString(R.string.hours_plural)
+                        String.format("%02d:%02d", totalMinutes, remainingSeconds)
                     }
-                    Text(
-                        text = hourText,
-                        style = TextStyle(
-                            fontFamily = clockFontFamily,
-                            fontWeight = FontWeight.Normal,
-                            fontSize = 70.sp,
-                            color = timerColor,
-                            textAlign = TextAlign.End
-                        ),
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                }
-                
-                // Display time: if >= 60 minutes, show remaining time after hours
-                // if < 60 minutes, show full time
-                val displayTime = if (totalMinutes >= 60) {
-                    String.format("%02d:%02d", remainingMinutes, remainingSeconds)
-                } else {
-                    String.format("%02d:%02d", totalMinutes, remainingSeconds)
-                }
-                
-                Text(
-                    text = displayTime,
-                    style = TextStyle(
+                    
+                    val baseStyle = TextStyle(
                         fontFamily = clockFontFamily,
-                        fontWeight = FontWeight.Normal,
-                        fontSize = 240.sp,
-                        color = timerColor,
-                        textAlign = TextAlign.Center
-                    ),
-                    modifier = Modifier.widthIn(min = 350.dp) // Fixed minimum width to prevent jitter
-                )
-            }
+                        fontWeight = FontWeight.Normal
+                    )
+                    
+                    ProportionalScaleBox(
+                        referenceText = hourPrefix + timeStr,
+                        referenceStyle = baseStyle,
+                        referenceFontSize = 240.sp,
+                        modifier = Modifier.padding(horizontal = 56.dp)
+                    ) { scale ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.clickable {
+                                if (!isRunning && !isOnBreak) {
+                                    onTimerClick()
+                                } else {
+                                    onToggleImmersiveMode()
+                                }
+                            }
+                        ) {
+                            // Show hour label if >= 1 hour
+                            if (totalMinutes >= 60) {
+                                Text(
+                                    text = hourPrefix.trimEnd(),
+                                    style = TextStyle(
+                                        fontFamily = clockFontFamily,
+                                        fontWeight = FontWeight.Normal,
+                                        fontSize = 70.sp * scale,
+                                        color = timerColor,
+                                        textAlign = TextAlign.End
+                                    ),
+                                    modifier = Modifier.padding(end = (8 * scale).dp)
+                                )
+                            }
+                            
+                            Text(
+                                text = timeStr,
+                                style = TextStyle(
+                                    fontFamily = clockFontFamily,
+                                    fontWeight = FontWeight.Normal,
+                                    fontSize = 240.sp * scale,
+                                    color = timerColor,
+                                    textAlign = TextAlign.Center
+                                )
+                            )
+                        }
+                    }
             } // Close Column wrapping break label + timer
             
             // Start/Stop button on the far left
@@ -664,16 +737,26 @@ private fun NavigationDot(
     )
 }
 
-private fun getCurrentTimeString(amString: String, pmString: String): String {
+private fun getCurrentTimeString(amString: String, pmString: String, is24HourFormat: Boolean = false): String {
     val calendar = Calendar.getInstance()
-    val hour = calendar.get(Calendar.HOUR_OF_DAY)
-    val minute = calendar.get(Calendar.MINUTE)
     
-    // Use localized AM/PM
-    val period = if (hour < 12) amString else pmString
-    
-    val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
-    return String.format("%02d:%02d\n%s", displayHour, minute, period)
+    if (is24HourFormat) {
+        // 24-hour format: HH:mm (no period)
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+        return String.format("%02d:%02d", hour, minute)
+    } else {
+        // 12-hour format: hh:mm
+        //                 period
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        val minute = calendar.get(Calendar.MINUTE)
+        
+        // Use localized AM/PM
+        val period = if (hour < 12) amString else pmString
+        
+        val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+        return String.format("%02d:%02d\n%s", displayHour, minute, period)
+    }
 }
 
 @Composable

@@ -81,4 +81,12 @@ class SettingsViewModel(context: Context) : ViewModel() {
         _clockSoundEnabled.value = enabled
         settingsRepository.setClockSoundEnabled(enabled)
     }
+    
+    private val _is24HourFormat = MutableStateFlow(settingsRepository.getIs24HourFormat())
+    val is24HourFormat: StateFlow<Boolean> = _is24HourFormat
+    
+    fun setIs24HourFormat(enabled: Boolean) {
+        _is24HourFormat.value = enabled
+        settingsRepository.setIs24HourFormat(enabled)
+    }
 }

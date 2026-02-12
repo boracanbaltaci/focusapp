@@ -88,6 +88,7 @@
 
     <!-- Settings -->
     <string name="clock_sound">Saat Sesi</string>
+    <string name="format_24_hour">24 Saatlik Biçim</string>
     <string name="sounds">Sesler</string>
     <string name="background_sound">Arkaplan Sesi</string>
     <string name="about">Hakkında</string>

@@ -44,6 +44,7 @@ fun SettingsScreen(
     val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
     val clockSoundEnabled by settingsViewModel.clockSoundEnabled.collectAsState()
+    val is24HourFormat by settingsViewModel.is24HourFormat.collectAsState()
     
     var showFontSubmenu by remember { mutableStateOf(false) }
     var showLanguageSubmenu by remember { mutableStateOf(false) }
@@ -202,7 +203,22 @@ fun SettingsScreen(
                         // Clock Font Setting (clickable to open submenu)
                         ClickableSettingItem(
                             title = stringResource(R.string.clock_font),
-                            subtitle = if (clockFont == "menil") "Menil-Étroit (Default)" else "LT Avocado",
+                            subtitle = when (clockFont) {
+                                "avocado" -> "LT Avocado"
+                                "break" -> "Break"
+                                "dxburst" -> "DXBurst Smooth"
+                                "kiya" -> "Kiya Handwrite"
+                                "flaviotte" -> "Flaviotte"
+                                "awesome" -> "Awesome Ways"
+                                "tehegan" -> "Tehegan"
+                                "wonderia" -> "Wonderia"
+                                "kino40" -> "Kino 40"
+                                "1797" -> "1797 Medium"
+                                "glina" -> "Glina Script"
+                                "sentient" -> "Sentient"
+                                "chillax" -> "Chillax"
+                                else -> "Menil-Étroit (Default)"
+                            },
                             onClick = { showFontSubmenu = true },
                             textColor = textColor
                         )
@@ -211,8 +227,20 @@ fun SettingsScreen(
                             modifier = Modifier.padding(vertical = 4.dp),
                             color = textColor.copy(alpha = 0.1f)
                         )
+
+                        // 24-Hour Format Setting
+                        SwitchSettingItem(
+                            title = stringResource(R.string.format_24_hour),
+                            isChecked = is24HourFormat,
+                            onCheckedChange = { settingsViewModel.setIs24HourFormat(it) },
+                            textColor = textColor
+                        )
                         
-                        // Theme Setting with Switch
+                        Divider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = textColor.copy(alpha = 0.1f)
+                        )
+                        
                         ThemeSettingItem(
                             isDark = theme == "dark",
                             onThemeChange = { isDark ->
@@ -376,6 +404,43 @@ private fun ClickableSettingItem(
 }
 
 @Composable
+private fun SwitchSettingItem(
+    title: String,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    textColor: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = title,
+            style = TextStyle(
+                fontFamily = GeistFontFamily,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Normal,
+                color = textColor
+            )
+        )
+        
+        Switch(
+            checked = isChecked,
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color(0xFF4CAF50),
+                checkedTrackColor = Color(0xFF4CAF50).copy(alpha = 0.5f),
+                uncheckedThumbColor = Color.Gray,
+                uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
+            )
+        )
+    }
+}
+
+@Composable
 private fun ThemeSettingItem(
     isDark: Boolean,
     onThemeChange: (Boolean) -> Unit,
@@ -485,8 +550,19 @@ private fun FontSubmenu(
         // Font options - Now includes both fonts and is scrollable
         val fontOptions = listOf(
             "Menil-Étroit (Default)" to "menil",
-            "LT Avocado" to "avocado"
-            // More fonts can be added here in the future
+            "LT Avocado" to "avocado",
+            "Break" to "break",
+            "DXBurst Smooth" to "dxburst",
+            "Kiya Handwrite" to "kiya",
+            "Flaviotte" to "flaviotte",
+            "Awesome Ways" to "awesome",
+            "Tehegan" to "tehegan",
+            "Wonderia" to "wonderia",
+            "Kino 40" to "kino40",
+            "1797 Medium" to "1797",
+            "Glina Script" to "glina",
+            "Sentient" to "sentient",
+            "Chillax" to "chillax"
         )
         
         Column(

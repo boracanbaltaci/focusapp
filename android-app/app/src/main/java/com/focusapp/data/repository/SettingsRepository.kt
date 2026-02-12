@@ -78,4 +78,12 @@ class SettingsRepository(context: Context) {
     fun setClockSoundEnabled(enabled: Boolean) {
         prefs.edit().putBoolean("clock_sound_enabled", enabled).apply()
     }
+    
+    fun getIs24HourFormat(): Boolean {
+        return prefs.getBoolean("is_24_hour_format", false)
+    }
+    
+    fun setIs24HourFormat(enabled: Boolean) {
+        prefs.edit().putBoolean("is_24_hour_format", enabled).apply()
+    }
 }

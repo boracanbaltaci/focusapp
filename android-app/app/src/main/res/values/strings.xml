@@ -88,6 +88,7 @@
 
     <!-- Settings -->
     <string name="clock_sound">Clock Sound</string>
+    <string name="format_24_hour">24-Hour Format</string>
     <string name="sounds">Sounds</string>
     <string name="background_sound">Background Sound</string>
     <string name="about">About</string>
