@@ -73,4 +73,12 @@ class SettingsViewModel(context: Context) : ViewModel() {
         _breakDurationMinutes.value = minutes
         settingsRepository.setBreakDurationMinutes(minutes)
     }
+    
+    private val _clockSoundEnabled = MutableStateFlow(settingsRepository.getClockSoundEnabled())
+    val clockSoundEnabled: StateFlow<Boolean> = _clockSoundEnabled
+    
+    fun setClockSoundEnabled(enabled: Boolean) {
+        _clockSoundEnabled.value = enabled
+        settingsRepository.setClockSoundEnabled(enabled)
+    }
 }

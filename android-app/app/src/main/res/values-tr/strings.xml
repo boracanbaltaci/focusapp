@@ -85,4 +85,12 @@
     <string name="break_custom">Özel</string>
     <string name="break_min_suffix">dk</string>
     <string name="on_break_label">Mola</string>
+
+    <!-- Settings -->
+    <string name="clock_sound">Saat Sesi</string>
+    <string name="sounds">Sesler</string>
+    <string name="background_sound">Arkaplan Sesi</string>
+    <string name="about">Hakkında</string>
+    <string name="subscription">Abonelik</string>
+    <string name="rate_us">Bizi Değerlendir</string>
 </resources>

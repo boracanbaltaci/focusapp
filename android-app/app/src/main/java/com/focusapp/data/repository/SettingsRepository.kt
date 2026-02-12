@@ -70,4 +70,12 @@ class SettingsRepository(context: Context) {
     fun setBreakDurationMinutes(minutes: Int) {
         prefs.edit().putInt("break_duration_minutes", minutes).apply()
     }
+    
+    fun getClockSoundEnabled(): Boolean {
+        return prefs.getBoolean("clock_sound_enabled", false)
+    }
+    
+    fun setClockSoundEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean("clock_sound_enabled", enabled).apply()
+    }
 }

@@ -85,4 +85,12 @@
     <string name="break_custom">Personalizzato</string>
     <string name="break_min_suffix">min</string>
     <string name="on_break_label">Pausa</string>
+
+    <!-- Settings -->
+    <string name="clock_sound">Suono dell\'orologio</string>
+    <string name="sounds">Suoni</string>
+    <string name="background_sound">Suono di sottofondo</string>
+    <string name="about">Informazioni</string>
+    <string name="subscription">Abbonamento</string>
+    <string name="rate_us">Valutaci</string>
 </resources>

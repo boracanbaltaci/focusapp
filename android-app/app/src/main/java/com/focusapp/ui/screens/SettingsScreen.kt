@@ -43,10 +43,12 @@ fun SettingsScreen(
     val language by settingsViewModel.language.collectAsState()
     val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
+    val clockSoundEnabled by settingsViewModel.clockSoundEnabled.collectAsState()
     
     var showFontSubmenu by remember { mutableStateOf(false) }
     var showLanguageSubmenu by remember { mutableStateOf(false) }
     var showBreakSubmenu by remember { mutableStateOf(false) }
+    var showSoundsSubmenu by remember { mutableStateOf(false) }
     var pendingLanguageChange by remember { mutableStateOf<String?>(null) }
     
     // Handle language change with LaunchedEffect for safe recreation
@@ -186,6 +188,14 @@ fun SettingsScreen(
                             onBack = { showBreakSubmenu = false },
                             textColor = textColor
                         )
+                    } else if (showSoundsSubmenu) {
+                        // Sounds Submenu
+                        SoundsSubmenu(
+                            clockSoundEnabled = clockSoundEnabled,
+                            onClockSoundChange = { settingsViewModel.setClockSoundEnabled(it) },
+                            onBack = { showSoundsSubmenu = false },
+                            textColor = textColor
+                        )
                     } else {
                         // Main Settings Menu
                         
@@ -234,6 +244,58 @@ fun SettingsScreen(
                             title = stringResource(R.string.auto_break),
                             subtitle = if (autoBreakEnabled) "$breakDurationMinutes ${stringResource(R.string.break_min_suffix)}" else "Off",
                             onClick = { showBreakSubmenu = true },
+                            textColor = textColor
+                        )
+                        
+                        Divider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = textColor.copy(alpha = 0.1f)
+                        )
+                        
+                        // Sounds (clickable to open submenu)
+                        ClickableSettingItem(
+                            title = stringResource(R.string.sounds),
+                            subtitle = "",
+                            onClick = { showSoundsSubmenu = true },
+                            textColor = textColor
+                        )
+                        
+                        Divider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = textColor.copy(alpha = 0.1f)
+                        )
+                        
+                        // About
+                        ClickableSettingItem(
+                            title = stringResource(R.string.about),
+                            subtitle = "",
+                            onClick = { /* TODO: open about page */ },
+                            textColor = textColor
+                        )
+                        
+                        Divider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = textColor.copy(alpha = 0.1f)
+                        )
+                        
+                        // Subscription
+                        ClickableSettingItem(
+                            title = stringResource(R.string.subscription),
+                            subtitle = "",
+                            onClick = { /* TODO: open subscription page */ },
+                            textColor = textColor
+                        )
+                        
+                        Divider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = textColor.copy(alpha = 0.1f)
+                        )
+                        
+                        // Rate Us
+                        ClickableSettingItem(
+                            title = stringResource(R.string.rate_us),
+                            subtitle = "",
+                            onClick = { /* TODO: open store rating */ },
                             textColor = textColor
                         )
                     }
@@ -841,6 +903,117 @@ private fun BreakSubmenu(
             Switch(
                 checked = autoBreakEnabled,
                 onCheckedChange = onAutoBreakChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color(0xFF4CAF50),
+                    checkedTrackColor = Color(0xFF4CAF50).copy(alpha = 0.5f),
+                    uncheckedThumbColor = Color.Gray,
+                    uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun SoundsSubmenu(
+    clockSoundEnabled: Boolean,
+    onClockSoundChange: (Boolean) -> Unit,
+    onBack: () -> Unit,
+    textColor: Color
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Back button
+        Row(
+            modifier = Modifier
+                .clickable(onClick = onBack)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Canvas(modifier = Modifier.size(20.dp)) {
+                val arrowColor = textColor
+                val centerY = size.height / 2f
+                val arrowSize = size.width * 0.6f
+                
+                drawLine(
+                    color = arrowColor,
+                    start = Offset(size.width * 0.5f, centerY),
+                    end = Offset(size.width * 0.5f - arrowSize, centerY),
+                    strokeWidth = 2.dp.toPx()
+                )
+                drawLine(
+                    color = arrowColor,
+                    start = Offset(size.width * 0.5f - arrowSize, centerY),
+                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY - arrowSize * 0.4f),
+                    strokeWidth = 2.dp.toPx()
+                )
+                drawLine(
+                    color = arrowColor,
+                    start = Offset(size.width * 0.5f - arrowSize, centerY),
+                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY + arrowSize * 0.4f),
+                    strokeWidth = 2.dp.toPx()
+                )
+            }
+            
+            Text(
+                text = stringResource(R.string.sounds),
+                style = TextStyle(
+                    fontFamily = GeistFontFamily,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor
+                )
+            )
+        }
+        
+        Divider(color = textColor.copy(alpha = 0.1f))
+        
+        // Background Sound (placeholder)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(onClick = { /* TODO: background sound selection */ })
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(R.string.background_sound),
+                style = TextStyle(
+                    fontFamily = GeistFontFamily,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor
+                )
+            )
+        }
+        
+        Divider(color = textColor.copy(alpha = 0.1f))
+        
+        // Clock Sound toggle
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(R.string.clock_sound),
+                style = TextStyle(
+                    fontFamily = GeistFontFamily,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor
+                )
+            )
+            
+            Switch(
+                checked = clockSoundEnabled,
+                onCheckedChange = onClockSoundChange,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color(0xFF4CAF50),
                     checkedTrackColor = Color(0xFF4CAF50).copy(alpha = 0.5f),
