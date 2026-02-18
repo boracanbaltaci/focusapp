@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/rounded_widget_bg"
+    android:orientation="vertical"
+    android:padding="10dp">
+
+    <!-- CardView is not supported in RemoteViews. Using FrameLayout with rounded corners.
+         The provider handles the image rounding. -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.68">
+
+        <ImageView
+            android:id="@+id/widget_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/widget_background" />
+
+        <!-- Overlay ring -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/inner_ring" />
+            
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/clock_container"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="0.32">
+
+        <!-- Default Font -->
+        <TextClock
+            android:id="@+id/clock_menil"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/menil_etroit"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_avocado"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/lt_avocado_regular"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_break"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/break_regular"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_dxburst"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/dxburst_smooth"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_kiya"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/kiya_handwrite"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_flaviotte"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/flaviotte"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_awesome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/awesome_ways"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_tehegan"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/tehegan"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_wonderia"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/wonderia"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_kino40"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/kino40"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_1797"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/font_1797_medium_v2"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_glina"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/glina_script_em"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_sentient"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/sentient_variable"
+            android:visibility="gone" />
+
+        <TextClock
+            android:id="@+id/clock_chillax"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:format12Hour="hh:mm"
+            android:format24Hour="kk:mm"
+            android:textColor="#000000"
+            android:textSize="30sp"
+            android:fontFamily="@font/chillax_variable"
+            android:visibility="gone" />
+
+    </FrameLayout>
+</LinearLayout>

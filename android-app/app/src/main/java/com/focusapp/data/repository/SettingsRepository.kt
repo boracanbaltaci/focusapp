@@ -86,4 +86,12 @@ class SettingsRepository(context: Context) {
     fun setIs24HourFormat(enabled: Boolean) {
         prefs.edit().putBoolean("is_24_hour_format", enabled).apply()
     }
+    
+    fun getBackgroundSound(): String {
+        return prefs.getString("background_sound", "none") ?: "none"
+    }
+    
+    fun setBackgroundSound(sound: String) {
+        prefs.edit().putString("background_sound", sound).apply()
+    }
 }

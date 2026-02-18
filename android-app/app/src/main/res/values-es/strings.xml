@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Focus App</string>
+    <string name="app_name">Clockera</string>
     <string name="login">Iniciar sesión</string>
     <string name="register">Registrarse</string>
     <string name="username">Nombre de usuario</string>
@@ -24,6 +24,7 @@
     <!-- New strings for Phase 3 -->
     <string name="select_duration">Seleccionar duración</string>
     <string name="clock_font">Fuente del reloj</string>
+    <string name="font_selection">Selección de fuente</string>
     <string name="theme">Tema</string>
     <string name="light">Claro</string>
     <string name="dark">Oscuro</string>
@@ -31,6 +32,8 @@
     <string name="pm">p.m.</string>
     <string name="hour_singular">hora</string>
     <string name="hours_plural">horas</string>
+    <string name="hour_short">h</string>
+    <string name="minute_short">min</string>
     <string name="confirm">Confirmar</string>
     
     <!-- Language names -->
@@ -94,5 +97,10 @@
     <string name="about">Acerca de</string>
     <string name="subscription">Suscripción</string>
     <string name="rate_us">Califícanos</string>
+
+    <!-- About Page -->
+    <string name="about_tagline">Tu experiencia de espacio de trabajo premium</string>
+    <string name="about_description">Diseñamos esta aplicación para personas que quieren sentirse mejor mientras trabajan. Porque sabemos que la productividad no se trata solo de listas de tareas, sino también de la atmósfera en la que te encuentras. El orden en tu escritorio, la sencillez en tu pantalla, la armonía de los colores que usas… Todo afecta tu mente. Por eso creamos no solo una aplicación, sino una experiencia de espacio de trabajo estética, minimalista y premium.\n\nNuestro objetivo es ofrecerte un entorno que te motive, que no canse tus ojos y que te haga pensar \"me alegro de usar esto\" cada vez que lo abras. Mientras gestionas tu tiempo de trabajo de forma más consciente, queremos que tu espacio se sienta más elegante, más organizado y más tuyo. Si te valoras a ti mismo, quieres sentir eso también mientras trabajas. Exactamente por eso estamos aquí.</string>
+    <string name="copyright">© 2025 Clockera. Todos los derechos reservados.</string>
 
 </resources>

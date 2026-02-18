@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Focus App</string>
+    <string name="app_name">Clockera</string>
     <string name="login">Connexion</string>
     <string name="register">S\'inscrire</string>
     <string name="username">Nom d\'utilisateur</string>
@@ -24,6 +24,7 @@
     <!-- New strings for Phase 3 -->
     <string name="select_duration">Sélectionner la durée</string>
     <string name="clock_font">Police d\'horloge</string>
+    <string name="font_selection">Sélection de police</string>
     <string name="theme">Thème</string>
     <string name="light">Clair</string>
     <string name="dark">Sombre</string>
@@ -31,6 +32,8 @@
     <string name="pm">pm</string>
     <string name="hour_singular">heure</string>
     <string name="hours_plural">heures</string>
+    <string name="hour_short">h</string>
+    <string name="minute_short">min</string>
     <string name="confirm">Confirmer</string>
     
     <!-- Language names -->
@@ -94,5 +97,10 @@
     <string name="about">À propos</string>
     <string name="subscription">Abonnement</string>
     <string name="rate_us">Évaluez-nous</string>
+
+    <!-- About Page -->
+    <string name="about_tagline">Votre expérience de travail premium</string>
+    <string name="about_description">Nous avons conçu cette application pour les personnes qui veulent se sentir mieux en travaillant. Car nous savons que la productivité ne concerne pas seulement les listes de tâches — c\'est aussi l\'atmosphère dans laquelle vous vous trouvez. L\'ordre sur votre bureau, la simplicité sur votre écran, l\'harmonie des couleurs que vous utilisez… Tout cela affecte votre esprit. C\'est pourquoi nous avons créé non pas simplement une application, mais une expérience de travail esthétique, minimale et premium.\n\nNotre objectif est de vous offrir un environnement qui vous motive, qui ne fatigue pas vos yeux et qui vous fait penser « je suis content(e) d\'utiliser cela » à chaque ouverture. En gérant votre temps de travail plus consciemment, nous voulons que vous rendiez votre espace plus élégant, plus organisé et plus personnel. Si vous vous valorisez, vous voulez ressentir cela en travaillant aussi. C\'est exactement pourquoi nous sommes là.</string>
+    <string name="copyright">© 2025 Clockera. Tous droits réservés.</string>
 
 </resources>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Customize Widget"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select a background image for your widget. The clock font will match your current app settings."
+        android:gravity="center"
+        android:layout_marginBottom="24dp"/>
+
+<TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clock Font"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:layout_alignStart="@+id/font_spinner"
+        android:layout_marginBottom="8dp"/>
+
+    <Spinner
+        android:id="@+id/font_spinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
+        android:minHeight="48dp" />
+
+
+
+    <FrameLayout
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_marginBottom="24dp">
+        
+        <ImageView
+            android:id="@+id/preview_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/widget_background"
+            android:scaleType="centerCrop"
+            android:background="#E0E0E0"/>
+            
+        <TextView
+            android:id="@+id/preview_clock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="12:00"
+            android:textSize="40sp"
+            android:textColor="#FFFFFF"
+            android:shadowColor="#000000"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="4"/>
+            
+    </FrameLayout>
+
+    <Button
+        android:id="@+id/btn_pick_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Pick Image"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btn_save_widget"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Save Widget"
+        android:enabled="true"/>
+
+</LinearLayout>

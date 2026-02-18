@@ -3,6 +3,7 @@ package com.focusapp.ui.screens
 import android.app.Activity
 import android.content.res.Configuration
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.focusapp.R
 import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.GeistFontFamily
+import androidx.compose.ui.res.painterResource
 import java.util.*
 
 @Composable
@@ -45,11 +47,13 @@ fun SettingsScreen(
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
     val clockSoundEnabled by settingsViewModel.clockSoundEnabled.collectAsState()
     val is24HourFormat by settingsViewModel.is24HourFormat.collectAsState()
+    val backgroundSound by settingsViewModel.backgroundSound.collectAsState()
     
     var showFontSubmenu by remember { mutableStateOf(false) }
     var showLanguageSubmenu by remember { mutableStateOf(false) }
     var showBreakSubmenu by remember { mutableStateOf(false) }
     var showSoundsSubmenu by remember { mutableStateOf(false) }
+    var showAboutSubmenu by remember { mutableStateOf(false) }
     var pendingLanguageChange by remember { mutableStateOf<String?>(null) }
     
     // Handle language change with LaunchedEffect for safe recreation
@@ -81,6 +85,16 @@ fun SettingsScreen(
                 .padding(48.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // Determine active title and back action
+            val (headerTitle, onBackAction) = when {
+                showFontSubmenu -> stringResource(R.string.font_selection) to { showFontSubmenu = false }
+                showLanguageSubmenu -> stringResource(R.string.language) to { showLanguageSubmenu = false }
+                showBreakSubmenu -> stringResource(R.string.auto_break) to { showBreakSubmenu = false }
+                showSoundsSubmenu -> stringResource(R.string.sounds) to { showSoundsSubmenu = false }
+                showAboutSubmenu -> stringResource(R.string.about) to { showAboutSubmenu = false }
+                else -> stringResource(R.string.settings) to onBack
+            }
+
             // Header with back button
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -88,7 +102,7 @@ fun SettingsScreen(
                 horizontalArrangement = Arrangement.Start
             ) {
                 IconButton(
-                    onClick = onBack,
+                    onClick = onBackAction,
                     modifier = Modifier.size(40.dp)
                 ) {
                     Canvas(modifier = Modifier.size(32.dp)) {
@@ -97,7 +111,7 @@ fun SettingsScreen(
                         val centerY = size.height / 2f
                         val startX = size.width * 0.5f
                         
-                        val arrowColor = Color.Black
+                        val arrowColor = textColor
                         
                         // Arrow line
                         drawLine(
@@ -128,7 +142,7 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.width(24.dp))
                 
                 Text(
-                    text = stringResource(R.string.settings),
+                    text = headerTitle,
                     style = TextStyle(
                         fontFamily = GeistFontFamily,
                         fontSize = 32.sp,
@@ -149,10 +163,26 @@ fun SettingsScreen(
                 color = containerColor,
                 shadowElevation = 2.dp
             ) {
+                // Determine current submenu key for scroll state reset
+                val currentSubmenuKey = when {
+                    showFontSubmenu -> "font"
+                    showLanguageSubmenu -> "language"
+                    showBreakSubmenu -> "break"
+                    showSoundsSubmenu -> "sounds"
+                    showAboutSubmenu -> "about"
+                    else -> "main"
+                }
+                val scrollState = rememberScrollState()
+                
+                // Reset scroll to top when submenu changes
+                LaunchedEffect(currentSubmenuKey) {
+                    scrollState.scrollTo(0)
+                }
+                
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .verticalScroll(rememberScrollState())  // Make scrollable
+                        .verticalScroll(scrollState)
                         .padding(32.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -194,8 +224,17 @@ fun SettingsScreen(
                         SoundsSubmenu(
                             clockSoundEnabled = clockSoundEnabled,
                             onClockSoundChange = { settingsViewModel.setClockSoundEnabled(it) },
+                            selectedSound = backgroundSound,
+                            onSoundSelect = { settingsViewModel.setBackgroundSound(it) },
                             onBack = { showSoundsSubmenu = false },
                             textColor = textColor
+                        )
+                    } else if (showAboutSubmenu) {
+                        // About Page
+                        AboutSubmenu(
+                            onBack = { showAboutSubmenu = false },
+                            textColor = textColor,
+                            isDark = theme == "dark"
                         )
                     } else {
                         // Main Settings Menu
@@ -203,22 +242,7 @@ fun SettingsScreen(
                         // Clock Font Setting (clickable to open submenu)
                         ClickableSettingItem(
                             title = stringResource(R.string.clock_font),
-                            subtitle = when (clockFont) {
-                                "avocado" -> "LT Avocado"
-                                "break" -> "Break"
-                                "dxburst" -> "DXBurst Smooth"
-                                "kiya" -> "Kiya Handwrite"
-                                "flaviotte" -> "Flaviotte"
-                                "awesome" -> "Awesome Ways"
-                                "tehegan" -> "Tehegan"
-                                "wonderia" -> "Wonderia"
-                                "kino40" -> "Kino 40"
-                                "1797" -> "1797 Medium"
-                                "glina" -> "Glina Script"
-                                "sentient" -> "Sentient"
-                                "chillax" -> "Chillax"
-                                else -> "Menil-Étroit (Default)"
-                            },
+                            subtitle = "",
                             onClick = { showFontSubmenu = true },
                             textColor = textColor
                         )
@@ -297,7 +321,7 @@ fun SettingsScreen(
                         ClickableSettingItem(
                             title = stringResource(R.string.about),
                             subtitle = "",
-                            onClick = { /* TODO: open about page */ },
+                            onClick = { showAboutSubmenu = true },
                             textColor = textColor
                         )
                         
@@ -311,19 +335,6 @@ fun SettingsScreen(
                             title = stringResource(R.string.subscription),
                             subtitle = "",
                             onClick = { /* TODO: open subscription page */ },
-                            textColor = textColor
-                        )
-                        
-                        Divider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            color = textColor.copy(alpha = 0.1f)
-                        )
-                        
-                        // Rate Us
-                        ClickableSettingItem(
-                            title = stringResource(R.string.rate_us),
-                            subtitle = "",
-                            onClick = { /* TODO: open store rating */ },
                             textColor = textColor
                         )
                     }
@@ -361,7 +372,9 @@ private fun ClickableSettingItem(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column {
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
             Text(
                 text = title,
                 style = TextStyle(
@@ -371,14 +384,16 @@ private fun ClickableSettingItem(
                     color = textColor
                 )
             )
-            Text(
-                text = subtitle,
-                style = TextStyle(
-                    fontFamily = GeistFontFamily,
-                    fontSize = 14.sp,
-                    color = textColor.copy(alpha = 0.6f)
+            if (subtitle.isNotEmpty()) {
+                Text(
+                    text = subtitle,
+                    style = TextStyle(
+                        fontFamily = GeistFontFamily,
+                        fontSize = 14.sp,
+                        color = textColor.copy(alpha = 0.6f)
+                    )
                 )
-            )
+            }
         }
         
         // Chevron arrow
@@ -497,78 +512,69 @@ private fun FontSubmenu(
     onBack: () -> Unit,
     textColor: Color
 ) {
-    Column(
-        modifier = Modifier.fillMaxSize(),  // Removed verticalScroll - parent is already scrollable
-        verticalArrangement = Arrangement.spacedBy(24.dp)
-    ) {
-        // Back button
-        Row(
-            modifier = Modifier
-                .clickable(onClick = onBack)
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Canvas(modifier = Modifier.size(20.dp)) {
-                val arrowColor = textColor
-                val centerY = size.height / 2f
-                val arrowSize = size.width * 0.6f
-                
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize, centerY),
-                    strokeWidth = 2.dp.toPx()
-                )
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f - arrowSize, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY - arrowSize * 0.4f),
-                    strokeWidth = 2.dp.toPx()
-                )
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f - arrowSize, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY + arrowSize * 0.4f),
-                    strokeWidth = 2.dp.toPx()
-                )
-            }
-            
-            Text(
-                text = "Font Selection",
-                style = TextStyle(
-                    fontFamily = GeistFontFamily,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = textColor
-                )
-            )
+    // Get current time for preview
+    val calendar = remember { java.util.Calendar.getInstance() }
+    var currentTimePreview by remember { mutableStateOf("") }
+    
+    LaunchedEffect(Unit) {
+        while (true) {
+            val cal = java.util.Calendar.getInstance()
+            val hour = cal.get(java.util.Calendar.HOUR_OF_DAY)
+            val minute = cal.get(java.util.Calendar.MINUTE)
+            currentTimePreview = String.format("%02d:%02d", hour, minute)
+            kotlinx.coroutines.delay(1000)
         }
+    }
+    
+    // Font key to FontFamily mapping
+    val fontFamilyMap = mapOf(
+        "menil" to MenilFontFamily,
+        "avocado" to com.focusapp.ui.theme.AvocadoFontFamily,
+        "break" to com.focusapp.ui.theme.BreakFontFamily,
+        "dxburst" to com.focusapp.ui.theme.DxburstFontFamily,
+        "kiya" to com.focusapp.ui.theme.KiyaFontFamily,
+        "flaviotte" to com.focusapp.ui.theme.FlaviotteFontFamily,
+        "awesome" to com.focusapp.ui.theme.AwesomeWaysFontFamily,
+        "tehegan" to com.focusapp.ui.theme.TeheganFontFamily,
+        "wonderia" to com.focusapp.ui.theme.WonderiaFontFamily,
+        "kino40" to com.focusapp.ui.theme.Kino40FontFamily,
+        "1797" to com.focusapp.ui.theme.Font1797FontFamily,
+        "glina" to com.focusapp.ui.theme.GlinaFontFamily,
+        "sentient" to com.focusapp.ui.theme.SentientFontFamily,
+        "chillax" to com.focusapp.ui.theme.ChillaxFontFamily
+    )
+    
+    val fontOptions = listOf(
+        "Menil-Étroit" to "menil",
+        "LT Avocado" to "avocado",
+        "Break" to "break",
+        "DXBurst Smooth" to "dxburst",
+        "Kiya Handwrite" to "kiya",
+        "Flaviotte" to "flaviotte",
+        "Awesome Ways" to "awesome",
+        "Tehegan" to "tehegan",
+        "Wonderia" to "wonderia",
+        "Kino 40" to "kino40",
+        "1797 Medium" to "1797",
+        "Glina Script" to "glina",
+        "Sentient" to "sentient",
+        "Chillax" to "chillax"
+    )
+    
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+
         
-        Divider(color = textColor.copy(alpha = 0.1f))
-        
-        // Font options - Now includes both fonts and is scrollable
-        val fontOptions = listOf(
-            "Menil-Étroit (Default)" to "menil",
-            "LT Avocado" to "avocado",
-            "Break" to "break",
-            "DXBurst Smooth" to "dxburst",
-            "Kiya Handwrite" to "kiya",
-            "Flaviotte" to "flaviotte",
-            "Awesome Ways" to "awesome",
-            "Tehegan" to "tehegan",
-            "Wonderia" to "wonderia",
-            "Kino 40" to "kino40",
-            "1797 Medium" to "1797",
-            "Glina Script" to "glina",
-            "Sentient" to "sentient",
-            "Chillax" to "chillax"
-        )
-        
+        // Font options with live time preview
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(0.dp)
         ) {
-            fontOptions.forEach { (label, value) ->
+            fontOptions.forEachIndexed { index, (_, value) ->
+                val isSelected = selectedFont == value
+                val fontFamily = fontFamilyMap[value] ?: MenilFontFamily
+                
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -576,21 +582,23 @@ private fun FontSubmenu(
                             role = Role.RadioButton,
                             onClick = { onFontSelect(value) }
                         )
-                        .padding(vertical = 12.dp),
+                        .padding(vertical = 16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
+                    // Time preview in the actual font
                     Text(
-                        text = label,
+                        text = currentTimePreview,
                         style = TextStyle(
-                            fontFamily = GeistFontFamily,
-                            fontSize = 16.sp,
-                            color = textColor.copy(alpha = if (selectedFont == value) 1f else 0.6f),
-                            fontWeight = if (selectedFont == value) FontWeight.Bold else FontWeight.Normal
+                            fontFamily = fontFamily,
+                            fontSize = 32.sp,
+                            fontWeight = FontWeight.Normal,
+                            color = textColor.copy(alpha = if (isSelected) 1f else 0.5f),
+                            letterSpacing = 1.sp
                         )
                     )
                     
-                    if (selectedFont == value) {
+                    if (isSelected) {
                         // Checkmark indicator
                         val checkColor = Color(0xFF4CAF50)
                         Canvas(modifier = Modifier.size(20.dp)) {
@@ -610,6 +618,14 @@ private fun FontSubmenu(
                         }
                     }
                 }
+                
+                // Add divider between items
+                if (index < fontOptions.size - 1) {
+                    Divider(
+                        color = textColor.copy(alpha = 0.1f),
+                        thickness = 0.5.dp
+                    )
+                }
             }
         }
     }
@@ -627,50 +643,7 @@ private fun LanguageSubmenu(
         verticalArrangement = Arrangement.spacedBy(24.dp)
     ) {
         // Back button
-        Row(
-            modifier = Modifier
-                .clickable(onClick = onBack)
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Canvas(modifier = Modifier.size(20.dp)) {
-                val arrowColor = textColor
-                val centerY = size.height / 2f
-                val arrowSize = size.width * 0.6f
-                
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize, centerY),
-                    strokeWidth = 2.dp.toPx()
-                )
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f - arrowSize, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY - arrowSize * 0.4f),
-                    strokeWidth = 2.dp.toPx()
-                )
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f - arrowSize, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY + arrowSize * 0.4f),
-                    strokeWidth = 2.dp.toPx()
-                )
-            }
-            
-            Text(
-                text = stringResource(R.string.language),
-                style = TextStyle(
-                    fontFamily = GeistFontFamily,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = textColor
-                )
-            )
-        }
-        
-        Divider(color = textColor.copy(alpha = 0.1f))
+
         
         // Language options
         val languageOptions = listOf(
@@ -748,51 +721,7 @@ private fun BreakSubmenu(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Back button
-        Row(
-            modifier = Modifier
-                .clickable(onClick = onBack)
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Canvas(modifier = Modifier.size(20.dp)) {
-                val arrowColor = textColor
-                val centerY = size.height / 2f
-                val arrowSize = size.width * 0.6f
-                
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize, centerY),
-                    strokeWidth = 2.dp.toPx()
-                )
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f - arrowSize, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY - arrowSize * 0.4f),
-                    strokeWidth = 2.dp.toPx()
-                )
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f - arrowSize, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY + arrowSize * 0.4f),
-                    strokeWidth = 2.dp.toPx()
-                )
-            }
-            
-            Text(
-                text = stringResource(R.string.auto_break),
-                style = TextStyle(
-                    fontFamily = GeistFontFamily,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = textColor
-                )
-            )
-        }
-        
-        Divider(color = textColor.copy(alpha = 0.1f))
+
         
         // Break Duration section (always visible)
         Text(
@@ -994,6 +923,8 @@ private fun BreakSubmenu(
 private fun SoundsSubmenu(
     clockSoundEnabled: Boolean,
     onClockSoundChange: (Boolean) -> Unit,
+    selectedSound: String,
+    onSoundSelect: (String) -> Unit,
     onBack: () -> Unit,
     textColor: Color
 ) {
@@ -1001,73 +932,7 @@ private fun SoundsSubmenu(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        // Back button
-        Row(
-            modifier = Modifier
-                .clickable(onClick = onBack)
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Canvas(modifier = Modifier.size(20.dp)) {
-                val arrowColor = textColor
-                val centerY = size.height / 2f
-                val arrowSize = size.width * 0.6f
-                
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize, centerY),
-                    strokeWidth = 2.dp.toPx()
-                )
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f - arrowSize, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY - arrowSize * 0.4f),
-                    strokeWidth = 2.dp.toPx()
-                )
-                drawLine(
-                    color = arrowColor,
-                    start = Offset(size.width * 0.5f - arrowSize, centerY),
-                    end = Offset(size.width * 0.5f - arrowSize + arrowSize * 0.4f, centerY + arrowSize * 0.4f),
-                    strokeWidth = 2.dp.toPx()
-                )
-            }
-            
-            Text(
-                text = stringResource(R.string.sounds),
-                style = TextStyle(
-                    fontFamily = GeistFontFamily,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = textColor
-                )
-            )
-        }
-        
-        Divider(color = textColor.copy(alpha = 0.1f))
-        
-        // Background Sound (placeholder)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = { /* TODO: background sound selection */ })
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = stringResource(R.string.background_sound),
-                style = TextStyle(
-                    fontFamily = GeistFontFamily,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = textColor
-                )
-            )
-        }
-        
-        Divider(color = textColor.copy(alpha = 0.1f))
+
         
         // Clock Sound toggle
         Row(
@@ -1075,7 +940,7 @@ private fun SoundsSubmenu(
                 .fillMaxWidth()
                 .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
                 text = stringResource(R.string.clock_sound),
@@ -1097,6 +962,76 @@ private fun SoundsSubmenu(
                     uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
                 )
             )
+        }
+        
+        Divider(color = textColor.copy(alpha = 0.1f))
+        
+        // Background Sounds
+        Text(
+            text = stringResource(R.string.background_sound),
+            style = TextStyle(
+                fontFamily = GeistFontFamily,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = textColor
+            ),
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+        
+        val soundOptions = listOf(
+            stringResource(R.string.sound_none) to "none",
+            stringResource(R.string.sound_calmness) to "calmness",
+            stringResource(R.string.sound_rain) to "rain",
+            stringResource(R.string.sound_waves) to "waves",
+            stringResource(R.string.sound_fireplace) to "fireplace"
+        )
+        
+        Column(
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            soundOptions.forEach { (label, value) ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(
+                            role = Role.RadioButton,
+                            onClick = { onSoundSelect(value) }
+                        )
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = label,
+                        style = TextStyle(
+                            fontFamily = GeistFontFamily,
+                            fontSize = 16.sp,
+                            color = textColor.copy(alpha = if (selectedSound == value) 1f else 0.6f),
+                            fontWeight = if (selectedSound == value) FontWeight.Bold else FontWeight.Normal
+                        )
+                    )
+                    
+                    if (selectedSound == value) {
+                        // Checkmark indicator
+                        val checkColor = Color(0xFF4CAF50)
+                        Canvas(modifier = Modifier.size(20.dp)) {
+                            val path = androidx.compose.ui.graphics.Path().apply {
+                                moveTo(size.width * 0.2f, size.height * 0.5f)
+                                lineTo(size.width * 0.4f, size.height * 0.7f)
+                                lineTo(size.width * 0.8f, size.height * 0.2f)
+                            }
+                            drawPath(
+                                path = path,
+                                color = checkColor,
+                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                    width = 3.dp.toPx(),
+                                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                                )
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -1172,6 +1107,108 @@ private fun SettingItem(
     }
 }
 
+@Composable
+private fun AboutSubmenu(
+    onBack: () -> Unit,
+    textColor: Color,
+    isDark: Boolean
+) {
+    val accentColor = Color(0xFF4CAF50)
+    
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // Back button header
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Scrollable content
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // App logo
+            Image(
+                painter = painterResource(id = R.mipmap.ic_launcher),
+                contentDescription = "Clockera Logo",
+                modifier = Modifier
+                    .size(80.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // App name
+            Text(
+                text = "Clockera",
+                style = TextStyle(
+                    fontFamily = GeistFontFamily,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = textColor,
+                    letterSpacing = 1.sp
+                )
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Subtle tagline
+            Text(
+                text = stringResource(R.string.about_tagline),
+                style = TextStyle(
+                    fontFamily = GeistFontFamily,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = accentColor,
+                    letterSpacing = 0.5.sp
+                )
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Divider
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.3f)
+                    .height(1.dp)
+                    .background(textColor.copy(alpha = 0.1f))
+            )
+            
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Mission text
+            Text(
+                text = stringResource(R.string.about_description),
+                style = TextStyle(
+                    fontFamily = GeistFontFamily,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor.copy(alpha = 0.75f),
+                    lineHeight = 24.sp,
+                    letterSpacing = 0.2.sp
+                ),
+                modifier = Modifier.padding(horizontal = 8.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // Copyright
+            Text(
+                text = stringResource(R.string.copyright),
+                style = TextStyle(
+                    fontFamily = GeistFontFamily,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Normal,
+                    color = textColor.copy(alpha = 0.35f),
+                    letterSpacing = 0.3.sp
+                )
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
 
 // Helper function to update locale
 private fun updateLocale(context: android.content.Context, languageCode: String) {
@@ -1183,3 +1220,4 @@ private fun updateLocale(context: android.content.Context, languageCode: String)
     
     context.resources.updateConfiguration(config, context.resources.displayMetrics)
 }
+

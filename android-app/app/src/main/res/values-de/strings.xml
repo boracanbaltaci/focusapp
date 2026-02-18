@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Focus App</string>
+    <string name="app_name">Clockera</string>
     <string name="login">Anmelden</string>
     <string name="register">Registrieren</string>
     <string name="username">Benutzername</string>
@@ -24,6 +24,7 @@
     <!-- New strings for Phase 3 -->
     <string name="select_duration">Dauer auswählen</string>
     <string name="clock_font">Uhrschriftart</string>
+    <string name="font_selection">Schriftauswahl</string>
     <string name="theme">Design</string>
     <string name="light">Hell</string>
     <string name="dark">Dunkel</string>
@@ -31,6 +32,8 @@
     <string name="pm">nachm.</string>
     <string name="hour_singular">Stunde</string>
     <string name="hours_plural">Stunden</string>
+    <string name="hour_short">Std</string>
+    <string name="minute_short">Min</string>
     <string name="confirm">Bestätigen</string>
     
     <!-- Language names -->
@@ -94,5 +97,10 @@
     <string name="about">Über</string>
     <string name="subscription">Abonnement</string>
     <string name="rate_us">Bewerten Sie uns</string>
+
+    <!-- About Page -->
+    <string name="about_tagline">Dein Premium-Arbeitsbereich-Erlebnis</string>
+    <string name="about_description">Wir haben diese App für Menschen entwickelt, die sich beim Arbeiten besser fühlen wollen. Denn wir wissen, dass Produktivität nicht nur mit To-do-Listen zu tun hat — sondern auch mit der Atmosphäre, in der man sich befindet. Die Ordnung auf dem Schreibtisch, die Schlichtheit auf dem Bildschirm, die Harmonie der verwendeten Farben… All das beeinflusst den Geist. Deshalb haben wir nicht einfach eine App geschaffen, sondern ein ästhetisches, minimales und Premium-Arbeitsbereich-Erlebnis.\n\nUnser Ziel ist es, dir eine Umgebung zu bieten, die dich motiviert, deine Augen nicht belastet und dich bei jedem Öffnen denken lässt: „Gut, dass ich das nutze." Während du deine Arbeitszeit bewusster gestaltest, möchten wir, dass sich dein Raum eleganter, geordneter und persönlicher anfühlt. Wenn du dich selbst wertschätzt, willst du das auch beim Arbeiten spüren. Genau dafür sind wir hier.</string>
+    <string name="copyright">© 2025 Clockera. Alle Rechte vorbehalten.</string>
 
 </resources>

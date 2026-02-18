@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Focus App</string>
+    <string name="app_name">Clockera</string>
     <string name="login">Login</string>
     <string name="register">Register</string>
     <string name="username">Username</string>
@@ -24,6 +24,7 @@
     <!-- New strings for Phase 3 -->
     <string name="select_duration">Select Duration</string>
     <string name="clock_font">Clock Font</string>
+    <string name="font_selection">Font Selection</string>
     <string name="theme">Theme</string>
     <string name="light">Light</string>
     <string name="dark">Dark</string>
@@ -31,6 +32,8 @@
     <string name="pm">pm</string>
     <string name="hour_singular">hour</string>
     <string name="hours_plural">hours</string>
+    <string name="hour_short">h</string>
+    <string name="minute_short">min</string>
     <string name="confirm">Confirm</string>
     
     <!-- Language names -->
@@ -94,5 +97,17 @@
     <string name="about">About</string>
     <string name="subscription">Subscription</string>
     <string name="rate_us">Rate Us</string>
+    
+    <!-- Sound Names -->
+    <string name="sound_none">None</string>
+    <string name="sound_calmness">Calmness</string>
+    <string name="sound_rain">Rain</string>
+    <string name="sound_waves">Waves</string>
+    <string name="sound_fireplace">Fireplace</string>
+
+    <!-- About Page -->
+    <string name="about_tagline">Your premium workspace experience</string>
+    <string name="about_description">We designed this app for people who want to feel better while working. Because we know that productivity isn\'t just about to-do lists — it\'s also about the atmosphere you\'re in. The tidiness on your desk, the simplicity on your screen, the harmony of the colors you use… They all affect your mind. That\'s why we created not just an app, but an aesthetic, minimal, and premium workspace experience.\n\nOur goal is to offer you an environment that motivates you, doesn\'t strain your eyes, and makes you think \"I\'m glad I use this\" every time you open it. While managing your work time more consciously, we want you to make your space feel more elegant, more organized, and more like yours. If you value yourself, you want to feel that while working too. That\'s exactly why we\'re here.</string>
+    <string name="copyright">© 2025 Clockera. All rights reserved.</string>
 
 </resources>

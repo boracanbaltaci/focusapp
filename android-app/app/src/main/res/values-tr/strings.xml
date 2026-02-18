@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Focus App</string>
+    <string name="app_name">Clockera</string>
     <string name="login">Giriş Yap</string>
     <string name="register">Kayıt Ol</string>
     <string name="username">Kullanıcı Adı</string>
@@ -24,6 +24,7 @@
     <!-- New strings for Phase 3 -->
     <string name="select_duration">Süre Seç</string>
     <string name="clock_font">Saat Yazı Tipi</string>
+    <string name="font_selection">Yazı Tipi Seçimi</string>
     <string name="theme">Tema</string>
     <string name="light">Açık</string>
     <string name="dark">Koyu</string>
@@ -31,6 +32,8 @@
     <string name="pm">ös</string>
     <string name="hour_singular">saat</string>
     <string name="hours_plural">saat</string>
+    <string name="hour_short">sa</string>
+    <string name="minute_short">dk</string>
     <string name="confirm">Onayla</string>
     
     <!-- Language names -->
@@ -94,5 +97,17 @@
     <string name="about">Hakkında</string>
     <string name="subscription">Abonelik</string>
     <string name="rate_us">Bizi Değerlendir</string>
+
+    <!-- Sound Names -->
+    <string name="sound_none">Yok</string>
+    <string name="sound_calmness">Sakinlik</string>
+    <string name="sound_rain">Yağmur</string>
+    <string name="sound_waves">Dalgalar</string>
+    <string name="sound_fireplace">Şömine</string>
+
+    <!-- About Page -->
+    <string name="about_tagline">Premium çalışma alanı deneyimin</string>
+    <string name="about_description">Biz bu uygulamayı, çalışırken kendini daha iyi hissetmek isteyen insanlar için tasarladık. Çünkü biliyoruz ki verimlilik sadece yapılacaklar listesiyle değil, içinde bulunduğun atmosferle de ilgilidir. Masanın üzerindeki düzen, ekrandaki sadelik, kullanılan renklerin uyumu… Hepsi zihnini etkiler. Bu yüzden ortaya sadece bir uygulama değil; estetik, sade ve premium hissi olan bir çalışma alanı deneyimi çıkardık.\n\nAmacımız seni motive eden, gözünü yormayan, açtığında \"iyi ki bunu kullanıyorum\" dedirten bir ortam sunmak. Çalışma süreni daha bilinçli yönetirken aynı zamanda bulunduğun alanı daha şık, daha düzenli ve daha sana ait hissettirmeni istiyoruz. Kendine değer veriyorsan, çalışırken de bunu hissetmek istiyorsun demektir. Biz tam olarak bunun için buradayız.</string>
+    <string name="copyright">© 2025 Clockera. Tüm hakları saklıdır.</string>
 
 </resources>

@@ -1,6 +1,7 @@
 package com.focusapp.ui.screens
 
 import androidx.compose.foundation.Canvas
+import android.media.MediaPlayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.animation.AnimatedVisibility
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.MutableInteractionSource
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
@@ -29,6 +31,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -123,6 +126,70 @@ fun HomeScreen(
     val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
     val is24HourFormat by settingsViewModel.is24HourFormat.collectAsState()
+    val backgroundSound by settingsViewModel.backgroundSound.collectAsState()
+    val clockSoundEnabled by settingsViewModel.clockSoundEnabled.collectAsState()
+    
+    // Ticking Sound Logic - MediaPlayer for continuous ticking track
+    val tickingMediaPlayer = remember {
+        MediaPlayer.create(context, R.raw.ticking)?.apply {
+            isLooping = true
+        }
+    }
+    
+    DisposableEffect(Unit) {
+        onDispose {
+            tickingMediaPlayer?.release()
+        }
+    }
+    
+    // Control ticking sound: play when timer running, not on break, and enabled
+    LaunchedEffect(tickingMediaPlayer, isTimerRunning, isOnBreak, clockSoundEnabled) {
+        if (tickingMediaPlayer != null) {
+            if (isTimerRunning && !isOnBreak && clockSoundEnabled) {
+                if (!tickingMediaPlayer.isPlaying) {
+                    tickingMediaPlayer.start()
+                }
+            } else {
+                if (tickingMediaPlayer.isPlaying) {
+                    tickingMediaPlayer.pause()
+                }
+            }
+        }
+    }
+    
+    // Background Sound Logic
+    val soundResId = getSoundResourceId(backgroundSound)
+    
+    // Manage MediaPlayer lifecycle - recreate only when sound changes
+    val backgroundMediaPlayer = remember(soundResId) {
+        if (soundResId != 0) {
+            MediaPlayer.create(context, soundResId).apply {
+                isLooping = true
+            }
+        } else null
+    }
+
+    // Dispose when sound changes or composable leaves
+    DisposableEffect(backgroundMediaPlayer) {
+        onDispose {
+            backgroundMediaPlayer?.release()
+        }
+    }
+
+    // Control Play/Pause based on timer state
+    LaunchedEffect(backgroundMediaPlayer, isTimerRunning, isOnBreak) {
+        if (backgroundMediaPlayer != null) {
+            if (isTimerRunning && !isOnBreak) {
+                if (!backgroundMediaPlayer.isPlaying) {
+                     backgroundMediaPlayer.start()
+                }
+            } else {
+                if (backgroundMediaPlayer.isPlaying) {
+                    backgroundMediaPlayer.pause()
+                }
+            }
+        }
+    }
     
     // Update clock every second
     LaunchedEffect(amString, pmString, is24HourFormat) {
@@ -141,6 +208,17 @@ fun HomeScreen(
         }
         // Timer reached 0
         isTimerRunning = false
+        
+        // Play notification sound
+        val notificationResId = if (isOnBreak) R.raw.mola else R.raw.bitince
+        try {
+            val mp = MediaPlayer.create(context, notificationResId)
+            mp.setOnCompletionListener { it.release() }
+            mp.start()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         if (isOnBreak) {
             // Break finished - reset to initial focus duration
             isOnBreak = false
@@ -162,13 +240,6 @@ fun HomeScreen(
     
     // Immersive Mode Logic
     var isImmersiveMode by remember { mutableStateOf(false) }
-    
-    // Reset immersive mode when timer stops
-    LaunchedEffect(isTimerRunning) {
-        if (!isTimerRunning) {
-            isImmersiveMode = false
-        }
-    }
     
     // Reset immersive mode when scrolling
     LaunchedEffect(pagerState.isScrollInProgress) {
@@ -224,7 +295,15 @@ fun HomeScreen(
         ) { page ->
             when (page) {
                 0 -> StatisticsScreen(onNavigateToSettings, textColor)
-                1 -> ClockScreen(currentTime, onNavigateToSettings, clockFontFamily, textColor, clockFont)
+                1 -> ClockScreen(
+                    currentTime = currentTime,
+                    onNavigateToSettings = onNavigateToSettings,
+                    clockFontFamily = clockFontFamily,
+                    textColor = textColor,
+                    clockFontKey = clockFont,
+                    isImmersiveMode = isImmersiveMode,
+                    onToggleImmersiveMode = { isImmersiveMode = !isImmersiveMode }
+                )
                 2 -> TimerScreen(
                     isRunning = isTimerRunning,
                     seconds = timerSeconds,
@@ -275,9 +354,7 @@ fun HomeScreen(
                     textColor = textColor,
                     isImmersiveMode = isImmersiveMode,
                     onToggleImmersiveMode = { 
-                        if (isTimerRunning) {
-                            isImmersiveMode = !isImmersiveMode
-                        }
+                        isImmersiveMode = !isImmersiveMode
                     }
                 )
             }
@@ -292,7 +369,8 @@ fun HomeScreen(
                     initialTimerSeconds = seconds // Track initial duration for statistics
                     isTimerRunning = false
                     showDurationPicker = false
-                }
+                },
+                isDark = theme == "dark"
             )
         }
         
@@ -334,11 +412,25 @@ private fun ClockScreen(
     onNavigateToSettings: () -> Unit,
     clockFontFamily: FontFamily,
     textColor: Color,
-    clockFontKey: String = "menil"
+    clockFontKey: String = "menil",
+    isImmersiveMode: Boolean = false,
+    onToggleImmersiveMode: () -> Unit = {}
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(indication = null, interactionSource = remember { MutableInteractionSource() }) {
+                onToggleImmersiveMode()
+            }
+    ) {
         // Settings icon with absolute positioning (7% from top, 7% from right)
-        SettingsIconButton(onNavigateToSettings, textColor)
+        AnimatedVisibility(
+            visible = !isImmersiveMode,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            SettingsIconButton(onNavigateToSettings, textColor)
+        }
         
         // Main content
         Column(
@@ -759,142 +851,124 @@ private fun getCurrentTimeString(amString: String, pmString: String, is24HourFor
     }
 }
 
+private fun getSoundResourceId(soundName: String): Int {
+    return when (soundName) {
+        "calmness" -> R.raw.calmness2
+        "rain" -> R.raw.rain2
+        "waves" -> R.raw.waves2
+        "fireplace" -> R.raw.fireplace
+        else -> 0
+    }
+}
+
 @Composable
 private fun DurationPickerDialog(
     onDismiss: () -> Unit,
-    onDurationSelected: (Int) -> Unit
+    onDurationSelected: (Int) -> Unit,
+    isDark: Boolean = false
 ) {
-    val context = LocalContext.current
-    val hourStr = stringResource(R.string.hour_singular)
-    val hoursStr = stringResource(R.string.hours_plural)
+    val hourShort = stringResource(R.string.hour_short)
+    val minShort = stringResource(R.string.minute_short)
+    
+    // Theme colors
+    val dialogBg = if (isDark) Color(0xFF1E2218) else Color(0xFFFBFBFB)
+    val textPrimary = if (isDark) Color(0xFFECDFCC) else Color(0xFF1A1A1A)
+    val textSecondary = if (isDark) Color(0xFFECDFCC).copy(alpha = 0.4f) else Color(0xFF999999)
+    val dividerColor = if (isDark) Color(0xFFECDFCC).copy(alpha = 0.08f) else Color(0xFFE0E0E0)
     
     val durationOptions = listOf(
-        Pair("5:00", 5 * 60),
-        Pair("10:00", 10 * 60),
-        Pair("15:00", 15 * 60),
-        Pair("20:00", 20 * 60),
-        Pair("30:00", 30 * 60),
-        Pair("45:00", 45 * 60),
-        Pair("1 $hourStr", 60 * 60),
-        Pair("1 $hourStr 10", 70 * 60),
-        Pair("1 $hourStr 15", 75 * 60),
-        Pair("1 $hourStr 20", 80 * 60),
-        Pair("1 $hourStr 30", 90 * 60),
-        Pair("1 $hourStr 45", 105 * 60),
-        Pair("2 $hoursStr", 120 * 60)
+        Pair("5 $minShort", 5 * 60),
+        Pair("10 $minShort", 10 * 60),
+        Pair("15 $minShort", 15 * 60),
+        Pair("20 $minShort", 20 * 60),
+        Pair("30 $minShort", 30 * 60),
+        Pair("45 $minShort", 45 * 60),
+        Pair("1 $hourShort", 60 * 60),
+        Pair("1 $hourShort 10 $minShort", 70 * 60),
+        Pair("1 $hourShort 15 $minShort", 75 * 60),
+        Pair("1 $hourShort 20 $minShort", 80 * 60),
+        Pair("1 $hourShort 30 $minShort", 90 * 60),
+        Pair("1 $hourShort 45 $minShort", 105 * 60),
+        Pair("2 $hourShort", 120 * 60)
     )
     
-    // Simple state to track selected index - default to 5:00 (index 0)
-    var selectedIndex by remember { mutableStateOf(0) }
+    val listState = rememberLazyListState()
     
     Dialog(onDismissRequest = onDismiss) {
         Surface(
             modifier = Modifier
-                .width(350.dp)
-                .height(500.dp),
-            shape = RoundedCornerShape(16.dp),
-            color = Color.White
+                .width(320.dp)
+                .wrapContentHeight(),
+            shape = RoundedCornerShape(28.dp),
+            color = dialogBg,
+            shadowElevation = 8.dp
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // Title
                 Text(
                     text = stringResource(R.string.select_duration),
                     style = TextStyle(
                         fontFamily = GeistFontFamily,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = Color.Black
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = textPrimary,
+                        letterSpacing = 0.5.sp
                     ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 24.dp, bottom = 16.dp),
-                    textAlign = TextAlign.Center
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
                 
-                // Scrollable list of clickable durations
-                LazyColumn(
+                // Subtle divider
+                Box(
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxWidth(0.85f)
+                        .height(0.5.dp)
+                        .background(dividerColor)
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                // Scrollable duration list - tap to select and apply
+                LazyColumn(
+                    state = listState,
+                    modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                        .height(340.dp)
+                        .padding(horizontal = 20.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     items(durationOptions.size) { index ->
                         val (label, seconds) = durationOptions[index]
-                        val isSelected = selectedIndex == index
                         
-                        Row(
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(50.dp)
-                                .background(
-                                    color = if (isSelected) Color(0xFFE8F5E9) else Color.Transparent,
-                                    shape = RoundedCornerShape(8.dp)
-                                )
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(14.dp))
                                 .clickable {
-                                    selectedIndex = index
+                                    onDurationSelected(seconds)
                                 }
-                                .padding(horizontal = 16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                                .padding(horizontal = 20.dp),
+                            contentAlignment = Alignment.CenterStart
                         ) {
                             Text(
                                 text = label,
                                 style = TextStyle(
                                     fontFamily = GeistFontFamily,
-                                    fontSize = 20.sp,
-                                    color = Color.Black,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Normal,
+                                    color = textSecondary
                                 )
                             )
-                            
-                            // Show checkmark for selected item
-                            if (isSelected) {
-                                Canvas(modifier = Modifier.size(20.dp)) {
-                                    val path = Path().apply {
-                                        moveTo(size.width * 0.2f, size.height * 0.5f)
-                                        lineTo(size.width * 0.4f, size.height * 0.7f)
-                                        lineTo(size.width * 0.8f, size.height * 0.2f)
-                                    }
-                                    drawPath(
-                                        path = path,
-                                        color = Color(0xFF4CAF50),
-                                        style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round)
-                                    )
-                                }
-                            }
                         }
                     }
                 }
                 
-                // Confirm button at bottom
-                Button(
-                    onClick = {
-                        val selectedDuration = durationOptions[selectedIndex].second
-                        onDurationSelected(selectedDuration)
-                        onDismiss()
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF4CAF50)
-                    ),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.confirm),
-                        style = TextStyle(
-                            fontFamily = GeistFontFamily,
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    )
-                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
         }
     }
