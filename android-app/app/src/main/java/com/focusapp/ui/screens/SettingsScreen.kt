@@ -895,15 +895,31 @@ private fun BreakSubmenu(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = stringResource(R.string.auto_break_start),
-                style = TextStyle(
-                    fontFamily = GeistFontFamily,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = textColor
+            Column(
+                modifier = Modifier.weight(1f).padding(end = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.auto_break_start),
+                    style = TextStyle(
+                        fontFamily = GeistFontFamily,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = textColor
+                    )
                 )
-            )
+                
+                Text(
+                    text = stringResource(R.string.auto_break_description),
+                    style = TextStyle(
+                        fontFamily = GeistFontFamily,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = textColor.copy(alpha = 0.6f),
+                        lineHeight = 18.sp
+                    )
+                )
+            }
             
             Switch(
                 checked = autoBreakEnabled,

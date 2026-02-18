@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.focusapp"
+    namespace = "com.clockera"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.focusapp"
+        applicationId = "com.clockera"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

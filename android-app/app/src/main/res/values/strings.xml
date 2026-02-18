@@ -109,5 +109,6 @@
     <string name="about_tagline">Your premium workspace experience</string>
     <string name="about_description">We designed this app for people who want to feel better while working. Because we know that productivity isn\'t just about to-do lists — it\'s also about the atmosphere you\'re in. The tidiness on your desk, the simplicity on your screen, the harmony of the colors you use… They all affect your mind. That\'s why we created not just an app, but an aesthetic, minimal, and premium workspace experience.\n\nOur goal is to offer you an environment that motivates you, doesn\'t strain your eyes, and makes you think \"I\'m glad I use this\" every time you open it. While managing your work time more consciously, we want you to make your space feel more elegant, more organized, and more like yours. If you value yourself, you want to feel that while working too. That\'s exactly why we\'re here.</string>
     <string name="copyright">© 2025 Clockera. All rights reserved.</string>
+    <string name="auto_break_description">Starts the break timer automatically when the focus session ends.</string>
 
 </resources>

@@ -109,5 +109,6 @@
     <string name="about_tagline">Premium çalışma alanı deneyimin</string>
     <string name="about_description">Biz bu uygulamayı, çalışırken kendini daha iyi hissetmek isteyen insanlar için tasarladık. Çünkü biliyoruz ki verimlilik sadece yapılacaklar listesiyle değil, içinde bulunduğun atmosferle de ilgilidir. Masanın üzerindeki düzen, ekrandaki sadelik, kullanılan renklerin uyumu… Hepsi zihnini etkiler. Bu yüzden ortaya sadece bir uygulama değil; estetik, sade ve premium hissi olan bir çalışma alanı deneyimi çıkardık.\n\nAmacımız seni motive eden, gözünü yormayan, açtığında \"iyi ki bunu kullanıyorum\" dedirten bir ortam sunmak. Çalışma süreni daha bilinçli yönetirken aynı zamanda bulunduğun alanı daha şık, daha düzenli ve daha sana ait hissettirmeni istiyoruz. Kendine değer veriyorsan, çalışırken de bunu hissetmek istiyorsun demektir. Biz tam olarak bunun için buradayız.</string>
     <string name="copyright">© 2025 Clockera. Tüm hakları saklıdır.</string>
+    <string name="auto_break_description">Odaklanma süresi bittiğinde mola sayacını otomatik başlatır.</string>
 
 </resources>
