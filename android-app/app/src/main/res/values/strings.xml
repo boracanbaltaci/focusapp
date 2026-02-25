@@ -90,20 +90,10 @@
     <string name="on_break_label">Break</string>
 
     <!-- Settings -->
-    <string name="clock_sound">Clock Sound</string>
     <string name="format_24_hour">24-Hour Format</string>
-    <string name="sounds">Sounds</string>
-    <string name="background_sound">Background Sound</string>
     <string name="about">About</string>
     <string name="subscription">Subscription</string>
     <string name="rate_us">Rate Us</string>
-    
-    <!-- Sound Names -->
-    <string name="sound_none">None</string>
-    <string name="sound_calmness">Calmness</string>
-    <string name="sound_rain">Rain</string>
-    <string name="sound_waves">Waves</string>
-    <string name="sound_fireplace">Fireplace</string>
 
     <!-- About Page -->
     <string name="about_tagline">Your premium workspace experience</string>

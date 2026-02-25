@@ -29,7 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.focusapp.R
+import com.clockera.R
 import com.focusapp.data.StatisticsRepository
 import com.focusapp.ui.theme.GeistFontFamily
 import kotlinx.coroutines.delay

@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.focusapp.R
+import com.clockera.R
 import com.focusapp.data.repository.SettingsRepository
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable

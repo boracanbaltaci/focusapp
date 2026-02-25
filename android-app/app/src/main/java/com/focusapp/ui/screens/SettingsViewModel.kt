@@ -74,13 +74,7 @@ class SettingsViewModel(context: Context) : ViewModel() {
         settingsRepository.setBreakDurationMinutes(minutes)
     }
     
-    private val _clockSoundEnabled = MutableStateFlow(settingsRepository.getClockSoundEnabled())
-    val clockSoundEnabled: StateFlow<Boolean> = _clockSoundEnabled
-    
-    fun setClockSoundEnabled(enabled: Boolean) {
-        _clockSoundEnabled.value = enabled
-        settingsRepository.setClockSoundEnabled(enabled)
-    }
+
     
     private val _is24HourFormat = MutableStateFlow(settingsRepository.getIs24HourFormat())
     val is24HourFormat: StateFlow<Boolean> = _is24HourFormat
@@ -90,11 +84,11 @@ class SettingsViewModel(context: Context) : ViewModel() {
         settingsRepository.setIs24HourFormat(enabled)
     }
     
-    private val _backgroundSound = MutableStateFlow(settingsRepository.getBackgroundSound())
-    val backgroundSound: StateFlow<String> = _backgroundSound
+    private val _colorPairIndex = MutableStateFlow(settingsRepository.getColorPairIndex())
+    val colorPairIndex: StateFlow<Int> = _colorPairIndex
     
-    fun setBackgroundSound(sound: String) {
-        _backgroundSound.value = sound
-        settingsRepository.setBackgroundSound(sound)
+    fun setColorPairIndex(index: Int) {
+        _colorPairIndex.value = index
+        settingsRepository.setColorPairIndex(index)
     }
 }

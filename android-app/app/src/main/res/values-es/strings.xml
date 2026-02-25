@@ -90,10 +90,7 @@
     <string name="on_break_label">Pausa</string>
 
     <!-- Settings -->
-    <string name="clock_sound">Sonido del reloj</string>
     <string name="format_24_hour">Formato de 24 horas</string>
-    <string name="sounds">Sonidos</string>
-    <string name="background_sound">Sonido de fondo</string>
     <string name="about">Acerca de</string>
     <string name="subscription">Suscripción</string>
     <string name="rate_us">Califícanos</string>

@@ -71,13 +71,7 @@ class SettingsRepository(context: Context) {
         prefs.edit().putInt("break_duration_minutes", minutes).apply()
     }
     
-    fun getClockSoundEnabled(): Boolean {
-        return prefs.getBoolean("clock_sound_enabled", false)
-    }
-    
-    fun setClockSoundEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean("clock_sound_enabled", enabled).apply()
-    }
+
     
     fun getIs24HourFormat(): Boolean {
         return prefs.getBoolean("is_24_hour_format", false)
@@ -87,11 +81,11 @@ class SettingsRepository(context: Context) {
         prefs.edit().putBoolean("is_24_hour_format", enabled).apply()
     }
     
-    fun getBackgroundSound(): String {
-        return prefs.getString("background_sound", "none") ?: "none"
+    fun getColorPairIndex(): Int {
+        return prefs.getInt("color_pair_index", 0)
     }
     
-    fun setBackgroundSound(sound: String) {
-        prefs.edit().putString("background_sound", sound).apply()
+    fun setColorPairIndex(index: Int) {
+        prefs.edit().putInt("color_pair_index", index).apply()
     }
 }

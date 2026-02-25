@@ -14,7 +14,7 @@ import android.graphics.RectF
 import android.graphics.Shader
 import android.view.View
 import android.widget.RemoteViews
-import com.focusapp.R
+import com.clockera.R
 import com.focusapp.ui.MainActivity
 
 class AestheticWidgetProvider : AppWidgetProvider() {

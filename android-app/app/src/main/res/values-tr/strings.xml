@@ -90,20 +90,10 @@
     <string name="on_break_label">Mola</string>
 
     <!-- Settings -->
-    <string name="clock_sound">Saat Sesi</string>
     <string name="format_24_hour">24 Saatlik Biçim</string>
-    <string name="sounds">Sesler</string>
-    <string name="background_sound">Arkaplan Sesi</string>
     <string name="about">Hakkında</string>
     <string name="subscription">Abonelik</string>
     <string name="rate_us">Bizi Değerlendir</string>
-
-    <!-- Sound Names -->
-    <string name="sound_none">Yok</string>
-    <string name="sound_calmness">Sakinlik</string>
-    <string name="sound_rain">Yağmur</string>
-    <string name="sound_waves">Dalgalar</string>
-    <string name="sound_fireplace">Şömine</string>
 
     <!-- About Page -->
     <string name="about_tagline">Premium çalışma alanı deneyimin</string>

@@ -1,7 +1,6 @@
 package com.focusapp.ui.screens
 
 import androidx.compose.foundation.Canvas
-import android.media.MediaPlayer
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.animation.AnimatedVisibility
@@ -32,6 +31,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -41,7 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.focusapp.R
+import com.clockera.R
 import com.focusapp.data.StatisticsRepository
 import com.focusapp.ui.components.ProportionalScaleBox
 import com.focusapp.ui.theme.MenilFontFamily
@@ -80,11 +81,42 @@ fun HomeScreen(
     // Collect settings
     val clockFont by settingsViewModel.clockFont.collectAsState()
     val theme by settingsViewModel.theme.collectAsState()
+    val colorPairIndex by settingsViewModel.colorPairIndex.collectAsState()
     
-    // Theme-based colors
-    val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
-    val textColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
-    val arcColor = if (theme == "dark") Color(0xFFECDFCC).copy(alpha = 0.3f) else Color(0xFFE5E5E5)
+    // Default theme colors (used for statistics screen always)
+    val defaultBackgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
+    val defaultTextColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
+    
+    // Color pairs: each is (lightColor, darkColor)
+    val colorPairs = listOf(
+        Pair(Color(0xFFFDFDC9), Color(0xFFC69FD5)), // Lemon + Wisteria
+        Pair(Color(0xFFCBD9FF), Color(0xFF3F6048)), // Periwinkle + Hunter Green
+        Pair(Color(0xFFBDDBF7), Color(0xFF6071B6)), // Uranian Blue + Glaucous
+        Pair(Color(0xFFBAD797), Color(0xFF670626)), // Matcha + Cherry
+        Pair(Color(0xFFC2D8C4), Color(0xFF222222)), // Matcha Mist + Dusty Coal
+        Pair(Color(0xFFFAF0CA), Color(0xFF0D3B66))  // Lemon Chiffon + Yale Blue
+    )
+    
+    // Effective colors for Clock/Timer screens
+    val effectiveBackgroundColor: Color
+    val effectiveTextColor: Color
+    if (colorPairIndex in 1..colorPairs.size) {
+        val pair = colorPairs[colorPairIndex - 1]
+        if (theme == "dark") {
+            effectiveBackgroundColor = pair.second // dark color as bg
+            effectiveTextColor = pair.first         // light color as text
+        } else {
+            effectiveBackgroundColor = pair.first   // light color as bg
+            effectiveTextColor = pair.second        // dark color as text
+        }
+    } else {
+        effectiveBackgroundColor = defaultBackgroundColor
+        effectiveTextColor = defaultTextColor
+    }
+    
+    val backgroundColor = effectiveBackgroundColor
+    val textColor = effectiveTextColor
+    val arcColor = effectiveTextColor.copy(alpha = 0.15f)
     
     // Font selection
     val clockFontFamily = when (clockFont) {
@@ -126,70 +158,7 @@ fun HomeScreen(
     val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
     val is24HourFormat by settingsViewModel.is24HourFormat.collectAsState()
-    val backgroundSound by settingsViewModel.backgroundSound.collectAsState()
-    val clockSoundEnabled by settingsViewModel.clockSoundEnabled.collectAsState()
-    
-    // Ticking Sound Logic - MediaPlayer for continuous ticking track
-    val tickingMediaPlayer = remember {
-        MediaPlayer.create(context, R.raw.ticking)?.apply {
-            isLooping = true
-        }
-    }
-    
-    DisposableEffect(Unit) {
-        onDispose {
-            tickingMediaPlayer?.release()
-        }
-    }
-    
-    // Control ticking sound: play when timer running, not on break, and enabled
-    LaunchedEffect(tickingMediaPlayer, isTimerRunning, isOnBreak, clockSoundEnabled) {
-        if (tickingMediaPlayer != null) {
-            if (isTimerRunning && !isOnBreak && clockSoundEnabled) {
-                if (!tickingMediaPlayer.isPlaying) {
-                    tickingMediaPlayer.start()
-                }
-            } else {
-                if (tickingMediaPlayer.isPlaying) {
-                    tickingMediaPlayer.pause()
-                }
-            }
-        }
-    }
-    
-    // Background Sound Logic
-    val soundResId = getSoundResourceId(backgroundSound)
-    
-    // Manage MediaPlayer lifecycle - recreate only when sound changes
-    val backgroundMediaPlayer = remember(soundResId) {
-        if (soundResId != 0) {
-            MediaPlayer.create(context, soundResId).apply {
-                isLooping = true
-            }
-        } else null
-    }
 
-    // Dispose when sound changes or composable leaves
-    DisposableEffect(backgroundMediaPlayer) {
-        onDispose {
-            backgroundMediaPlayer?.release()
-        }
-    }
-
-    // Control Play/Pause based on timer state
-    LaunchedEffect(backgroundMediaPlayer, isTimerRunning, isOnBreak) {
-        if (backgroundMediaPlayer != null) {
-            if (isTimerRunning && !isOnBreak) {
-                if (!backgroundMediaPlayer.isPlaying) {
-                     backgroundMediaPlayer.start()
-                }
-            } else {
-                if (backgroundMediaPlayer.isPlaying) {
-                    backgroundMediaPlayer.pause()
-                }
-            }
-        }
-    }
     
     // Update clock every second
     LaunchedEffect(amString, pmString, is24HourFormat) {
@@ -209,15 +178,7 @@ fun HomeScreen(
         // Timer reached 0
         isTimerRunning = false
         
-        // Play notification sound
-        val notificationResId = if (isOnBreak) R.raw.mola else R.raw.bitince
-        try {
-            val mp = MediaPlayer.create(context, notificationResId)
-            mp.setOnCompletionListener { it.release() }
-            mp.start()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+
 
         if (isOnBreak) {
             // Break finished - reset to initial focus duration
@@ -240,6 +201,7 @@ fun HomeScreen(
     
     // Immersive Mode Logic
     var isImmersiveMode by remember { mutableStateOf(false) }
+    var showColorPicker by remember { mutableStateOf(false) }
     
     // Reset immersive mode when scrolling
     LaunchedEffect(pagerState.isScrollInProgress) {
@@ -294,10 +256,11 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize()
         ) { page ->
             when (page) {
-                0 -> StatisticsScreen(onNavigateToSettings, textColor)
+                0 -> StatisticsScreen(onNavigateToSettings, defaultTextColor)
                 1 -> ClockScreen(
                     currentTime = currentTime,
                     onNavigateToSettings = onNavigateToSettings,
+                    onOpenColorPicker = { showColorPicker = true },
                     clockFontFamily = clockFontFamily,
                     textColor = textColor,
                     clockFontKey = clockFont,
@@ -350,6 +313,7 @@ fun HomeScreen(
                         }
                     },
                     onNavigateToSettings = onNavigateToSettings,
+                    onOpenColorPicker = { showColorPicker = true },
                     clockFontFamily = clockFontFamily,
                     textColor = textColor,
                     isImmersiveMode = isImmersiveMode,
@@ -371,6 +335,19 @@ fun HomeScreen(
                     showDurationPicker = false
                 },
                 isDark = theme == "dark"
+            )
+        }
+        
+        // Color picker modal
+        if (showColorPicker) {
+            ColorPickerModal(
+                colorPairs = colorPairs,
+                selectedIndex = colorPairIndex,
+                isDark = theme == "dark",
+                onSelect = { index ->
+                    settingsViewModel.setColorPairIndex(index)
+                },
+                onDismiss = { showColorPicker = false }
             )
         }
         
@@ -410,6 +387,7 @@ fun HomeScreen(
 private fun ClockScreen(
     currentTime: String,
     onNavigateToSettings: () -> Unit,
+    onOpenColorPicker: () -> Unit,
     clockFontFamily: FontFamily,
     textColor: Color,
     clockFontKey: String = "menil",
@@ -430,6 +408,15 @@ private fun ClockScreen(
             exit = fadeOut()
         ) {
             SettingsIconButton(onNavigateToSettings, textColor)
+        }
+        
+        // Color picker icon (top-left)
+        AnimatedVisibility(
+            visible = !isImmersiveMode,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            ColorPickerIconButton(onClick = onOpenColorPicker, iconColor = textColor)
         }
         
         // Main content
@@ -515,6 +502,7 @@ private fun TimerScreen(
     onTimerClick: () -> Unit,
     onFinish: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onOpenColorPicker: () -> Unit,
     clockFontFamily: FontFamily,
     textColor: Color,
     isImmersiveMode: Boolean,
@@ -536,6 +524,16 @@ private fun TimerScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             SettingsIconButton(onNavigateToSettings, textColor)
+        }
+        
+        // Color picker icon (top-left)
+        androidx.compose.animation.AnimatedVisibility(
+            visible = !isImmersiveMode,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            ColorPickerIconButton(onClick = onOpenColorPicker, iconColor = textColor)
         }
         
         // Main content
@@ -851,15 +849,6 @@ private fun getCurrentTimeString(amString: String, pmString: String, is24HourFor
     }
 }
 
-private fun getSoundResourceId(soundName: String): Int {
-    return when (soundName) {
-        "calmness" -> R.raw.calmness2
-        "rain" -> R.raw.rain2
-        "waves" -> R.raw.waves2
-        "fireplace" -> R.raw.fireplace
-        else -> 0
-    }
-}
 
 @Composable
 private fun DurationPickerDialog(
@@ -969,6 +958,235 @@ private fun DurationPickerDialog(
                 }
                 
                 Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun ColorPickerIconButton(onClick: () -> Unit, iconColor: Color) {
+    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        // Position: 7% from top, 7% from left (mirrors settings icon)
+        val xOffset = maxWidth * 0.07f - 16.dp
+        val yOffset = maxHeight * 0.07f
+        
+        IconButton(
+            onClick = onClick,
+            modifier = Modifier
+                .size(32.dp)
+                .offset(x = xOffset, y = yOffset)
+        ) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val centerX = size.width / 2f
+                val centerY = size.height / 2f
+                val r = size.width * 0.38f
+                val strokeW = 2.dp.toPx()
+                
+                // Draw eyedropper icon
+                // Main body (angled rectangle)
+                val bodyPath = Path().apply {
+                    moveTo(centerX + r * 0.1f, centerY - r * 0.9f)
+                    lineTo(centerX + r * 0.5f, centerY - r * 0.5f)
+                    lineTo(centerX - r * 0.4f, centerY + r * 0.6f)
+                    lineTo(centerX - r * 0.8f, centerY + r * 0.2f)
+                    close()
+                }
+                drawPath(
+                    path = bodyPath,
+                    color = iconColor,
+                    style = Stroke(width = strokeW, cap = StrokeCap.Round)
+                )
+                
+                // Tip (triangle)
+                val tipPath = Path().apply {
+                    moveTo(centerX - r * 0.4f, centerY + r * 0.6f)
+                    lineTo(centerX - r * 0.65f, centerY + r * 0.85f)
+                    lineTo(centerX - r * 0.8f, centerY + r * 0.2f)
+                }
+                drawPath(
+                    path = tipPath,
+                    color = iconColor,
+                    style = Stroke(width = strokeW, cap = StrokeCap.Round)
+                )
+                
+                // Top bulb (circle)
+                drawCircle(
+                    color = iconColor,
+                    radius = r * 0.22f,
+                    center = Offset(centerX + r * 0.3f, centerY - r * 0.7f),
+                    style = Stroke(width = strokeW)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ColorPickerModal(
+    colorPairs: List<Pair<Color, Color>>,
+    selectedIndex: Int,
+    isDark: Boolean,
+    onSelect: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val dialogBg = if (isDark) Color(0xFF1E1E1E) else Color(0xFFF8F8F8)
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f)
+    val checkColor = if (isDark) Color.White else Color.Black
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .shadow(
+                    elevation = 24.dp,
+                    shape = RoundedCornerShape(28.dp),
+                    ambientColor = Color.Black.copy(alpha = 0.15f)
+                )
+                .clip(RoundedCornerShape(28.dp))
+                .background(dialogBg)
+                .padding(24.dp)
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Default (no custom color) option
+                val isDefaultSelected = selectedIndex == 0
+                
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (isDefaultSelected) checkColor.copy(alpha = 0.1f)
+                            else Color.Transparent
+                        )
+                        .clickable { onSelect(0); onDismiss() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    // Reset icon (circle with slash)
+                    Canvas(modifier = Modifier.size(28.dp)) {
+                        val s = size.width
+                        val sw = 2.dp.toPx()
+                        drawCircle(
+                            color = checkColor.copy(alpha = 0.5f),
+                            radius = s * 0.4f,
+                            style = Stroke(width = sw)
+                        )
+                        drawLine(
+                            color = checkColor.copy(alpha = 0.5f),
+                            start = Offset(s * 0.25f, s * 0.75f),
+                            end = Offset(s * 0.75f, s * 0.25f),
+                            strokeWidth = sw,
+                            cap = StrokeCap.Round
+                        )
+                    }
+                    if (isDefaultSelected) {
+                        Canvas(modifier = Modifier
+                            .size(12.dp)
+                            .align(Alignment.BottomEnd)
+                        ) {
+                            val path = Path().apply {
+                                moveTo(size.width * 0.15f, size.height * 0.5f)
+                                lineTo(size.width * 0.4f, size.height * 0.8f)
+                                lineTo(size.width * 0.85f, size.height * 0.2f)
+                            }
+                            drawPath(
+                                path = path,
+                                color = checkColor,
+                                style = Stroke(
+                                    width = 2.dp.toPx(),
+                                    cap = StrokeCap.Round
+                                )
+                            )
+                        }
+                    }
+                }
+                
+                Divider(
+                    color = borderColor,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+                
+                // Color pair circles in grid (rows of 3)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    colorPairs.chunked(3).forEachIndexed { rowIndex, rowPairs ->
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            rowPairs.forEachIndexed { colIndex, pair ->
+                                val pairIndex = rowIndex * 3 + colIndex + 1
+                                val isSelected = selectedIndex == pairIndex
+                                
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .aspectRatio(1f)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .background(
+                                            if (isSelected) checkColor.copy(alpha = 0.08f)
+                                            else Color.Transparent
+                                        )
+                                        .clickable { onSelect(pairIndex); onDismiss() },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    // Two overlapping circles for each pair
+                                    Box(modifier = Modifier.size(48.dp)) {
+                                        // Light color circle (back-left)
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .align(Alignment.TopStart)
+                                                .shadow(2.dp, CircleShape)
+                                                .clip(CircleShape)
+                                                .background(pair.first)
+                                        )
+                                        // Dark color circle (front-right)
+                                        Box(
+                                            modifier = Modifier
+                                                .size(32.dp)
+                                                .align(Alignment.BottomEnd)
+                                                .shadow(2.dp, CircleShape)
+                                                .clip(CircleShape)
+                                                .background(pair.second)
+                                        )
+                                    }
+                                    
+                                    // Selection checkmark indicator
+                                    if (isSelected) {
+                                        Canvas(modifier = Modifier
+                                            .size(14.dp)
+                                            .align(Alignment.BottomCenter)
+                                            .offset(y = 2.dp)
+                                        ) {
+                                            val path = Path().apply {
+                                                moveTo(size.width * 0.15f, size.height * 0.5f)
+                                                lineTo(size.width * 0.4f, size.height * 0.8f)
+                                                lineTo(size.width * 0.85f, size.height * 0.2f)
+                                            }
+                                            drawPath(
+                                                path = path,
+                                                color = checkColor,
+                                                style = Stroke(
+                                                    width = 2.dp.toPx(),
+                                                    cap = StrokeCap.Round
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                            // Fill remaining space if row has fewer than 3 items
+                            repeat(3 - rowPairs.size) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
             }
         }
     }

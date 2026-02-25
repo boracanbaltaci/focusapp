@@ -26,7 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.focusapp.R
+import com.clockera.R
 import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.GeistFontFamily
 import androidx.compose.ui.res.painterResource
@@ -45,14 +45,11 @@ fun SettingsScreen(
     val language by settingsViewModel.language.collectAsState()
     val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
-    val clockSoundEnabled by settingsViewModel.clockSoundEnabled.collectAsState()
     val is24HourFormat by settingsViewModel.is24HourFormat.collectAsState()
-    val backgroundSound by settingsViewModel.backgroundSound.collectAsState()
     
     var showFontSubmenu by remember { mutableStateOf(false) }
     var showLanguageSubmenu by remember { mutableStateOf(false) }
     var showBreakSubmenu by remember { mutableStateOf(false) }
-    var showSoundsSubmenu by remember { mutableStateOf(false) }
     var showAboutSubmenu by remember { mutableStateOf(false) }
     var pendingLanguageChange by remember { mutableStateOf<String?>(null) }
     
@@ -90,7 +87,6 @@ fun SettingsScreen(
                 showFontSubmenu -> stringResource(R.string.font_selection) to { showFontSubmenu = false }
                 showLanguageSubmenu -> stringResource(R.string.language) to { showLanguageSubmenu = false }
                 showBreakSubmenu -> stringResource(R.string.auto_break) to { showBreakSubmenu = false }
-                showSoundsSubmenu -> stringResource(R.string.sounds) to { showSoundsSubmenu = false }
                 showAboutSubmenu -> stringResource(R.string.about) to { showAboutSubmenu = false }
                 else -> stringResource(R.string.settings) to onBack
             }
@@ -168,7 +164,6 @@ fun SettingsScreen(
                     showFontSubmenu -> "font"
                     showLanguageSubmenu -> "language"
                     showBreakSubmenu -> "break"
-                    showSoundsSubmenu -> "sounds"
                     showAboutSubmenu -> "about"
                     else -> "main"
                 }
@@ -219,16 +214,7 @@ fun SettingsScreen(
                             onBack = { showBreakSubmenu = false },
                             textColor = textColor
                         )
-                    } else if (showSoundsSubmenu) {
-                        // Sounds Submenu
-                        SoundsSubmenu(
-                            clockSoundEnabled = clockSoundEnabled,
-                            onClockSoundChange = { settingsViewModel.setClockSoundEnabled(it) },
-                            selectedSound = backgroundSound,
-                            onSoundSelect = { settingsViewModel.setBackgroundSound(it) },
-                            onBack = { showSoundsSubmenu = false },
-                            textColor = textColor
-                        )
+
                     } else if (showAboutSubmenu) {
                         // About Page
                         AboutSubmenu(
@@ -296,19 +282,6 @@ fun SettingsScreen(
                             title = stringResource(R.string.auto_break),
                             subtitle = if (autoBreakEnabled) "$breakDurationMinutes ${stringResource(R.string.break_min_suffix)}" else "Off",
                             onClick = { showBreakSubmenu = true },
-                            textColor = textColor
-                        )
-                        
-                        Divider(
-                            modifier = Modifier.padding(vertical = 4.dp),
-                            color = textColor.copy(alpha = 0.1f)
-                        )
-                        
-                        // Sounds (clickable to open submenu)
-                        ClickableSettingItem(
-                            title = stringResource(R.string.sounds),
-                            subtitle = "",
-                            onClick = { showSoundsSubmenu = true },
                             textColor = textColor
                         )
                         
@@ -935,122 +908,7 @@ private fun BreakSubmenu(
     }
 }
 
-@Composable
-private fun SoundsSubmenu(
-    clockSoundEnabled: Boolean,
-    onClockSoundChange: (Boolean) -> Unit,
-    selectedSound: String,
-    onSoundSelect: (String) -> Unit,
-    onBack: () -> Unit,
-    textColor: Color
-) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
 
-        
-        // Clock Sound toggle
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.clock_sound),
-                style = TextStyle(
-                    fontFamily = GeistFontFamily,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = textColor
-                )
-            )
-            
-            Switch(
-                checked = clockSoundEnabled,
-                onCheckedChange = onClockSoundChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFF4CAF50),
-                    checkedTrackColor = Color(0xFF4CAF50).copy(alpha = 0.5f),
-                    uncheckedThumbColor = Color.Gray,
-                    uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
-                )
-            )
-        }
-        
-        Divider(color = textColor.copy(alpha = 0.1f))
-        
-        // Background Sounds
-        Text(
-            text = stringResource(R.string.background_sound),
-            style = TextStyle(
-                fontFamily = GeistFontFamily,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = textColor
-            ),
-            modifier = Modifier.padding(vertical = 4.dp)
-        )
-        
-        val soundOptions = listOf(
-            stringResource(R.string.sound_none) to "none",
-            stringResource(R.string.sound_calmness) to "calmness",
-            stringResource(R.string.sound_rain) to "rain",
-            stringResource(R.string.sound_waves) to "waves",
-            stringResource(R.string.sound_fireplace) to "fireplace"
-        )
-        
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            soundOptions.forEach { (label, value) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(
-                            role = Role.RadioButton,
-                            onClick = { onSoundSelect(value) }
-                        )
-                        .padding(vertical = 12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = label,
-                        style = TextStyle(
-                            fontFamily = GeistFontFamily,
-                            fontSize = 16.sp,
-                            color = textColor.copy(alpha = if (selectedSound == value) 1f else 0.6f),
-                            fontWeight = if (selectedSound == value) FontWeight.Bold else FontWeight.Normal
-                        )
-                    )
-                    
-                    if (selectedSound == value) {
-                        // Checkmark indicator
-                        val checkColor = Color(0xFF4CAF50)
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            val path = androidx.compose.ui.graphics.Path().apply {
-                                moveTo(size.width * 0.2f, size.height * 0.5f)
-                                lineTo(size.width * 0.4f, size.height * 0.7f)
-                                lineTo(size.width * 0.8f, size.height * 0.2f)
-                            }
-                            drawPath(
-                                path = path,
-                                color = checkColor,
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(
-                                    width = 3.dp.toPx(),
-                                    cap = androidx.compose.ui.graphics.StrokeCap.Round
-                                )
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 private fun SettingItem(

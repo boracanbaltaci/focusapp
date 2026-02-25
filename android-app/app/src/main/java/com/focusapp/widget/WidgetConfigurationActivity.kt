@@ -18,7 +18,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.res.ResourcesCompat
-import com.focusapp.R
+import com.clockera.R
 import java.io.File
 import java.io.FileOutputStream
 
