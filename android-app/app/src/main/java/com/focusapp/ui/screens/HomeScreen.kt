@@ -44,7 +44,9 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.clockera.R
 import com.focusapp.data.StatisticsRepository
+import com.focusapp.ui.components.LocalScreenScale
 import com.focusapp.ui.components.ProportionalScaleBox
+import com.focusapp.ui.components.scaled
 import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.AvocadoFontFamily
 import com.focusapp.ui.theme.BreakFontFamily
@@ -352,11 +354,12 @@ fun HomeScreen(
         }
         
         // Bottom navigation dots
+        val navScale = LocalScreenScale.current
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
-                .padding(bottom = 32.dp),
+                .padding(bottom = 32.dp.scaled(navScale, min = 16.dp)),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -376,7 +379,7 @@ fun HomeScreen(
                     )
                 }
                 if (index < 2) {
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(16.dp.scaled(navScale, min = 8.dp)))
                 }
             }
         }
@@ -537,10 +540,11 @@ private fun TimerScreen(
         }
         
         // Main content
+        val timerScale = LocalScreenScale.current
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 48.dp),
+                .padding(horizontal = 48.dp.scaled(timerScale, min = 16.dp)),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -565,7 +569,7 @@ private fun TimerScreen(
                                     text = stringResource(R.string.on_break_label),
                                     style = TextStyle(
                                         fontFamily = GeistFontFamily,
-                                        fontSize = 24.sp,
+                                        fontSize = 24.sp.scaled(timerScale, min = 14.sp),
                                         fontWeight = FontWeight.Normal,
                                         color = textColor.copy(alpha = 0.4f),
                                         letterSpacing = 2.sp
@@ -667,13 +671,13 @@ private fun TimerScreen(
                             containerColor = if (isRunning) Color(0xFFFF4444) else Color(0xFF4CAF50)
                         ),
                         modifier = Modifier
-                            .padding(start = 24.dp)
-                            .size(56.dp),
+                            .padding(start = 24.dp.scaled(timerScale, min = 8.dp))
+                            .size(56.dp.scaled(timerScale, min = 36.dp)),
                         shape = CircleShape,
                         contentPadding = PaddingValues(0.dp)
                     ) {
                         // Play or Pause icon using Canvas
-                        Canvas(modifier = Modifier.size(24.dp)) {
+                        Canvas(modifier = Modifier.size(24.dp.scaled(timerScale, min = 16.dp))) {
                             if (isRunning) {
                                 // Pause icon (two vertical lines)
                                 val lineWidth = size.width * 0.15f
@@ -727,13 +731,13 @@ private fun TimerScreen(
                             containerColor = Color(0xFF9E9E9E) // Gray color for finish
                         ),
                         modifier = Modifier
-                            .padding(end = 24.dp)
-                            .size(56.dp),
+                            .padding(end = 24.dp.scaled(timerScale, min = 8.dp))
+                            .size(56.dp.scaled(timerScale, min = 36.dp)),
                         shape = CircleShape,
                         contentPadding = PaddingValues(0.dp)
                     ) {
                         // Stop/Finish icon (square) using Canvas
-                        Canvas(modifier = Modifier.size(20.dp)) {
+                        Canvas(modifier = Modifier.size(20.dp.scaled(timerScale, min = 14.dp))) {
                             drawRect(
                                 color = Color.White,
                                 topLeft = Offset(0f, 0f),
@@ -754,14 +758,16 @@ private fun TimerScreen(
 @Composable
 fun SettingsIconButton(onClick: () -> Unit, iconColor: Color) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val iconScale = LocalScreenScale.current
         // Position: 7% from top, 7% from right (93% from left)
-        val xOffset = maxWidth * 0.93f - 16.dp  // 7% from right
+        val iconSize = 32.dp.scaled(iconScale, min = 24.dp)
+        val xOffset = maxWidth * 0.93f - (iconSize / 2)  // 7% from right
         val yOffset = maxHeight * 0.07f          // 7% from top
         
         IconButton(
             onClick = onClick,
             modifier = Modifier
-                .size(32.dp)
+                .size(iconSize)
                 .offset(x = xOffset, y = yOffset)
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
@@ -884,11 +890,12 @@ private fun DurationPickerDialog(
     val listState = rememberLazyListState()
     
     Dialog(onDismissRequest = onDismiss) {
+        val dialogScale = LocalScreenScale.current
         Surface(
             modifier = Modifier
-                .width(320.dp)
+                .fillMaxWidth(0.85f)
                 .wrapContentHeight(),
-            shape = RoundedCornerShape(28.dp),
+            shape = RoundedCornerShape(28.dp.scaled(dialogScale, min = 16.dp)),
             color = dialogBg,
             shadowElevation = 8.dp
         ) {
@@ -926,7 +933,7 @@ private fun DurationPickerDialog(
                     state = listState,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(340.dp)
+                        .height(340.dp.scaled(dialogScale, min = 200.dp))
                         .padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
@@ -966,14 +973,16 @@ private fun DurationPickerDialog(
 @Composable
 fun ColorPickerIconButton(onClick: () -> Unit, iconColor: Color) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+        val iconScale = LocalScreenScale.current
         // Position: 7% from top, 7% from left (mirrors settings icon)
-        val xOffset = maxWidth * 0.07f - 16.dp
+        val iconSize = 32.dp.scaled(iconScale, min = 24.dp)
+        val xOffset = maxWidth * 0.07f - (iconSize / 2)
         val yOffset = maxHeight * 0.07f
         
         IconButton(
             onClick = onClick,
             modifier = Modifier
-                .size(32.dp)
+                .size(iconSize)
                 .offset(x = xOffset, y = yOffset)
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
@@ -1135,11 +1144,14 @@ private fun ColorPickerModal(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     // Two overlapping circles for each pair
-                                    Box(modifier = Modifier.size(48.dp)) {
+                                    val cpScale = LocalScreenScale.current
+                                    val circleContainerSize = 48.dp.scaled(cpScale, min = 32.dp)
+                                    val circleSize = 32.dp.scaled(cpScale, min = 22.dp)
+                                    Box(modifier = Modifier.size(circleContainerSize)) {
                                         // Light color circle (back-left)
                                         Box(
                                             modifier = Modifier
-                                                .size(32.dp)
+                                                .size(circleSize)
                                                 .align(Alignment.TopStart)
                                                 .shadow(2.dp, CircleShape)
                                                 .clip(CircleShape)
@@ -1148,7 +1160,7 @@ private fun ColorPickerModal(
                                         // Dark color circle (front-right)
                                         Box(
                                             modifier = Modifier
-                                                .size(32.dp)
+                                                .size(circleSize)
                                                 .align(Alignment.BottomEnd)
                                                 .shadow(2.dp, CircleShape)
                                                 .clip(CircleShape)

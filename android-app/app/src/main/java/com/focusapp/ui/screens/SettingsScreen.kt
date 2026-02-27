@@ -27,6 +27,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clockera.R
+import com.focusapp.ui.components.LocalScreenScale
+import com.focusapp.ui.components.scaled
 import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.GeistFontFamily
 import androidx.compose.ui.res.painterResource
@@ -71,6 +73,7 @@ fun SettingsScreen(
     val textColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
     val containerColor = if (theme == "dark") Color(0xFF181C14) else Color.White
     
+    val settingsScale = LocalScreenScale.current
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -79,8 +82,8 @@ fun SettingsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(48.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(24.dp.scaled(settingsScale, min = 12.dp)),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Determine active title and back action
             val (headerTitle, onBackAction) = when {
@@ -99,9 +102,9 @@ fun SettingsScreen(
             ) {
                 IconButton(
                     onClick = onBackAction,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier.size(32.dp)
                 ) {
-                    Canvas(modifier = Modifier.size(32.dp)) {
+                    Canvas(modifier = Modifier.size(24.dp)) {
                         // Draw back arrow
                         val arrowSize = size.width * 0.6f
                         val centerY = size.height / 2f
@@ -114,7 +117,7 @@ fun SettingsScreen(
                             color = arrowColor,
                             start = Offset(startX, centerY),
                             end = Offset(startX - arrowSize, centerY),
-                            strokeWidth = 3.dp.toPx()
+                            strokeWidth = 2.dp.toPx()
                         )
                         
                         // Arrow head top
@@ -122,7 +125,7 @@ fun SettingsScreen(
                             color = arrowColor,
                             start = Offset(startX - arrowSize, centerY),
                             end = Offset(startX - arrowSize + arrowSize * 0.4f, centerY - arrowSize * 0.4f),
-                            strokeWidth = 3.dp.toPx()
+                            strokeWidth = 2.dp.toPx()
                         )
                         
                         // Arrow head bottom
@@ -130,34 +133,34 @@ fun SettingsScreen(
                             color = arrowColor,
                             start = Offset(startX - arrowSize, centerY),
                             end = Offset(startX - arrowSize + arrowSize * 0.4f, centerY + arrowSize * 0.4f),
-                            strokeWidth = 3.dp.toPx()
+                            strokeWidth = 2.dp.toPx()
                         )
                     }
                 }
                 
-                Spacer(modifier = Modifier.width(24.dp))
+                Spacer(modifier = Modifier.width(12.dp))
                 
                 Text(
                     text = headerTitle,
                     style = TextStyle(
                         fontFamily = GeistFontFamily,
-                        fontSize = 32.sp,
+                        fontSize = 22.sp.scaled(settingsScale, min = 16.sp),
                         fontWeight = FontWeight.Normal,
                         color = textColor
                     )
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(4.dp))
             
             // Settings container with rounded rectangle
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = containerColor,
-                shadowElevation = 2.dp
+                shadowElevation = 1.dp
             ) {
                 // Determine current submenu key for scroll state reset
                 val currentSubmenuKey = when {
@@ -178,8 +181,8 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(scrollState)
-                        .padding(32.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                        .padding(16.dp.scaled(settingsScale, min = 8.dp)),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     if (showFontSubmenu) {
                         // Font Selection Submenu
@@ -234,7 +237,7 @@ fun SettingsScreen(
                         )
                         
                         Divider(
-                            modifier = Modifier.padding(vertical = 4.dp),
+                            modifier = Modifier.padding(vertical = 1.dp),
                             color = textColor.copy(alpha = 0.1f)
                         )
 
@@ -247,7 +250,7 @@ fun SettingsScreen(
                         )
                         
                         Divider(
-                            modifier = Modifier.padding(vertical = 4.dp),
+                            modifier = Modifier.padding(vertical = 1.dp),
                             color = textColor.copy(alpha = 0.1f)
                         )
                         
@@ -260,7 +263,7 @@ fun SettingsScreen(
                         )
                         
                         Divider(
-                            modifier = Modifier.padding(vertical = 4.dp),
+                            modifier = Modifier.padding(vertical = 1.dp),
                             color = textColor.copy(alpha = 0.1f)
                         )
                         
@@ -273,7 +276,7 @@ fun SettingsScreen(
                         )
                         
                         Divider(
-                            modifier = Modifier.padding(vertical = 4.dp),
+                            modifier = Modifier.padding(vertical = 1.dp),
                             color = textColor.copy(alpha = 0.1f)
                         )
                         
@@ -286,7 +289,7 @@ fun SettingsScreen(
                         )
                         
                         Divider(
-                            modifier = Modifier.padding(vertical = 4.dp),
+                            modifier = Modifier.padding(vertical = 1.dp),
                             color = textColor.copy(alpha = 0.1f)
                         )
                         
@@ -337,11 +340,12 @@ private fun ClickableSettingItem(
     onClick: () -> Unit,
     textColor: Color
 ) {
+    val scale = LocalScreenScale.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 12.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -352,7 +356,7 @@ private fun ClickableSettingItem(
                 text = title,
                 style = TextStyle(
                     fontFamily = GeistFontFamily,
-                    fontSize = 18.sp,
+                    fontSize = 15.sp.scaled(scale, min = 12.sp),
                     fontWeight = FontWeight.Normal,
                     color = textColor
                 )
@@ -362,7 +366,7 @@ private fun ClickableSettingItem(
                     text = subtitle,
                     style = TextStyle(
                         fontFamily = GeistFontFamily,
-                        fontSize = 14.sp,
+                        fontSize = 12.sp,
                         color = textColor.copy(alpha = 0.6f)
                     )
                 )
@@ -370,7 +374,7 @@ private fun ClickableSettingItem(
         }
         
         // Chevron arrow
-        Canvas(modifier = Modifier.size(20.dp)) {
+        Canvas(modifier = Modifier.size(16.dp)) {
             val arrowColor = textColor.copy(alpha = 0.6f)
             val centerY = size.height / 2f
             val arrowSize = size.width * 0.5f
@@ -398,10 +402,11 @@ private fun SwitchSettingItem(
     onCheckedChange: (Boolean) -> Unit,
     textColor: Color
 ) {
+    val switchScale = LocalScreenScale.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -409,7 +414,7 @@ private fun SwitchSettingItem(
             text = title,
             style = TextStyle(
                 fontFamily = GeistFontFamily,
-                fontSize = 18.sp,
+                fontSize = 15.sp.scaled(switchScale, min = 12.sp),
                 fontWeight = FontWeight.Normal,
                 color = textColor
             )
@@ -437,7 +442,7 @@ private fun ThemeSettingItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 12.dp),
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -445,7 +450,7 @@ private fun ThemeSettingItem(
             text = stringResource(R.string.theme),  // Use string resource
             style = TextStyle(
                 fontFamily = GeistFontFamily,
-                fontSize = 18.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Normal,
                 color = textColor
             )
@@ -459,7 +464,7 @@ private fun ThemeSettingItem(
                 text = if (isDark) stringResource(R.string.dark) else stringResource(R.string.light),
                 style = TextStyle(
                     fontFamily = GeistFontFamily,
-                    fontSize = 14.sp,
+                    fontSize = 12.sp,
                     color = textColor.copy(alpha = 0.6f)
                 )
             )
@@ -555,7 +560,7 @@ private fun FontSubmenu(
                             role = Role.RadioButton,
                             onClick = { onFontSelect(value) }
                         )
-                        .padding(vertical = 16.dp),
+                        .padding(vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -564,7 +569,7 @@ private fun FontSubmenu(
                         text = currentTimePreview,
                         style = TextStyle(
                             fontFamily = fontFamily,
-                            fontSize = 32.sp,
+                            fontSize = 32.sp.scaled(LocalScreenScale.current, min = 20.sp),
                             fontWeight = FontWeight.Normal,
                             color = textColor.copy(alpha = if (isSelected) 1f else 0.5f),
                             letterSpacing = 1.sp
@@ -1017,7 +1022,7 @@ private fun AboutSubmenu(
                 text = "Clockera",
                 style = TextStyle(
                     fontFamily = GeistFontFamily,
-                    fontSize = 28.sp,
+                    fontSize = 28.sp.scaled(LocalScreenScale.current, min = 18.sp),
                     fontWeight = FontWeight.Bold,
                     color = textColor,
                     letterSpacing = 1.sp

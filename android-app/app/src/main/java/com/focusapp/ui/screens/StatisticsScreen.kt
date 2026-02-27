@@ -30,6 +30,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.clockera.R
+import com.focusapp.ui.components.LocalScreenScale
+import com.focusapp.ui.components.scaled
 import com.focusapp.data.StatisticsRepository
 import com.focusapp.ui.theme.GeistFontFamily
 import kotlinx.coroutines.delay
@@ -83,20 +85,21 @@ fun StatisticsScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         SettingsIconButton(onClick = onNavigateToSettings, iconColor = textColor)
 
+        val statsScale = LocalScreenScale.current
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 32.dp),
+                .padding(horizontal = 32.dp.scaled(statsScale, min = 12.dp)),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.height(36.dp.scaled(statsScale, min = 16.dp)))
 
             // Title
             Text(
                 text = stringResource(R.string.statistics_title),
                 style = TextStyle(
                     fontFamily = GeistFontFamily,
-                    fontSize = 22.sp,
+                    fontSize = 22.sp.scaled(statsScale, min = 16.sp),
                     fontWeight = FontWeight.Bold,
                     color = textColor,
                     letterSpacing = 0.5.sp
@@ -163,7 +166,7 @@ fun StatisticsScreen(
                     text = if (hours > 0) "$hours" else "$minutes",
                     style = TextStyle(
                         fontFamily = GeistFontFamily,
-                        fontSize = 36.sp,
+                        fontSize = 36.sp.scaled(statsScale, min = 24.sp),
                         fontWeight = FontWeight.Bold,
                         color = textColor
                     )
@@ -174,7 +177,7 @@ fun StatisticsScreen(
                            else stringResource(R.string.stat_minutes),
                     style = TextStyle(
                         fontFamily = GeistFontFamily,
-                        fontSize = 15.sp,
+                        fontSize = 15.sp.scaled(statsScale, min = 11.sp),
                         color = subtleTextColor
                     ),
                     modifier = Modifier.padding(bottom = 6.dp)
@@ -185,7 +188,7 @@ fun StatisticsScreen(
                         text = "$minutes",
                         style = TextStyle(
                             fontFamily = GeistFontFamily,
-                            fontSize = 36.sp,
+                            fontSize = 36.sp.scaled(statsScale, min = 24.sp),
                             fontWeight = FontWeight.Bold,
                             color = textColor
                         )
@@ -195,7 +198,7 @@ fun StatisticsScreen(
                         text = stringResource(R.string.stat_minutes),
                         style = TextStyle(
                             fontFamily = GeistFontFamily,
-                            fontSize = 15.sp,
+                            fontSize = 15.sp.scaled(statsScale, min = 11.sp),
                             color = subtleTextColor
                         ),
                         modifier = Modifier.padding(bottom = 6.dp)
@@ -307,7 +310,7 @@ fun StatisticsScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(64.dp))
+            Spacer(modifier = Modifier.height(64.dp.scaled(statsScale, min = 32.dp)))
         }
     }
 }
@@ -440,6 +443,7 @@ private fun ViewModeChip(
     onClick: () -> Unit,
     accentColor: Color
 ) {
+    val chipScale = LocalScreenScale.current
     Box(
         modifier = Modifier
             .clickable(onClick = onClick)
@@ -447,14 +451,14 @@ private fun ViewModeChip(
                 color = if (selected) accentColor else Color.Transparent,
                 shape = RoundedCornerShape(20.dp)
             )
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp.scaled(chipScale, min = 8.dp), vertical = 8.dp.scaled(chipScale, min = 4.dp)),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
             style = TextStyle(
                 fontFamily = GeistFontFamily,
-                fontSize = 14.sp,
+                fontSize = 14.sp.scaled(chipScale, min = 10.sp),
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 color = if (selected) Color.White else Color.Gray
             )

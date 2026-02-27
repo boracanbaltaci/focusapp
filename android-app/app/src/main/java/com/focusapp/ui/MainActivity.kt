@@ -27,6 +27,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.focusapp.ui.components.LocalScreenScale
+import com.focusapp.ui.components.ScreenScaleProvider
+import com.focusapp.ui.components.scaled
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -44,11 +47,21 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 class MainActivity : ComponentActivity() {
+    
+    override fun attachBaseContext(newBase: Context) {
+        val settingsRepository = SettingsRepository(newBase)
+        val languageCode = settingsRepository.getLanguage()
+        val locale = Locale(languageCode)
+        Locale.setDefault(locale)
+        
+        val config = Configuration(newBase.resources.configuration)
+        config.setLocale(locale)
+        val context = newBase.createConfigurationContext(config)
+        super.attachBaseContext(context)
+    }
+    
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Apply saved language on activity creation
-        applySavedLanguage()
         
         // Enable edge-to-edge and hide status bar
         enableEdgeToEdge()
@@ -63,26 +76,12 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    FocusApp()
+                    ScreenScaleProvider(modifier = Modifier.fillMaxSize()) {
+                        FocusApp()
+                    }
                 }
             }
         }
-    }
-    
-    private fun applySavedLanguage() {
-        val settingsRepository = SettingsRepository(this)
-        val languageCode = settingsRepository.getLanguage()
-        updateLocale(languageCode)
-    }
-    
-    private fun updateLocale(languageCode: String) {
-        val locale = Locale(languageCode)
-        Locale.setDefault(locale)
-        
-        val config = Configuration(resources.configuration)
-        config.setLocale(locale)
-        
-        resources.updateConfiguration(config, resources.displayMetrics)
     }
 }
 
@@ -173,7 +172,7 @@ fun SplashScreen(onSplashFinished: () -> Unit) {
             painter = painterResource(id = R.mipmap.ic_launcher),
             contentDescription = "Clockera",
             modifier = Modifier
-                .size(160.dp)
+                .size(160.dp.scaled(LocalScreenScale.current, min = 80.dp))
                 .alpha(alphaAnim.value)
                 .scale(scaleAnim.value)
         )
