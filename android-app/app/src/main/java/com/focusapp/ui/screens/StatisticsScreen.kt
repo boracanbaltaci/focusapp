@@ -113,6 +113,21 @@ fun StatisticsScreen(
         ) {
             Spacer(modifier = Modifier.height(40.dp.scaled(statsScale, min = 20.dp)))
 
+            // ── Title ──
+            Text(
+                text = stringResource(R.string.statistics_title),
+                style = TextStyle(
+                    fontFamily = GeistFontFamily,
+                    fontSize = 22.sp.scaled(statsScale, min = 16.sp),
+                    fontWeight = FontWeight.Bold,
+                    color = textColor,
+                    letterSpacing = 0.5.sp
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             // ── Hero: Total time ──
             Row(
                 verticalAlignment = Alignment.Bottom,
