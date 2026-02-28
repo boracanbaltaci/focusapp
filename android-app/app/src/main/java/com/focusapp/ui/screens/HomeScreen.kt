@@ -155,6 +155,7 @@ fun HomeScreen(
     var showDurationPicker by remember { mutableStateOf(false) }
     var isOnBreak by remember { mutableStateOf(false) } // Track break state
     var timerGeneration by remember { mutableStateOf(0) } // Force LaunchedEffect restart
+    var selectedCategory by remember { mutableStateOf<FocusCategory?>(null) }
     
     // Auto break settings
     val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
@@ -188,7 +189,7 @@ fun HomeScreen(
             timerSeconds = initialTimerSeconds
         } else {
             // Focus session finished - save to statistics
-            statisticsRepository.saveSession(initialTimerSeconds / 60, initialTimerSeconds)
+            statisticsRepository.saveSession(initialTimerSeconds / 60, initialTimerSeconds, selectedCategory?.name)
             // Always switch to break mode
             isOnBreak = true
             timerSeconds = breakDurationMinutes * 60
@@ -281,7 +282,7 @@ fun HomeScreen(
                                 // Only save to stats if it was a focus session
                                 val elapsedSeconds = initialTimerSeconds - timerSeconds
                                 if (elapsedSeconds > 0) {
-                                    statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds)
+                                    statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name)
                                 }
                             }
                         } else {
@@ -308,7 +309,7 @@ fun HomeScreen(
                             val elapsedSeconds = initialTimerSeconds - timerSeconds
                             isTimerRunning = false
                             if (elapsedSeconds > 0) {
-                                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds)
+                                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name)
                             }
                             // Reset to initial duration
                             timerSeconds = initialTimerSeconds
@@ -322,7 +323,9 @@ fun HomeScreen(
                     onToggleImmersiveMode = { 
                         isImmersiveMode = !isImmersiveMode
                     },
-                    isDark = theme == "dark"
+                    isDark = theme == "dark",
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = { selectedCategory = it }
                 )
             }
         }
@@ -511,10 +514,11 @@ private fun TimerScreen(
     textColor: Color,
     isImmersiveMode: Boolean,
     onToggleImmersiveMode: () -> Unit,
-    isDark: Boolean = false
+    isDark: Boolean = false,
+    selectedCategory: FocusCategory? = null,
+    onCategorySelected: (FocusCategory?) -> Unit = {}
 ) {
     val context = LocalContext.current
-    var selectedCategory by remember { mutableStateOf<FocusCategory?>(null) }
     
     Box(modifier = Modifier
         .fillMaxSize()
@@ -756,23 +760,31 @@ private fun TimerScreen(
         Spacer(modifier = Modifier.height(80.dp))
         }
 
-        // Pin category selector at bottom-left
-        androidx.compose.animation.AnimatedVisibility(
-            visible = !isImmersiveMode,
-            enter = fadeIn(),
-            exit = fadeOut(),
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 24.dp, bottom = 80.dp)
+        // Pin category selector at bottom-left, aligned with color picker icon
+        // Uses same 7% offset as ColorPickerIconButton but mirrored to bottom
+        BoxWithConstraints(
+            modifier = Modifier.fillMaxSize()
         ) {
-            PinCategorySelector(
-                selectedCategory = selectedCategory,
-                onCategorySelected = { category ->
-                    selectedCategory = category
-                },
-                textColor = textColor,
-                isDark = isDark
-            )
+            val pinIconScale = LocalScreenScale.current
+            val pinIconSize = 32.dp.scaled(pinIconScale, min = 24.dp)
+            val pinXOffset = maxWidth * 0.07f - (pinIconSize / 2)
+            val pinYOffset = maxHeight * 0.88f - pinIconSize
+
+            androidx.compose.animation.AnimatedVisibility(
+                visible = !isImmersiveMode,
+                enter = fadeIn(),
+                exit = fadeOut(),
+                modifier = Modifier.offset(x = pinXOffset, y = pinYOffset)
+            ) {
+                PinCategorySelector(
+                    selectedCategory = selectedCategory,
+                    onCategorySelected = { category ->
+                        onCategorySelected(category)
+                    },
+                    textColor = textColor,
+                    isDark = isDark
+                )
+            }
         }
     }
 }

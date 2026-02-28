@@ -91,4 +91,12 @@ class SettingsViewModel(context: Context) : ViewModel() {
         _colorPairIndex.value = index
         settingsRepository.setColorPairIndex(index)
     }
+
+    private val _pomodoroSessions = MutableStateFlow(settingsRepository.getPomodoroSessions())
+    val pomodoroSessions: StateFlow<Int> = _pomodoroSessions
+
+    fun setPomodoroSessions(sessions: Int) {
+        _pomodoroSessions.value = sessions
+        settingsRepository.setPomodoroSessions(sessions)
+    }
 }

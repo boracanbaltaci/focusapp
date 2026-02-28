@@ -11,11 +11,11 @@ class StatisticsRepository(context: Context) {
         context.getSharedPreferences("statistics_prefs", Context.MODE_PRIVATE)
     private val gson = Gson()
     
-    fun saveSession(durationMinutes: Int, elapsedSeconds: Int = 0) {
+    fun saveSession(durationMinutes: Int, elapsedSeconds: Int = 0, category: String? = null) {
         val sessions = getAllSessions().toMutableList()
         // Save at least 1 minute if any time was spent
         val effectiveMinutes = if (durationMinutes == 0 && elapsedSeconds > 0) 1 else durationMinutes.coerceAtLeast(if (elapsedSeconds > 0) 1 else 0)
-        sessions.add(SessionData(System.currentTimeMillis(), effectiveMinutes))
+        sessions.add(SessionData(System.currentTimeMillis(), effectiveMinutes, category))
         
         val json = gson.toJson(sessions)
         prefs.edit().putString("sessions", json).apply()
@@ -27,7 +27,7 @@ class StatisticsRepository(context: Context) {
         return gson.fromJson(json, type) ?: emptyList()
     }
     
-    fun getWeeklyData(): Map<Int, Int> {
+    fun getWeeklyData(category: String? = null): Map<Int, Int> {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -36,7 +36,9 @@ class StatisticsRepository(context: Context) {
         calendar.set(Calendar.MILLISECOND, 0)
         val weekStart = calendar.timeInMillis
         
-        val sessions = getAllSessions().filter { it.date >= weekStart }
+        val sessions = getAllSessions().filter { 
+            it.date >= weekStart && (category == null || it.category == category)
+        }
         val weekData = mutableMapOf<Int, Int>()
         
         // Initialize all 7 days with 0
@@ -56,7 +58,7 @@ class StatisticsRepository(context: Context) {
         return weekData
     }
     
-    fun getMonthlyData(): Map<Int, Int> {
+    fun getMonthlyData(category: String? = null): Map<Int, Int> {
         val calendar = Calendar.getInstance()
         val currentMonth = calendar.get(Calendar.MONTH)
         val currentYear = calendar.get(Calendar.YEAR)
@@ -68,7 +70,8 @@ class StatisticsRepository(context: Context) {
         val sessions = getAllSessions().filter { session ->
             filterCal.timeInMillis = session.date
             filterCal.get(Calendar.MONTH) == currentMonth && 
-            filterCal.get(Calendar.YEAR) == currentYear
+            filterCal.get(Calendar.YEAR) == currentYear &&
+            (category == null || session.category == category)
         }
         
         val monthData = mutableMapOf<Int, Int>()
@@ -88,14 +91,15 @@ class StatisticsRepository(context: Context) {
         return monthData
     }
     
-    fun getYearlyData(): Map<Int, Int> {
+    fun getYearlyData(category: String? = null): Map<Int, Int> {
         val calendar = Calendar.getInstance()
         val currentYear = calendar.get(Calendar.YEAR)
         
         val filterCal = Calendar.getInstance()
         val sessions = getAllSessions().filter { session ->
             filterCal.timeInMillis = session.date
-            filterCal.get(Calendar.YEAR) == currentYear
+            filterCal.get(Calendar.YEAR) == currentYear &&
+            (category == null || session.category == category)
         }
         
         val yearData = mutableMapOf<Int, Int>()
@@ -117,5 +121,29 @@ class StatisticsRepository(context: Context) {
     
     fun getTotalMinutes(data: Map<Int, Int>): Int {
         return data.values.sum()
+    }
+    
+    /**
+     * Returns total minutes per category for the current week.
+     * Returns a map of category name -> total minutes.
+     */
+    fun getWeeklyCategoryBreakdown(): Map<String, Int> {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val weekStart = calendar.timeInMillis
+        
+        val sessions = getAllSessions().filter { it.date >= weekStart && it.category != null }
+        val breakdown = mutableMapOf<String, Int>()
+        
+        sessions.forEach { session ->
+            val cat = session.category ?: return@forEach
+            breakdown[cat] = (breakdown[cat] ?: 0) + session.durationMinutes
+        }
+        
+        return breakdown
     }
 }

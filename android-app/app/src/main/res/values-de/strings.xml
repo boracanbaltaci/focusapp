@@ -93,12 +93,27 @@
     <string name="format_24_hour">24-Stunden-Format</string>
     <string name="about">Über</string>
     <string name="subscription">Abonnement</string>
-    <string name="milestones">Meilensteine</string>
+    <string name="milestones">Belohnungen</string>
     <string name="rate_us">Bewerten Sie uns</string>
 
     <!-- About Page -->
     <string name="about_tagline">Dein Premium-Arbeitsbereich-Erlebnis</string>
     <string name="about_description">Wir haben diese App für Menschen entwickelt, die sich beim Arbeiten besser fühlen wollen. Denn wir wissen, dass Produktivität nicht nur mit To-do-Listen zu tun hat — sondern auch mit der Atmosphäre, in der man sich befindet. Die Ordnung auf dem Schreibtisch, die Schlichtheit auf dem Bildschirm, die Harmonie der verwendeten Farben… All das beeinflusst den Geist. Deshalb haben wir nicht einfach eine App geschaffen, sondern ein ästhetisches, minimales und Premium-Arbeitsbereich-Erlebnis.\n\nUnser Ziel ist es, dir eine Umgebung zu bieten, die dich motiviert, deine Augen nicht belastet und dich bei jedem Öffnen denken lässt: „Gut, dass ich das nutze." Während du deine Arbeitszeit bewusster gestaltest, möchten wir, dass sich dein Raum eleganter, geordneter und persönlicher anfühlt. Wenn du dich selbst wertschätzt, willst du das auch beim Arbeiten spüren. Genau dafür sind wir hier.</string>
     <string name="copyright">© 2025 Clockera. Alle Rechte vorbehalten.</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_name">Clockera Erinnerungen</string>
+    <string name="notif_inactivity_title">Clockera</string>
+    <string name="notif_inactivity_body">Du hast seit 5 Tagen nicht gearbeitet, wo bist du? 😢</string>
+    <string name="notif_weekly_title">Wochenzusammenfassung</string>
+    <string name="notif_weekly_body">Du hast dir diese Woche %1$s für dich selbst genommen! %2$s</string>
+    <string name="notif_weekly_10h">Du hast dir diese Woche über 10 Stunden für dich selbst genommen! 🏆</string>
+    <string name="notif_hours">Stunden</string>
+    <string name="notif_minutes">Minuten</string>
+
+    <!-- Break / Sessions -->
+    <string name="break_off">Aus</string>
+    <string name="sessions">Sitzungen</string>
+    <string name="sessions_count">%d Sitzungen</string>
 
 </resources>

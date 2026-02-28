@@ -93,7 +93,7 @@
     <string name="format_24_hour">24 Saatlik Biçim</string>
     <string name="about">Hakkında</string>
     <string name="subscription">Abonelik</string>
-    <string name="milestones">Kilometre Taşları</string>
+    <string name="milestones">Ödüller</string>
     <string name="rate_us">Bizi Değerlendir</string>
 
     <!-- About Page -->
@@ -101,5 +101,20 @@
     <string name="about_description">Biz bu uygulamayı, çalışırken kendini daha iyi hissetmek isteyen insanlar için tasarladık. Çünkü biliyoruz ki verimlilik sadece yapılacaklar listesiyle değil, içinde bulunduğun atmosferle de ilgilidir. Masanın üzerindeki düzen, ekrandaki sadelik, kullanılan renklerin uyumu… Hepsi zihnini etkiler. Bu yüzden ortaya sadece bir uygulama değil; estetik, sade ve premium hissi olan bir çalışma alanı deneyimi çıkardık.\n\nAmacımız seni motive eden, gözünü yormayan, açtığında \"iyi ki bunu kullanıyorum\" dedirten bir ortam sunmak. Çalışma süreni daha bilinçli yönetirken aynı zamanda bulunduğun alanı daha şık, daha düzenli ve daha sana ait hissettirmeni istiyoruz. Kendine değer veriyorsan, çalışırken de bunu hissetmek istiyorsun demektir. Biz tam olarak bunun için buradayız.</string>
     <string name="copyright">© 2025 Clockera. Tüm hakları saklıdır.</string>
     <string name="auto_break_description">Odaklanma süresi bittiğinde mola sayacını otomatik başlatır.</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_name">Clockera Hatırlatmalar</string>
+    <string name="notif_inactivity_title">Clockera</string>
+    <string name="notif_inactivity_body">Tam 5 gündür hiç çalışmamış olamazsın nerelerdesin? 😢</string>
+    <string name="notif_weekly_title">Haftalık Özet</string>
+    <string name="notif_weekly_body">Bu hafta kendine %1$s ayırdın! %2$s</string>
+    <string name="notif_weekly_10h">Bu hafta kendine 10 saatten fazla zaman ayırdın! 🏆</string>
+    <string name="notif_hours">saat</string>
+    <string name="notif_minutes">dakika</string>
+
+    <!-- Break / Sessions -->
+    <string name="break_off">Kapalı</string>
+    <string name="sessions">Oturumlar</string>
+    <string name="sessions_count">%d oturum</string>
 
 </resources>

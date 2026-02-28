@@ -88,4 +88,12 @@ class SettingsRepository(context: Context) {
     fun setColorPairIndex(index: Int) {
         prefs.edit().putInt("color_pair_index", index).apply()
     }
+
+    fun getPomodoroSessions(): Int {
+        return prefs.getInt("pomodoro_sessions", 4)
+    }
+
+    fun setPomodoroSessions(sessions: Int) {
+        prefs.edit().putInt("pomodoro_sessions", sessions).apply()
+    }
 }

@@ -93,7 +93,7 @@
     <string name="format_24_hour">24-Hour Format</string>
     <string name="about">About</string>
     <string name="subscription">Subscription</string>
-    <string name="milestones">Milestones</string>
+    <string name="milestones">Rewards</string>
     <string name="rate_us">Rate Us</string>
 
     <!-- About Page -->
@@ -101,5 +101,20 @@
     <string name="about_description">We designed this app for people who want to feel better while working. Because we know that productivity isn\'t just about to-do lists — it\'s also about the atmosphere you\'re in. The tidiness on your desk, the simplicity on your screen, the harmony of the colors you use… They all affect your mind. That\'s why we created not just an app, but an aesthetic, minimal, and premium workspace experience.\n\nOur goal is to offer you an environment that motivates you, doesn\'t strain your eyes, and makes you think \"I\'m glad I use this\" every time you open it. While managing your work time more consciously, we want you to make your space feel more elegant, more organized, and more like yours. If you value yourself, you want to feel that while working too. That\'s exactly why we\'re here.</string>
     <string name="copyright">© 2025 Clockera. All rights reserved.</string>
     <string name="auto_break_description">Starts the break timer automatically when the focus session ends.</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_name">Clockera Reminders</string>
+    <string name="notif_inactivity_title">Clockera</string>
+    <string name="notif_inactivity_body">You haven\'t worked for 5 days, where have you been? 😢</string>
+    <string name="notif_weekly_title">Weekly Summary</string>
+    <string name="notif_weekly_body">You spent %1$s on yourself this week! %2$s</string>
+    <string name="notif_weekly_10h">You spent over 10 hours on yourself this week! 🏆</string>
+    <string name="notif_hours">hours</string>
+    <string name="notif_minutes">minutes</string>
+
+    <!-- Break / Sessions -->
+    <string name="break_off">Off</string>
+    <string name="sessions">Sessions</string>
+    <string name="sessions_count">%d sessions</string>
 
 </resources>

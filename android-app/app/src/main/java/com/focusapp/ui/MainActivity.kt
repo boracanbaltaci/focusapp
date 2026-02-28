@@ -1,7 +1,10 @@
 package com.focusapp.ui
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,14 +30,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.focusapp.ui.components.LocalScreenScale
 import com.focusapp.ui.components.ScreenScaleProvider
 import com.focusapp.ui.components.scaled
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.clockera.R
 import com.focusapp.data.repository.SettingsRepository
+import com.focusapp.notification.InactivityCheckWorker
+import com.focusapp.notification.NotificationHelper
+import com.focusapp.notification.WeeklySummaryWorker
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -45,6 +56,7 @@ import com.focusapp.ui.theme.FocusAppTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     
@@ -69,6 +81,57 @@ class MainActivity : ComponentActivity() {
         val controller = WindowInsetsControllerCompat(window, window.decorView)
         controller.hide(WindowInsetsCompat.Type.statusBars())
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        
+        // Save last app open timestamp for inactivity tracking
+        val prefs = getSharedPreferences("focus_app_settings", Context.MODE_PRIVATE)
+        prefs.edit().putLong("last_app_open_timestamp", System.currentTimeMillis()).apply()
+        
+        // Create notification channel
+        NotificationHelper.createNotificationChannel(this)
+        
+        // Request notification permission for API 33+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
+                != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(
+                    this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 1001
+                )
+            }
+        }
+        
+        // Schedule inactivity check worker (every 24 hours)
+        val inactivityWork = PeriodicWorkRequestBuilder<InactivityCheckWorker>(
+            24, TimeUnit.HOURS
+        ).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            InactivityCheckWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            inactivityWork
+        )
+        
+        // Schedule weekly summary worker (every 7 days, aligned to Sunday 16:00)
+        val calendar = Calendar.getInstance()
+        val now = calendar.timeInMillis
+        
+        // Calculate delay to next Sunday 16:00
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY)
+        calendar.set(Calendar.HOUR_OF_DAY, 16)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        if (calendar.timeInMillis <= now) {
+            calendar.add(Calendar.WEEK_OF_YEAR, 1)
+        }
+        val initialDelay = calendar.timeInMillis - now
+        
+        val weeklyWork = PeriodicWorkRequestBuilder<WeeklySummaryWorker>(
+            7, TimeUnit.DAYS
+        ).setInitialDelay(initialDelay, TimeUnit.MILLISECONDS).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            WeeklySummaryWorker.WORK_NAME,
+            ExistingPeriodicWorkPolicy.KEEP,
+            weeklyWork
+        )
         
         setContent {
             FocusAppTheme {

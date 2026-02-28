@@ -17,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -48,11 +50,14 @@ fun SettingsScreen(
     val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
     val is24HourFormat by settingsViewModel.is24HourFormat.collectAsState()
+    val pomodoroSessions by settingsViewModel.pomodoroSessions.collectAsState()
     
     var showFontSubmenu by remember { mutableStateOf(false) }
     var showLanguageSubmenu by remember { mutableStateOf(false) }
     var showBreakSubmenu by remember { mutableStateOf(false) }
     var showAboutSubmenu by remember { mutableStateOf(false) }
+    var showRewardsSubmenu by remember { mutableStateOf(false) }
+    var showSessionsSubmenu by remember { mutableStateOf(false) }
     var pendingLanguageChange by remember { mutableStateOf<String?>(null) }
     
     // Handle language change with LaunchedEffect for safe recreation
@@ -91,6 +96,8 @@ fun SettingsScreen(
                 showLanguageSubmenu -> stringResource(R.string.language) to { showLanguageSubmenu = false }
                 showBreakSubmenu -> stringResource(R.string.auto_break) to { showBreakSubmenu = false }
                 showAboutSubmenu -> stringResource(R.string.about) to { showAboutSubmenu = false }
+                showRewardsSubmenu -> stringResource(R.string.milestones) to { showRewardsSubmenu = false }
+                showSessionsSubmenu -> stringResource(R.string.sessions) to { showSessionsSubmenu = false }
                 else -> stringResource(R.string.settings) to onBack
             }
 
@@ -168,6 +175,8 @@ fun SettingsScreen(
                     showLanguageSubmenu -> "language"
                     showBreakSubmenu -> "break"
                     showAboutSubmenu -> "about"
+                    showRewardsSubmenu -> "rewards"
+                    showSessionsSubmenu -> "sessions"
                     else -> "main"
                 }
                 val scrollState = rememberScrollState()
@@ -224,6 +233,19 @@ fun SettingsScreen(
                             onBack = { showAboutSubmenu = false },
                             textColor = textColor,
                             isDark = theme == "dark"
+                        )
+                    } else if (showRewardsSubmenu) {
+                        // Rewards Grid
+                        RewardsSubmenu(
+                            textColor = textColor,
+                            isDark = theme == "dark"
+                        )
+                    } else if (showSessionsSubmenu) {
+                        // Sessions Selector
+                        SessionsSubmenu(
+                            currentSessions = pomodoroSessions,
+                            onSessionsChange = { settingsViewModel.setPomodoroSessions(it) },
+                            textColor = textColor
                         )
                     } else {
                         // Main Settings Menu
@@ -283,7 +305,7 @@ fun SettingsScreen(
                         // Auto Break Setting (clickable to open submenu)
                         ClickableSettingItem(
                             title = stringResource(R.string.auto_break),
-                            subtitle = if (autoBreakEnabled) "$breakDurationMinutes ${stringResource(R.string.break_min_suffix)}" else "Off",
+                            subtitle = if (autoBreakEnabled) "$breakDurationMinutes ${stringResource(R.string.break_min_suffix)}" else stringResource(R.string.break_off),
                             onClick = { showBreakSubmenu = true },
                             textColor = textColor
                         )
@@ -292,12 +314,25 @@ fun SettingsScreen(
                             modifier = Modifier.padding(vertical = 1.dp),
                             color = textColor.copy(alpha = 0.1f)
                         )
+
+                        // Sessions Setting
+                        ClickableSettingItem(
+                            title = stringResource(R.string.sessions),
+                            subtitle = String.format(stringResource(R.string.sessions_count), pomodoroSessions),
+                            onClick = { showSessionsSubmenu = true },
+                            textColor = textColor
+                        )
                         
-                        // Milestones
+                        Divider(
+                            modifier = Modifier.padding(vertical = 1.dp),
+                            color = textColor.copy(alpha = 0.1f)
+                        )
+                        
+                        // Rewards
                         ClickableSettingItem(
                             title = stringResource(R.string.milestones),
                             subtitle = "",
-                            onClick = { /* TODO: open milestones page */ },
+                            onClick = { showRewardsSubmenu = true },
                             textColor = textColor
                         )
                         
@@ -325,6 +360,50 @@ fun SettingsScreen(
                             subtitle = "",
                             onClick = { /* TODO: open subscription page */ },
                             textColor = textColor
+                        )
+                        
+                        Divider(
+                            modifier = Modifier.padding(vertical = 1.dp),
+                            color = textColor.copy(alpha = 0.1f)
+                        )
+                        
+                        // TEST: Notification test button (temporary)
+                        ClickableSettingItem(
+                            title = "🔔 Test Notifications",
+                            subtitle = "Send all notifications now",
+                            onClick = {
+                                // Inactivity notification
+                                com.focusapp.notification.NotificationHelper.showNotification(
+                                    context,
+                                    context.getString(R.string.notif_inactivity_title),
+                                    context.getString(R.string.notif_inactivity_body),
+                                    1001
+                                )
+                                // Weekly summary notification (example: 3h 47min)
+                                val timeText = "3 ${context.getString(R.string.notif_hours)} 47 ${context.getString(R.string.notif_minutes)}"
+                                com.focusapp.notification.NotificationHelper.showNotification(
+                                    context,
+                                    context.getString(R.string.notif_weekly_title),
+                                    String.format(context.getString(R.string.notif_weekly_body), timeText, "🎉"),
+                                    1002
+                                )
+                                // Weekly 5h+ notification
+                                val timeText2 = "5 ${context.getString(R.string.notif_hours)} 46 ${context.getString(R.string.notif_minutes)}"
+                                com.focusapp.notification.NotificationHelper.showNotification(
+                                    context,
+                                    context.getString(R.string.notif_weekly_title),
+                                    String.format(context.getString(R.string.notif_weekly_body), timeText2, "🔥"),
+                                    1003
+                                )
+                                // Weekly 10h+ notification
+                                com.focusapp.notification.NotificationHelper.showNotification(
+                                    context,
+                                    context.getString(R.string.notif_weekly_title),
+                                    context.getString(R.string.notif_weekly_10h),
+                                    1004
+                                )
+                            },
+                            textColor = Color(0xFFFF9800)
                         )
                     }
                 }
@@ -1097,6 +1176,147 @@ private fun AboutSubmenu(
             )
             
             Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+
+@Composable
+private fun RewardsSubmenu(
+    textColor: Color,
+    isDark: Boolean
+) {
+    val cardBg = if (isDark) Color(0xFF2A2E24) else Color(0xFFF0F0F0)
+    val lockColor = textColor.copy(alpha = 0.3f)
+
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // 5 rows x 3 columns grid
+        for (row in 0 until 5) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                for (col in 0 until 3) {
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .aspectRatio(1f)
+                            .background(cardBg, RoundedCornerShape(12.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Lock icon using Canvas
+                        Canvas(modifier = Modifier.size(28.dp)) {
+                            val w = size.width
+                            val h = size.height
+                            val strokeW = 2.dp.toPx()
+
+                            // Lock body (rectangle)
+                            val bodyTop = h * 0.45f
+                            val bodyLeft = w * 0.2f
+                            val bodyRight = w * 0.8f
+                            val bodyBottom = h * 0.9f
+                            drawRoundRect(
+                                color = lockColor,
+                                topLeft = Offset(bodyLeft, bodyTop),
+                                size = androidx.compose.ui.geometry.Size(bodyRight - bodyLeft, bodyBottom - bodyTop),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(4.dp.toPx()),
+                                style = Stroke(width = strokeW)
+                            )
+
+                            // Lock shackle (arc)
+                            val shackleLeft = w * 0.3f
+                            val shackleRight = w * 0.7f
+                            val shackleTop = h * 0.12f
+                            drawArc(
+                                color = lockColor,
+                                startAngle = 180f,
+                                sweepAngle = 180f,
+                                useCenter = false,
+                                topLeft = Offset(shackleLeft, shackleTop),
+                                size = androidx.compose.ui.geometry.Size(shackleRight - shackleLeft, (bodyTop - shackleTop) * 2),
+                                style = Stroke(width = strokeW, cap = StrokeCap.Round)
+                            )
+
+                            // Keyhole dot
+                            drawCircle(
+                                color = lockColor,
+                                radius = 2.5.dp.toPx(),
+                                center = Offset(w / 2, h * 0.62f)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SessionsSubmenu(
+    currentSessions: Int,
+    onSessionsChange: (Int) -> Unit,
+    textColor: Color
+) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Spacer(modifier = Modifier.height(4.dp))
+
+        for (count in 2..10) {
+            val isSelected = currentSessions == count
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable(
+                        role = Role.RadioButton,
+                        onClick = { onSessionsChange(count) }
+                    )
+                    .padding(vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = String.format(stringResource(R.string.sessions_count), count),
+                    style = TextStyle(
+                        fontFamily = GeistFontFamily,
+                        fontSize = 16.sp,
+                        color = textColor.copy(alpha = if (isSelected) 1f else 0.6f),
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                    )
+                )
+
+                if (isSelected) {
+                    val checkColor = Color(0xFF4CAF50)
+                    Canvas(modifier = Modifier.size(20.dp)) {
+                        val path = androidx.compose.ui.graphics.Path().apply {
+                            moveTo(size.width * 0.2f, size.height * 0.5f)
+                            lineTo(size.width * 0.4f, size.height * 0.7f)
+                            lineTo(size.width * 0.8f, size.height * 0.2f)
+                        }
+                        drawPath(
+                            path = path,
+                            color = checkColor,
+                            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                width = 3.dp.toPx(),
+                                cap = androidx.compose.ui.graphics.StrokeCap.Round
+                            )
+                        )
+                    }
+                }
+            }
+
+            if (count < 10) {
+                Divider(
+                    color = textColor.copy(alpha = 0.1f),
+                    thickness = 0.5.dp
+                )
+            }
         }
     }
 }
