@@ -1,6 +1,8 @@
 package com.focusapp.data
 
+import com.google.gson.annotations.SerializedName
+
 data class SessionData(
-    val date: Long, // Timestamp in milliseconds
-    val durationMinutes: Int // Duration in minutes
+    @SerializedName("date") val date: Long, // Timestamp in milliseconds
+    @SerializedName("durationMinutes") val durationMinutes: Int // Duration in minutes
 )

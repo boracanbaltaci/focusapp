@@ -1,7 +1,11 @@
 package com.focusapp.ui.screens
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -11,14 +15,25 @@ import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.IntOffset
@@ -35,6 +50,9 @@ import com.focusapp.ui.components.scaled
 import com.focusapp.data.StatisticsRepository
 import com.focusapp.ui.theme.GeistFontFamily
 import kotlinx.coroutines.delay
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 enum class ViewMode {
     WEEK, MONTH, YEAR
@@ -48,6 +66,7 @@ fun StatisticsScreen(
     val context = LocalContext.current
     val statisticsRepository = remember { StatisticsRepository(context) }
     var viewMode by remember { mutableStateOf(ViewMode.WEEK) }
+
 
     // Auto-refresh data every ~5 seconds
     var refreshTick by remember { mutableStateOf(0) }
@@ -232,14 +251,53 @@ fun StatisticsScreen(
             val scrollState = rememberScrollState()
             val needsScroll = viewMode == ViewMode.MONTH
             val hourAbbrev = stringResource(R.string.stat_hour_grid)
+            val minAbbrev = stringResource(R.string.stat_minutes)
 
-            // Dynamic grid scale per view mode
-            val gridSteps = when (viewMode) {
-                ViewMode.WEEK -> listOf(1, 2, 3, 4, 5)
-                ViewMode.MONTH -> listOf(5, 10, 15, 20, 25)
-                ViewMode.YEAR -> listOf(5, 10, 15, 20, 25)
+            // Dynamic grid scale based on actual data
+            val maxDataMinutes = data.values.maxOrNull() ?: 0
+            val gridSteps: List<Int>
+            val gridMaxMinutes: Int
+            val gridIsMinutes: Boolean // true = labels show minutes, false = show hours
+
+            if (maxDataMinutes <= 0) {
+                // No data - show a small default scale in minutes
+                gridSteps = listOf(5, 10, 15, 20, 25)
+                gridMaxMinutes = 25
+                gridIsMinutes = true
+            } else if (maxDataMinutes <= 10) {
+                // Very small data: 0-10 minutes
+                gridSteps = listOf(2, 4, 6, 8, 10)
+                gridMaxMinutes = 10
+                gridIsMinutes = true
+            } else if (maxDataMinutes <= 30) {
+                // Small data: 10-30 minutes
+                gridSteps = listOf(5, 10, 15, 20, 30)
+                gridMaxMinutes = 30
+                gridIsMinutes = true
+            } else if (maxDataMinutes <= 60) {
+                // Medium data: 30-60 minutes
+                gridSteps = listOf(10, 20, 30, 40, 60)
+                gridMaxMinutes = 60
+                gridIsMinutes = true
+            } else if (maxDataMinutes <= 180) {
+                // 1-3 hours
+                gridSteps = listOf(1, 2, 3)
+                gridMaxMinutes = 3 * 60
+                gridIsMinutes = false
+            } else if (maxDataMinutes <= 300) {
+                // 3-5 hours
+                gridSteps = listOf(1, 2, 3, 4, 5)
+                gridMaxMinutes = 5 * 60
+                gridIsMinutes = false
+            } else {
+                // 5+ hours - scale up
+                val maxHours = (maxDataMinutes / 60) + 1
+                val step = ((maxHours + 4) / 5).coerceAtLeast(1)
+                val topHour = step * 5
+                gridSteps = (1..5).map { it * step }
+                gridMaxMinutes = topHour * 60
+                gridIsMinutes = false
             }
-            val gridMaxMinutes = gridSteps.last() * 60 // max scale in minutes
 
             Box(
                 modifier = Modifier
@@ -260,14 +318,14 @@ fun StatisticsScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text(
-                                text = "$h$hourAbbrev",
+                                text = if (gridIsMinutes) "$h$minAbbrev" else "$h$hourAbbrev",
                                 style = TextStyle(
                                     fontFamily = GeistFontFamily,
                                     fontSize = 8.sp,
                                     color = subtleTextColor,
                                     textAlign = TextAlign.End
                                 ),
-                                modifier = Modifier.width(24.dp)
+                                modifier = Modifier.width(if (gridIsMinutes) 30.dp else 24.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Box(
@@ -499,4 +557,359 @@ private fun getLabelForKey(key: Int, viewMode: ViewMode): String {
             else -> ""
         }
     }
+}
+
+// --- Pin Category Selector ---
+
+enum class FocusCategory {
+    BOOK, WORK, SPORT, COFFEE, MEDITATION, GAMING
+}
+
+@Composable
+fun PinCategorySelector(
+    selectedCategory: FocusCategory?,
+    onCategorySelected: (FocusCategory?) -> Unit,
+    textColor: Color,
+    isDark: Boolean,
+    modifier: Modifier = Modifier
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    val categories = FocusCategory.entries
+
+    val accentColor = Color(0xFF4CAF50)
+    val buttonBgColor = if (isDark) Color(0xFF2A2A2A) else Color(0xFFF5F5F5)
+    val categoryBgColor = if (isDark) Color(0xFF2A2E24) else Color(0xFFF0F0F0)
+
+    // Animation for button scale (pulse on tap)
+    val buttonScale by animateFloatAsState(
+        targetValue = if (isExpanded) 1.1f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "buttonScale"
+    )
+
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        // Main button - shows tag icon or selected category icon
+        val hasSelection = selectedCategory != null
+        val selectedColor = selectedCategory?.let { getCategoryColor(it) } ?: accentColor
+
+        Box(
+            modifier = Modifier
+                .size(44.dp)
+                .scale(buttonScale)
+                .clip(CircleShape)
+                .background(
+                    if (isExpanded) accentColor
+                    else if (hasSelection) selectedColor.copy(alpha = 0.15f)
+                    else buttonBgColor
+                )
+                .clickable { isExpanded = !isExpanded },
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(modifier = Modifier.size(22.dp)) {
+                if (hasSelection && !isExpanded) {
+                    // Show selected category icon
+                    when (selectedCategory) {
+                        FocusCategory.BOOK -> drawBookIcon(selectedColor)
+                        FocusCategory.WORK -> drawWorkIcon(selectedColor)
+                        FocusCategory.SPORT -> drawSportIcon(selectedColor)
+                        FocusCategory.COFFEE -> drawCoffeeIcon(selectedColor)
+                        FocusCategory.MEDITATION -> drawMeditationIcon(selectedColor)
+                        FocusCategory.GAMING -> drawGamingIcon(selectedColor)
+                        null -> {}
+                    }
+                } else {
+                    // Show tag/label icon
+                    drawTagIcon(
+                        color = if (isExpanded) Color.White else textColor.copy(alpha = 0.6f)
+                    )
+                }
+            }
+        }
+
+        // Category icons (expand to the right)
+        categories.forEachIndexed { index, category ->
+            val itemScale by animateFloatAsState(
+                targetValue = if (isExpanded) 1f else 0f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessLow
+                ),
+                label = "categoryScale$index"
+            )
+
+            val itemOffset by animateDpAsState(
+                targetValue = if (isExpanded) 8.dp else (-20).dp,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                ),
+                label = "categoryOffset$index"
+            )
+
+            if (itemScale > 0.01f) {
+                Spacer(modifier = Modifier.width(itemOffset.coerceAtLeast(0.dp)))
+
+                val isSelected = selectedCategory == category
+                val categoryColor = getCategoryColor(category)
+
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .scale(itemScale)
+                        .clip(CircleShape)
+                        .background(
+                            if (isSelected) categoryColor.copy(alpha = 0.2f)
+                            else categoryBgColor
+                        )
+                        .clickable {
+                            if (selectedCategory == category) {
+                                onCategorySelected(null) // Deselect
+                            } else {
+                                onCategorySelected(category)
+                            }
+                            isExpanded = false // Auto-close after selection
+                        },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Canvas(modifier = Modifier.size(18.dp)) {
+                        when (category) {
+                            FocusCategory.BOOK -> drawBookIcon(
+                                color = if (isSelected) categoryColor else textColor.copy(alpha = 0.6f)
+                            )
+                            FocusCategory.WORK -> drawWorkIcon(
+                                color = if (isSelected) categoryColor else textColor.copy(alpha = 0.6f)
+                            )
+                            FocusCategory.SPORT -> drawSportIcon(
+                                color = if (isSelected) categoryColor else textColor.copy(alpha = 0.6f)
+                            )
+                            FocusCategory.COFFEE -> drawCoffeeIcon(
+                                color = if (isSelected) categoryColor else textColor.copy(alpha = 0.6f)
+                            )
+                            FocusCategory.MEDITATION -> drawMeditationIcon(
+                                color = if (isSelected) categoryColor else textColor.copy(alpha = 0.6f)
+                            )
+                            FocusCategory.GAMING -> drawGamingIcon(
+                                color = if (isSelected) categoryColor else textColor.copy(alpha = 0.6f)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun getCategoryColor(category: FocusCategory): Color {
+    return when (category) {
+        FocusCategory.BOOK -> Color(0xFF5C6BC0)     // Indigo
+        FocusCategory.WORK -> Color(0xFF42A5F5)      // Blue
+        FocusCategory.SPORT -> Color(0xFFEF5350)     // Red
+        FocusCategory.COFFEE -> Color(0xFF8D6E63)    // Brown
+        FocusCategory.MEDITATION -> Color(0xFFAB47BC) // Purple
+        FocusCategory.GAMING -> Color(0xFF66BB6A)    // Green
+    }
+}
+
+// --- Canvas Icon Drawing Functions ---
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawTagIcon(color: Color) {
+    val w = size.width
+    val h = size.height
+    val stroke = Stroke(width = w * 0.09f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+    // Tag body (rounded rectangle with pointed right side)
+    val tagPath = Path().apply {
+        moveTo(w * 0.1f, h * 0.2f)
+        lineTo(w * 0.6f, h * 0.2f)
+        lineTo(w * 0.9f, h * 0.5f)
+        lineTo(w * 0.6f, h * 0.8f)
+        lineTo(w * 0.1f, h * 0.8f)
+        close()
+    }
+    drawPath(tagPath, color = color, style = stroke)
+
+    // Small circle (tag hole)
+    drawCircle(
+        color = color,
+        radius = w * 0.07f,
+        center = Offset(w * 0.28f, h * 0.5f),
+        style = Fill
+    )
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBookIcon(color: Color) {
+    val w = size.width
+    val h = size.height
+    val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+    // Book cover (open book shape)
+    val leftPage = Path().apply {
+        moveTo(w * 0.5f, h * 0.2f)
+        lineTo(w * 0.1f, h * 0.15f)
+        lineTo(w * 0.1f, h * 0.85f)
+        lineTo(w * 0.5f, h * 0.8f)
+    }
+    drawPath(leftPage, color = color, style = stroke)
+
+    val rightPage = Path().apply {
+        moveTo(w * 0.5f, h * 0.2f)
+        lineTo(w * 0.9f, h * 0.15f)
+        lineTo(w * 0.9f, h * 0.85f)
+        lineTo(w * 0.5f, h * 0.8f)
+    }
+    drawPath(rightPage, color = color, style = stroke)
+
+    // Spine
+    drawLine(color, Offset(w * 0.5f, h * 0.2f), Offset(w * 0.5f, h * 0.8f), strokeWidth = w * 0.06f)
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawWorkIcon(color: Color) {
+    val w = size.width
+    val h = size.height
+    val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+    // Briefcase body
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(w * 0.08f, h * 0.35f),
+        size = Size(w * 0.84f, h * 0.55f),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.08f),
+        style = stroke
+    )
+
+    // Handle
+    val handlePath = Path().apply {
+        moveTo(w * 0.3f, h * 0.35f)
+        lineTo(w * 0.3f, h * 0.2f)
+        lineTo(w * 0.7f, h * 0.2f)
+        lineTo(w * 0.7f, h * 0.35f)
+    }
+    drawPath(handlePath, color = color, style = stroke)
+
+    // Middle line
+    drawLine(color, Offset(w * 0.08f, h * 0.58f), Offset(w * 0.92f, h * 0.58f), strokeWidth = w * 0.06f)
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawSportIcon(color: Color) {
+    val w = size.width
+    val h = size.height
+
+    // Dumbbell bar
+    drawLine(color, Offset(w * 0.2f, h * 0.5f), Offset(w * 0.8f, h * 0.5f), strokeWidth = w * 0.07f, cap = StrokeCap.Round)
+
+    // Left weight
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(w * 0.05f, h * 0.25f),
+        size = Size(w * 0.18f, h * 0.5f),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.05f),
+        style = Fill
+    )
+
+    // Right weight
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(w * 0.77f, h * 0.25f),
+        size = Size(w * 0.18f, h * 0.5f),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.05f),
+        style = Fill
+    )
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawCoffeeIcon(color: Color) {
+    val w = size.width
+    val h = size.height
+    val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+    // Cup body
+    drawRoundRect(
+        color = color,
+        topLeft = Offset(w * 0.1f, h * 0.35f),
+        size = Size(w * 0.6f, h * 0.55f),
+        cornerRadius = androidx.compose.ui.geometry.CornerRadius(w * 0.06f),
+        style = stroke
+    )
+
+    // Handle
+    drawArc(
+        color = color,
+        startAngle = -60f,
+        sweepAngle = 120f,
+        useCenter = false,
+        topLeft = Offset(w * 0.62f, h * 0.4f),
+        size = Size(w * 0.28f, h * 0.35f),
+        style = stroke
+    )
+
+    // Steam lines
+    drawLine(color, Offset(w * 0.3f, h * 0.28f), Offset(w * 0.3f, h * 0.1f), strokeWidth = w * 0.05f, cap = StrokeCap.Round)
+    drawLine(color, Offset(w * 0.5f, h * 0.25f), Offset(w * 0.5f, h * 0.05f), strokeWidth = w * 0.05f, cap = StrokeCap.Round)
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawMeditationIcon(color: Color) {
+    val w = size.width
+    val h = size.height
+    val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+    // Head (circle)
+    drawCircle(
+        color = color,
+        radius = w * 0.12f,
+        center = Offset(w * 0.5f, h * 0.2f),
+        style = stroke
+    )
+
+    // Body (sitting in lotus position)
+    val bodyPath = Path().apply {
+        moveTo(w * 0.5f, h * 0.32f)
+        lineTo(w * 0.5f, h * 0.55f)
+    }
+    drawPath(bodyPath, color = color, style = stroke)
+
+    // Legs (crossed)
+    val legsPath = Path().apply {
+        moveTo(w * 0.15f, h * 0.75f)
+        quadraticBezierTo(w * 0.35f, h * 0.55f, w * 0.5f, h * 0.65f)
+        quadraticBezierTo(w * 0.65f, h * 0.55f, w * 0.85f, h * 0.75f)
+    }
+    drawPath(legsPath, color = color, style = stroke)
+
+    // Arms spread
+    drawLine(color, Offset(w * 0.5f, h * 0.42f), Offset(w * 0.2f, h * 0.55f), strokeWidth = w * 0.07f, cap = StrokeCap.Round)
+    drawLine(color, Offset(w * 0.5f, h * 0.42f), Offset(w * 0.8f, h * 0.55f), strokeWidth = w * 0.07f, cap = StrokeCap.Round)
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawGamingIcon(color: Color) {
+    val w = size.width
+    val h = size.height
+    val stroke = Stroke(width = w * 0.08f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+
+    // Controller body (rounded shape)
+    val bodyPath = Path().apply {
+        moveTo(w * 0.2f, h * 0.3f)
+        lineTo(w * 0.8f, h * 0.3f)
+        quadraticBezierTo(w * 0.95f, h * 0.3f, w * 0.95f, h * 0.5f)
+        quadraticBezierTo(w * 0.95f, h * 0.75f, w * 0.75f, h * 0.75f)
+        lineTo(w * 0.6f, h * 0.75f)
+        lineTo(w * 0.5f, h * 0.55f)
+        lineTo(w * 0.4f, h * 0.75f)
+        lineTo(w * 0.25f, h * 0.75f)
+        quadraticBezierTo(w * 0.05f, h * 0.75f, w * 0.05f, h * 0.5f)
+        quadraticBezierTo(w * 0.05f, h * 0.3f, w * 0.2f, h * 0.3f)
+        close()
+    }
+    drawPath(bodyPath, color = color, style = stroke)
+
+    // D-pad (left side - cross)
+    drawLine(color, Offset(w * 0.25f, h * 0.45f), Offset(w * 0.25f, h * 0.6f), strokeWidth = w * 0.07f, cap = StrokeCap.Round)
+    drawLine(color, Offset(w * 0.18f, h * 0.525f), Offset(w * 0.32f, h * 0.525f), strokeWidth = w * 0.07f, cap = StrokeCap.Round)
+
+    // Buttons (right side - two dots)
+    drawCircle(color = color, radius = w * 0.04f, center = Offset(w * 0.7f, h * 0.45f), style = Fill)
+    drawCircle(color = color, radius = w * 0.04f, center = Offset(w * 0.78f, h * 0.55f), style = Fill)
 }

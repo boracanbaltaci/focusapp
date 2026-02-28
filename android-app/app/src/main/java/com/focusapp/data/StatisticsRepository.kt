@@ -29,8 +29,11 @@ class StatisticsRepository(context: Context) {
     
     fun getWeeklyData(): Map<Int, Int> {
         val calendar = Calendar.getInstance()
-        val today = calendar.get(Calendar.DAY_OF_WEEK)
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
         val weekStart = calendar.timeInMillis
         
         val sessions = getAllSessions().filter { it.date >= weekStart }
@@ -41,12 +44,13 @@ class StatisticsRepository(context: Context) {
             weekData[i] = 0
         }
         
+        val sessionCal = Calendar.getInstance()
         sessions.forEach { session ->
-            calendar.timeInMillis = session.date
-            val dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK)
+            sessionCal.timeInMillis = session.date
+            val dayOfWeek = sessionCal.get(Calendar.DAY_OF_WEEK)
             // Convert Sunday=1 to Monday=1 system
             val adjustedDay = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
-            weekData[adjustedDay] = weekData[adjustedDay]!! + session.durationMinutes
+            weekData[adjustedDay] = (weekData[adjustedDay] ?: 0) + session.durationMinutes
         }
         
         return weekData
@@ -57,16 +61,16 @@ class StatisticsRepository(context: Context) {
         val currentMonth = calendar.get(Calendar.MONTH)
         val currentYear = calendar.get(Calendar.YEAR)
         
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        val monthStart = calendar.timeInMillis
+        // Pre-compute daysInMonth before any mutation
+        val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
         
+        val filterCal = Calendar.getInstance()
         val sessions = getAllSessions().filter { session ->
-            calendar.timeInMillis = session.date
-            calendar.get(Calendar.MONTH) == currentMonth && 
-            calendar.get(Calendar.YEAR) == currentYear
+            filterCal.timeInMillis = session.date
+            filterCal.get(Calendar.MONTH) == currentMonth && 
+            filterCal.get(Calendar.YEAR) == currentYear
         }
         
-        val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
         val monthData = mutableMapOf<Int, Int>()
         
         // Initialize all days with 0
@@ -74,10 +78,11 @@ class StatisticsRepository(context: Context) {
             monthData[i] = 0
         }
         
+        val sessionCal = Calendar.getInstance()
         sessions.forEach { session ->
-            calendar.timeInMillis = session.date
-            val day = calendar.get(Calendar.DAY_OF_MONTH)
-            monthData[day] = monthData[day]!! + session.durationMinutes
+            sessionCal.timeInMillis = session.date
+            val day = sessionCal.get(Calendar.DAY_OF_MONTH)
+            monthData[day] = (monthData[day] ?: 0) + session.durationMinutes
         }
         
         return monthData
@@ -87,9 +92,10 @@ class StatisticsRepository(context: Context) {
         val calendar = Calendar.getInstance()
         val currentYear = calendar.get(Calendar.YEAR)
         
+        val filterCal = Calendar.getInstance()
         val sessions = getAllSessions().filter { session ->
-            calendar.timeInMillis = session.date
-            calendar.get(Calendar.YEAR) == currentYear
+            filterCal.timeInMillis = session.date
+            filterCal.get(Calendar.YEAR) == currentYear
         }
         
         val yearData = mutableMapOf<Int, Int>()
@@ -99,10 +105,11 @@ class StatisticsRepository(context: Context) {
             yearData[i] = 0
         }
         
+        val sessionCal = Calendar.getInstance()
         sessions.forEach { session ->
-            calendar.timeInMillis = session.date
-            val month = calendar.get(Calendar.MONTH) + 1 // 0-based to 1-based
-            yearData[month] = yearData[month]!! + session.durationMinutes
+            sessionCal.timeInMillis = session.date
+            val month = sessionCal.get(Calendar.MONTH) + 1 // 0-based to 1-based
+            yearData[month] = (yearData[month] ?: 0) + session.durationMinutes
         }
         
         return yearData

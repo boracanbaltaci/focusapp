@@ -321,7 +321,8 @@ fun HomeScreen(
                     isImmersiveMode = isImmersiveMode,
                     onToggleImmersiveMode = { 
                         isImmersiveMode = !isImmersiveMode
-                    }
+                    },
+                    isDark = theme == "dark"
                 )
             }
         }
@@ -509,9 +510,11 @@ private fun TimerScreen(
     clockFontFamily: FontFamily,
     textColor: Color,
     isImmersiveMode: Boolean,
-    onToggleImmersiveMode: () -> Unit
+    onToggleImmersiveMode: () -> Unit,
+    isDark: Boolean = false
 ) {
     val context = LocalContext.current
+    var selectedCategory by remember { mutableStateOf<FocusCategory?>(null) }
     
     Box(modifier = Modifier
         .fillMaxSize()
@@ -751,6 +754,25 @@ private fun TimerScreen(
         
         
         Spacer(modifier = Modifier.height(80.dp))
+        }
+
+        // Pin category selector at bottom-left
+        androidx.compose.animation.AnimatedVisibility(
+            visible = !isImmersiveMode,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 24.dp, bottom = 80.dp)
+        ) {
+            PinCategorySelector(
+                selectedCategory = selectedCategory,
+                onCategorySelected = { category ->
+                    selectedCategory = category
+                },
+                textColor = textColor,
+                isDark = isDark
+            )
         }
     }
 }

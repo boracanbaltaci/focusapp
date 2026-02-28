@@ -293,6 +293,19 @@ fun SettingsScreen(
                             color = textColor.copy(alpha = 0.1f)
                         )
                         
+                        // Milestones
+                        ClickableSettingItem(
+                            title = stringResource(R.string.milestones),
+                            subtitle = "",
+                            onClick = { /* TODO: open milestones page */ },
+                            textColor = textColor
+                        )
+                        
+                        Divider(
+                            modifier = Modifier.padding(vertical = 1.dp),
+                            color = textColor.copy(alpha = 0.1f)
+                        )
+                        
                         // About
                         ClickableSettingItem(
                             title = stringResource(R.string.about),
