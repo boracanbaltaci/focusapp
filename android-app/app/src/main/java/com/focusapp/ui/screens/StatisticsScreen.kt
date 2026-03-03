@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.List
 import androidx.compose.ui.Modifier
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -162,7 +163,7 @@ fun StatisticsScreen(
                     )
                 }
 
-                Box(modifier = Modifier.align(Alignment.Center)) {
+                Row(modifier = Modifier.align(Alignment.Center), verticalAlignment = Alignment.CenterVertically) {
                     HorizontalTabGroup(
                         viewMode = viewMode,
                         onViewModeSelected = { viewMode = it },
@@ -171,14 +172,14 @@ fun StatisticsScreen(
                         textActive = textTabActive,
                         textInactive = textTabInactive
                     )
-                }
+                    
+                    Spacer(modifier = Modifier.width(16.dp))
 
-                // Top Right Icons
-                Row(modifier = Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { showTagsPopup = !showTagsPopup; showStatsPopup = false }) {
+                    IconButton(onClick = { showTagsPopup = !showTagsPopup; showStatsPopup = false }, modifier = Modifier.size(36.dp)) {
                         Icon(Icons.Default.List, contentDescription = "Tags", tint = textColor)
                     }
-                    IconButton(onClick = { showStatsPopup = !showStatsPopup; showTagsPopup = false }) {
+                    Spacer(modifier = Modifier.width(8.dp))
+                    IconButton(onClick = { showStatsPopup = !showStatsPopup; showTagsPopup = false }, modifier = Modifier.size(36.dp)) {
                         Icon(Icons.Default.Star, contentDescription = "Stats", tint = textColor)
                     }
                 }
@@ -368,10 +369,15 @@ fun StatisticsScreen(
 
         // Popups
         if (showStatsPopup) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = 80.dp),
+                contentAlignment = Alignment.TopCenter
+            ) {
                 Column(
                     modifier = Modifier
-                        .fillMaxWidth(0.9f)
+                        .width(220.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .background(cardBg)
                         .padding(16.dp),
@@ -379,8 +385,9 @@ fun StatisticsScreen(
                 ) {
                     // Total Sessions
                     StatCard(
-                        modifier = Modifier.fillMaxWidth().height(80.dp),
-                        iconBg = Color(0xFF11381A),
+                        modifier = Modifier.fillMaxWidth().height(84.dp),
+                        cardBg = Color(0xFF0F2615),
+                        iconBg = Color(0xFF1B4D25),
                         iconColor = bgTabActive,
                         icon = Icons.Default.CheckCircle,
                         title = "TOTAL SESSIONS",
@@ -388,17 +395,19 @@ fun StatisticsScreen(
                     )
                     // Streak 
                     StatCard(
-                        modifier = Modifier.fillMaxWidth().height(80.dp),
-                        iconBg = Color(0xFF3B2713),
+                        modifier = Modifier.fillMaxWidth().height(84.dp),
+                        cardBg = Color(0xFF2A1C0F),
+                        iconBg = Color(0xFF4A301A),
                         iconColor = Color(0xFFFF9800),
                         icon = Icons.Default.Star,
-                        title = "STREAK",
+                        title = "LONGEST STREAK",
                         value = "$streak Days"
                     )
                     // Daily Average
                     StatCard(
-                        modifier = Modifier.fillMaxWidth().height(80.dp),
-                        iconBg = Color(0xFF281E3D),
+                        modifier = Modifier.fillMaxWidth().height(84.dp),
+                        cardBg = Color(0xFF1E1C28),
+                        iconBg = Color(0xFF382F4C),
                         iconColor = Color(0xFFB388FF),
                         icon = Icons.Default.DateRange,
                         title = "DAILY AVERAGE",
@@ -520,6 +529,7 @@ fun HorizontalTabGroup(
 @Composable
 fun StatCard(
     modifier: Modifier = Modifier,
+    cardBg: Color,
     iconBg: Color,
     iconColor: Color,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
@@ -528,33 +538,32 @@ fun StatCard(
 ) {
     Row(
         modifier = modifier
-            .fillMaxHeight()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF2F3033).copy(alpha = 0.5f))
-            .padding(horizontal = 12.dp),
+            .background(cardBg)
+            .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
-                .size(36.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(iconBg.copy(alpha = 0.5f)),
+                .size(48.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(iconBg),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
                 tint = iconColor,
-                modifier = Modifier.size(20.dp)
+                modifier = Modifier.size(24.dp)
             )
         }
         
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(16.dp))
         
         Column(verticalArrangement = Arrangement.Center) {
-            Text(title, color = Color(0xFF64748B), fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = GeistFontFamily)
+            Text(title, color = Color.White.copy(alpha = 0.6f), fontSize = 10.sp, fontWeight = FontWeight.Bold, fontFamily = GeistFontFamily)
             Spacer(modifier = Modifier.height(2.dp))
-            Text(value, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold, fontFamily = GeistFontFamily)
+            Text(value, color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, fontFamily = GeistFontFamily)
         }
     }
 }
