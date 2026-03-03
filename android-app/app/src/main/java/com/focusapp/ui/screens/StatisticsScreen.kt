@@ -124,6 +124,7 @@ fun StatisticsScreen(
     val textTabInactive = if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8)
     val cardBg = bgTabContainer
     val barColor = bgTabActive
+    val chartFocusColor = selectedCategoryFilter?.let { getCategoryColor(it) } ?: bgTabActive
     val screenBg = if (isDark) Color(0xFF181C14) else Color(0xFFF6F5F2)
 
     Box(
@@ -347,9 +348,9 @@ fun StatisticsScreen(
                                                             val bText = if (bMins >= 60) "${bMins/60}$hourShort ${bMins%60}$minShort" else "${bMins}$minShort"
 
                                                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                                                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(bgTabActive))
+                                                                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(chartFocusColor))
                                                                 Spacer(modifier = Modifier.width(4.dp))
-                                                                Text(fText, color = Color(0xFF102216), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                                                Text(fText, color = chartFocusColor, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                                                             }
                                                             Row(verticalAlignment = Alignment.CenterVertically) {
                                                                 Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFE65100)))
@@ -382,7 +383,7 @@ fun StatisticsScreen(
                                                             .weight(1f)
                                                             .height(focusH.coerceAtLeast(4.dp))
                                                             .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                                            .background(bgTabActive) 
+                                                            .background(chartFocusColor) 
                                                     )
                                                 }
                                                 
@@ -743,7 +744,7 @@ fun PinCategorySelector(
                 .background(
                     if (isExpanded) accentColor
                     else if (hasSelection) selectedColor.copy(alpha = 0.5f)
-                    else Color.White
+                    else if (isDark) Color(0xFF333333) else Color.White
                 )
                 .clickable { isExpanded = !isExpanded },
             contentAlignment = Alignment.Center
