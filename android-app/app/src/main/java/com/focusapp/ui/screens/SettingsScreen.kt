@@ -15,6 +15,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -366,53 +367,9 @@ fun SettingsScreen(
                         
                         // Subscription
                         ClickableSettingItem(
-                            title = stringResource(R.string.subscription),
-                            subtitle = "",
+                            title = "⭐️ ${stringResource(R.string.subscription)}",
+                            subtitle = "Tüm özelliklere erişim.",
                             onClick = { showSubscriptionSubmenu = true },
-                            textColor = textColor
-                        )
-                        
-                        Divider(
-                            modifier = Modifier.padding(vertical = 1.dp),
-                            color = textColor.copy(alpha = 0.1f)
-                        )
-                        
-                        // TEST: Notification test button (temporary)
-                        ClickableSettingItem(
-                            title = "🔔 Test Notifications",
-                            subtitle = "Send all notifications now",
-                            onClick = {
-                                // Inactivity notification
-                                com.focusapp.notification.NotificationHelper.showNotification(
-                                    context,
-                                    context.getString(R.string.notif_inactivity_title),
-                                    context.getString(R.string.notif_inactivity_body),
-                                    1001
-                                )
-                                // Weekly summary notification (example: 3h 47min)
-                                val timeText = "3 ${context.getString(R.string.notif_hours)} 47 ${context.getString(R.string.notif_minutes)}"
-                                com.focusapp.notification.NotificationHelper.showNotification(
-                                    context,
-                                    context.getString(R.string.notif_weekly_title),
-                                    String.format(context.getString(R.string.notif_weekly_body), timeText, "🎉"),
-                                    1002
-                                )
-                                // Weekly 5h+ notification
-                                val timeText2 = "5 ${context.getString(R.string.notif_hours)} 46 ${context.getString(R.string.notif_minutes)}"
-                                com.focusapp.notification.NotificationHelper.showNotification(
-                                    context,
-                                    context.getString(R.string.notif_weekly_title),
-                                    String.format(context.getString(R.string.notif_weekly_body), timeText2, "🔥"),
-                                    1003
-                                )
-                                // Weekly 10h+ notification
-                                com.focusapp.notification.NotificationHelper.showNotification(
-                                    context,
-                                    context.getString(R.string.notif_weekly_title),
-                                    context.getString(R.string.notif_weekly_10h),
-                                    1004
-                                )
-                            },
                             textColor = Color(0xFFFF9800)
                         )
                     }
@@ -647,64 +604,59 @@ private fun FontSubmenu(
     ) {
 
         
-        // Font options with live time preview
-        Column(
-            verticalArrangement = Arrangement.spacedBy(0.dp)
+        // Add 2 padding items to reach 16
+        val gridItems = fontOptions + listOf("Yakında..." to "coming_soon_1", "Yakında..." to "coming_soon_2")
+
+        androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+            columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(4),
+            modifier = Modifier.fillMaxWidth().height(480.dp), // Height adjustment for 4 rows
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp)
         ) {
-            fontOptions.forEachIndexed { index, (_, value) ->
+            items(gridItems.size) { index ->
+                val (label, value) = gridItems[index]
+                val isPlaceholder = value.startsWith("coming_soon")
                 val isSelected = selectedFont == value
                 val fontFamily = fontFamilyMap[value] ?: MenilFontFamily
                 
-                Row(
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .padding(12.dp) // added more padding to shrink the visual box even further
+                        .aspectRatio(1f) // Square cell
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(
+                            if (isSelected) Color(0xFF4CAF50).copy(alpha = 0.2f) 
+                            else textColor.copy(alpha = 0.05f)
+                        )
                         .clickable(
-                            role = Role.RadioButton,
+                            enabled = !isPlaceholder,
                             onClick = { onFontSelect(value) }
                         )
-                        .padding(vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    // Time preview in the actual font
-                    Text(
-                        text = currentTimePreview,
-                        style = TextStyle(
-                            fontFamily = fontFamily,
-                            fontSize = 32.sp.scaled(LocalScreenScale.current, min = 20.sp),
-                            fontWeight = FontWeight.Normal,
-                            color = textColor.copy(alpha = if (isSelected) 1f else 0.5f),
-                            letterSpacing = 1.sp
-                        )
-                    )
-                    
-                    if (isSelected) {
-                        // Checkmark indicator
-                        val checkColor = Color(0xFF4CAF50)
-                        Canvas(modifier = Modifier.size(20.dp)) {
-                            val path = androidx.compose.ui.graphics.Path().apply {
-                                moveTo(size.width * 0.2f, size.height * 0.5f)
-                                lineTo(size.width * 0.4f, size.height * 0.7f)
-                                lineTo(size.width * 0.8f, size.height * 0.2f)
-                            }
-                            drawPath(
-                                path = path,
-                                color = checkColor,
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(
-                                    width = 3.dp.toPx(),
-                                    cap = androidx.compose.ui.graphics.StrokeCap.Round
-                                )
+                    if (isPlaceholder) {
+                        Text(
+                            text = "Yakında...",
+                            style = TextStyle(
+                                fontFamily = GeistFontFamily,
+                                fontSize = 10.sp,
+                                color = textColor.copy(alpha = 0.4f),
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
                             )
-                        }
+                        )
+                    } else {
+                        Text(
+                            text = currentTimePreview,
+                            style = TextStyle(
+                                fontFamily = fontFamily,
+                                fontSize = 40.sp,
+                                color = textColor.copy(alpha = if (isSelected) 1f else 0.8f),
+                                letterSpacing = (-0.5).sp
+                            )
+                        )
                     }
-                }
-                
-                // Add divider between items
-                if (index < fontOptions.size - 1) {
-                    Divider(
-                        color = textColor.copy(alpha = 0.1f),
-                        thickness = 0.5.dp
-                    )
                 }
             }
         }
@@ -802,7 +754,54 @@ private fun BreakSubmenu(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
+        // Auto break toggle (at the top)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(
+                modifier = Modifier.weight(1f).padding(end = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = stringResource(R.string.auto_break_start),
+                    style = TextStyle(
+                        fontFamily = GeistFontFamily,
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = textColor
+                    )
+                )
+                
+                Text(
+                    text = stringResource(R.string.auto_break_description),
+                    style = TextStyle(
+                        fontFamily = GeistFontFamily,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = textColor.copy(alpha = 0.6f),
+                        lineHeight = 18.sp
+                    )
+                )
+            }
+            
+            Switch(
+                checked = autoBreakEnabled,
+                onCheckedChange = onAutoBreakChange,
+                colors = SwitchDefaults.colors(
+                    checkedThumbColor = Color(0xFF4CAF50),
+                    checkedTrackColor = Color(0xFF4CAF50).copy(alpha = 0.5f),
+                    uncheckedThumbColor = Color.Gray,
+                    uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
+                )
+            )
+        }
         
+        Divider(color = textColor.copy(alpha = 0.1f))
+
         // Break Duration section (always visible)
         Text(
             text = stringResource(R.string.break_duration),
@@ -963,54 +962,6 @@ private fun BreakSubmenu(
                     )
                 }
             }
-        }
-        
-        Divider(color = textColor.copy(alpha = 0.1f))
-        
-        // Auto break toggle (at the bottom)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(
-                modifier = Modifier.weight(1f).padding(end = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Text(
-                    text = stringResource(R.string.auto_break_start),
-                    style = TextStyle(
-                        fontFamily = GeistFontFamily,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = textColor
-                    )
-                )
-                
-                Text(
-                    text = stringResource(R.string.auto_break_description),
-                    style = TextStyle(
-                        fontFamily = GeistFontFamily,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = textColor.copy(alpha = 0.6f),
-                        lineHeight = 18.sp
-                    )
-                )
-            }
-            
-            Switch(
-                checked = autoBreakEnabled,
-                onCheckedChange = onAutoBreakChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFF4CAF50),
-                    checkedTrackColor = Color(0xFF4CAF50).copy(alpha = 0.5f),
-                    uncheckedThumbColor = Color.Gray,
-                    uncheckedTrackColor = Color.Gray.copy(alpha = 0.5f)
-                )
-            )
         }
     }
 }

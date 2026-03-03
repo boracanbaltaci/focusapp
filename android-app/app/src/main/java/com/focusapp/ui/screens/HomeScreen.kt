@@ -209,11 +209,37 @@ fun HomeScreen(
     var isImmersiveMode by remember { mutableStateOf(false) }
     var showColorPicker by remember { mutableStateOf(false) }
     
-    // Reset immersive mode when scrolling
+    // Handle side-effects of screen scrolling (e.g. pause timer, disable immersive)
     LaunchedEffect(pagerState.isScrollInProgress) {
         if (pagerState.isScrollInProgress) {
             isImmersiveMode = false
         }
+    }
+    
+    // Pause timer explicitly when leaving the Timer screen (page 2)
+    LaunchedEffect(pagerState.currentPage) {
+        if (pagerState.currentPage != 2 && isTimerRunning) {
+            // User scrolled away from Timer screen, Pause it and record usage
+            isTimerRunning = false
+            val elapsedSeconds = initialTimerSeconds - timerSeconds
+            if (elapsedSeconds > 0) {
+                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name, isBreak = isOnBreak)
+            }
+            // Update initialTimerSeconds so if user returns and resumes, it treats the remainder as a new session chunk 
+            initialTimerSeconds = timerSeconds
+        }
+    }
+
+    val handleNavigateToSettings = {
+        if (isTimerRunning) {
+            isTimerRunning = false
+            val elapsedSeconds = initialTimerSeconds - timerSeconds
+            if (elapsedSeconds > 0) {
+                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name, isBreak = isOnBreak)
+            }
+            initialTimerSeconds = timerSeconds
+        }
+        onNavigateToSettings()
     }
 
     Box(
@@ -262,10 +288,10 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize()
         ) { page ->
             when (page) {
-                0 -> StatisticsScreen(onNavigateToSettings, defaultTextColor)
+                0 -> StatisticsScreen(onNavigateToSettings = handleNavigateToSettings, defaultTextColor)
                 1 -> ClockScreen(
                     currentTime = currentTime,
-                    onNavigateToSettings = onNavigateToSettings,
+                    onNavigateToSettings = handleNavigateToSettings,
                     onOpenColorPicker = { showColorPicker = true },
                     clockFontFamily = clockFontFamily,
                     textColor = textColor,
@@ -321,7 +347,7 @@ fun HomeScreen(
                             timerSeconds = initialTimerSeconds
                         }
                     },
-                    onNavigateToSettings = onNavigateToSettings,
+                    onNavigateToSettings = handleNavigateToSettings,
                     onOpenColorPicker = { showColorPicker = true },
                     clockFontFamily = clockFontFamily,
                     textColor = textColor,
@@ -572,24 +598,18 @@ private fun TimerScreen(
                 ) {
                     // Show break label when on break
                     if (isOnBreak) {
-                        AnimatedVisibility(
-                            visible = !isImmersiveMode,
-                            enter = fadeIn(),
-                            exit = fadeOut()
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    text = stringResource(R.string.on_break_label),
-                                    style = TextStyle(
-                                        fontFamily = GeistFontFamily,
-                                        fontSize = 24.sp.scaled(timerScale, min = 14.sp),
-                                        fontWeight = FontWeight.Normal,
-                                        color = textColor.copy(alpha = 0.4f),
-                                        letterSpacing = 2.sp
-                                    )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = stringResource(R.string.on_break_label),
+                                style = TextStyle(
+                                    fontFamily = clockFontFamily,
+                                    fontSize = 24.sp.scaled(timerScale, min = 14.sp),
+                                    fontWeight = FontWeight.Normal,
+                                    color = textColor.copy(alpha = 0.4f),
+                                    letterSpacing = 2.sp
                                 )
-                                Spacer(modifier = Modifier.height(8.dp))
-                            }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
                     

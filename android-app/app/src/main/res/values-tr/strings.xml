@@ -23,8 +23,8 @@
     
     <!-- New strings for Phase 3 -->
     <string name="select_duration">Süre Seç</string>
-    <string name="clock_font">Saat Yazı Tipi</string>
-    <string name="font_selection">Yazı Tipi Seçimi</string>
+    <string name="clock_font">Saat Fontu</string>
+    <string name="font_selection">Saat Fontu</string>
     <string name="theme">Tema</string>
     <string name="light">Açık</string>
     <string name="dark">Koyu</string>

@@ -101,7 +101,7 @@ fun StatisticsScreen(
     
     // Derived values for bottom cards
     val totalSessions = remember(viewMode, refreshTick) {
-        statisticsRepository.getAllSessions().size
+        statisticsRepository.getAllSessions().filter { !it.isBreak && it.durationMinutes >= 1 }.size
     }
     
     val avgMinutes = remember(refreshTick) { statisticsRepository.getAverageDailyActiveMinutes() }
