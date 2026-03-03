@@ -115,5 +115,7 @@
     <string name="break_off">Desactivado</string>
     <string name="sessions">Sesiones</string>
     <string name="sessions_count">%d sesiones</string>
+    <string name="streak_title">Racha</string>
+    <string name="streak_days">días</string>
 
 </resources>

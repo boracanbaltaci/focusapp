@@ -181,15 +181,18 @@ fun HomeScreen(
         // Timer reached 0
         isTimerRunning = false
         
-
+        val elapsedSeconds = initialTimerSeconds - timerSeconds // This will be 0 if timer ran to completion
 
         if (isOnBreak) {
-            // Break finished - reset to initial focus duration
+            // Break finished - save to statistics and reset to initial focus duration
+            if (elapsedSeconds > 0) { // Only save if some time passed
+                statisticsRepository.saveSession(initialTimerSeconds / 60, initialTimerSeconds, selectedCategory?.name, isBreak = true)
+            }
             isOnBreak = false
             timerSeconds = initialTimerSeconds
         } else {
             // Focus session finished - save to statistics
-            statisticsRepository.saveSession(initialTimerSeconds / 60, initialTimerSeconds, selectedCategory?.name)
+            statisticsRepository.saveSession(initialTimerSeconds / 60, initialTimerSeconds, selectedCategory?.name, isBreak = false)
             // Always switch to break mode
             isOnBreak = true
             timerSeconds = breakDurationMinutes * 60
@@ -278,18 +281,17 @@ fun HomeScreen(
                         if (isTimerRunning) {
                             // Pausing timer
                             isTimerRunning = false
-                            if (!isOnBreak) {
-                                // Only save to stats if it was a focus session
-                                val elapsedSeconds = initialTimerSeconds - timerSeconds
-                                if (elapsedSeconds > 0) {
-                                    statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name)
+                            val elapsedSeconds = initialTimerSeconds - timerSeconds
+                            if (elapsedSeconds > 0) {
+                                if (!isOnBreak) {
+                                    statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name, isBreak = false)
+                                } else {
+                                    statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name, isBreak = true)
                                 }
                             }
                         } else {
-                            // Starting timer - capture initial duration only for focus sessions
-                            if (!isOnBreak) {
-                                initialTimerSeconds = timerSeconds
-                            }
+                            // Starting timer - capture initial duration
+                            initialTimerSeconds = timerSeconds
                             isTimerRunning = true
                         }
                     },
@@ -300,16 +302,20 @@ fun HomeScreen(
                     },
                     onFinish = {
                         if (isOnBreak) {
-                            // Skip/end break - reset to focus duration
-                            isOnBreak = false
+                            // Skip/end break - save elapsed break time
+                            val elapsedSeconds = initialTimerSeconds - timerSeconds
                             isTimerRunning = false
+                            if (elapsedSeconds > 0) {
+                                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name, isBreak = true)
+                            }
+                            isOnBreak = false
                             timerSeconds = initialTimerSeconds
                         } else {
                             // Finish/end the focus session - save elapsed time
                             val elapsedSeconds = initialTimerSeconds - timerSeconds
                             isTimerRunning = false
                             if (elapsedSeconds > 0) {
-                                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name)
+                                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name, isBreak = false)
                             }
                             // Reset to initial duration
                             timerSeconds = initialTimerSeconds

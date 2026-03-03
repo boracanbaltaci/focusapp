@@ -115,5 +115,7 @@
     <string name="break_off">Aus</string>
     <string name="sessions">Sitzungen</string>
     <string name="sessions_count">%d Sitzungen</string>
+    <string name="streak_title">Serie</string>
+    <string name="streak_days">Tage</string>
 
 </resources>

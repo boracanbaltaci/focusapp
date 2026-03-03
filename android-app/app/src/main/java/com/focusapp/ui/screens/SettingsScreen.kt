@@ -58,6 +58,7 @@ fun SettingsScreen(
     var showAboutSubmenu by remember { mutableStateOf(false) }
     var showRewardsSubmenu by remember { mutableStateOf(false) }
     var showSessionsSubmenu by remember { mutableStateOf(false) }
+    var showSubscriptionSubmenu by remember { mutableStateOf(false) }
     var pendingLanguageChange by remember { mutableStateOf<String?>(null) }
     
     // Handle language change with LaunchedEffect for safe recreation
@@ -98,6 +99,7 @@ fun SettingsScreen(
                 showAboutSubmenu -> stringResource(R.string.about) to { showAboutSubmenu = false }
                 showRewardsSubmenu -> stringResource(R.string.milestones) to { showRewardsSubmenu = false }
                 showSessionsSubmenu -> stringResource(R.string.sessions) to { showSessionsSubmenu = false }
+                showSubscriptionSubmenu -> stringResource(R.string.subscription) to { showSubscriptionSubmenu = false }
                 else -> stringResource(R.string.settings) to onBack
             }
 
@@ -177,6 +179,7 @@ fun SettingsScreen(
                     showAboutSubmenu -> "about"
                     showRewardsSubmenu -> "rewards"
                     showSessionsSubmenu -> "sessions"
+                    showSubscriptionSubmenu -> "subscription"
                     else -> "main"
                 }
                 val scrollState = rememberScrollState()
@@ -246,6 +249,13 @@ fun SettingsScreen(
                             currentSessions = pomodoroSessions,
                             onSessionsChange = { settingsViewModel.setPomodoroSessions(it) },
                             textColor = textColor
+                        )
+                    } else if (showSubscriptionSubmenu) {
+                        // Subscription Page
+                        SubscriptionSubmenu(
+                            onBack = { showSubscriptionSubmenu = false },
+                            textColor = textColor,
+                            isDark = theme == "dark"
                         )
                     } else {
                         // Main Settings Menu
@@ -358,7 +368,7 @@ fun SettingsScreen(
                         ClickableSettingItem(
                             title = stringResource(R.string.subscription),
                             subtitle = "",
-                            onClick = { /* TODO: open subscription page */ },
+                            onClick = { showSubscriptionSubmenu = true },
                             textColor = textColor
                         )
                         
@@ -1331,5 +1341,135 @@ private fun updateLocale(context: android.content.Context, languageCode: String)
     config.setLocale(locale)
     
     context.resources.updateConfiguration(config, context.resources.displayMetrics)
+}
+
+@Composable
+private fun SubscriptionSubmenu(
+    onBack: () -> Unit,
+    textColor: Color,
+    isDark: Boolean
+) {
+    val accentColor = Color(0xFF4CAF50)
+    val cardBg = if (isDark) Color(0xFF2A2E24) else Color(0xFFF0F0F0)
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        // App logo or premium icon
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .background(cardBg, RoundedCornerShape(20.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Canvas(modifier = Modifier.size(40.dp)) {
+                // Draw a simple diamond/gem shape to represent premium
+                val path = androidx.compose.ui.graphics.Path().apply {
+                    moveTo(size.width / 2f, 0f)
+                    lineTo(size.width, size.height * 0.3f)
+                    lineTo(size.width / 2f, size.height)
+                    lineTo(0f, size.height * 0.3f)
+                    close()
+                }
+                drawPath(
+                    path = path,
+                    color = accentColor,
+                    style = androidx.compose.ui.graphics.drawscope.Fill
+                )
+            }
+        }
+        
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        // Title
+        Text(
+            text = stringResource(R.string.subscription_title),
+            style = TextStyle(
+                fontFamily = GeistFontFamily,
+                fontSize = 24.sp.scaled(LocalScreenScale.current, min = 18.sp),
+                fontWeight = FontWeight.Bold,
+                color = textColor,
+                letterSpacing = 0.5.sp
+            )
+        )
+        
+        Spacer(modifier = Modifier.height(32.dp))
+        
+        // Subscription Features
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            PremiumFeatureItem(text = stringResource(R.string.subscription_desc_1), textColor = textColor, accentColor = accentColor)
+            PremiumFeatureItem(text = stringResource(R.string.subscription_desc_2), textColor = textColor, accentColor = accentColor)
+            PremiumFeatureItem(text = stringResource(R.string.subscription_desc_3), textColor = textColor, accentColor = accentColor)
+        }
+        
+        Spacer(modifier = Modifier.weight(1f))
+        
+        // Subscribe Button
+        Button(
+            onClick = { /* TODO: Initiate subscription flow */ },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp)
+                .padding(horizontal = 16.dp, vertical = 4.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = accentColor,
+                contentColor = Color.White
+            ),
+            shape = RoundedCornerShape(28.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.subscription_button),
+                style = TextStyle(
+                    fontFamily = GeistFontFamily,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            )
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun PremiumFeatureItem(text: String, textColor: Color, accentColor: Color) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Canvas(modifier = Modifier.size(20.dp)) {
+            val path = androidx.compose.ui.graphics.Path().apply {
+                moveTo(size.width * 0.2f, size.height * 0.5f)
+                lineTo(size.width * 0.4f, size.height * 0.7f)
+                lineTo(size.width * 0.8f, size.height * 0.2f)
+            }
+            drawPath(
+                path = path,
+                color = accentColor,
+                style = Stroke(
+                    width = 3.dp.toPx(),
+                    cap = StrokeCap.Round,
+                    join = androidx.compose.ui.graphics.StrokeJoin.Round
+                )
+            )
+        }
+        Spacer(modifier = Modifier.width(16.dp))
+        Text(
+            text = text,
+            style = TextStyle(
+                fontFamily = GeistFontFamily,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Normal,
+                color = textColor.copy(alpha = 0.8f)
+            )
+        )
+    }
 }
 

@@ -11,11 +11,11 @@ class StatisticsRepository(context: Context) {
         context.getSharedPreferences("statistics_prefs", Context.MODE_PRIVATE)
     private val gson = Gson()
     
-    fun saveSession(durationMinutes: Int, elapsedSeconds: Int = 0, category: String? = null) {
+    fun saveSession(durationMinutes: Int, elapsedSeconds: Int = 0, category: String? = null, isBreak: Boolean = false) {
         val sessions = getAllSessions().toMutableList()
         // Save at least 1 minute if any time was spent
         val effectiveMinutes = if (durationMinutes == 0 && elapsedSeconds > 0) 1 else durationMinutes.coerceAtLeast(if (elapsedSeconds > 0) 1 else 0)
-        sessions.add(SessionData(System.currentTimeMillis(), effectiveMinutes, category))
+        sessions.add(SessionData(System.currentTimeMillis(), effectiveMinutes, category, isBreak))
         
         val json = gson.toJson(sessions)
         prefs.edit().putString("sessions", json).apply()
@@ -26,8 +26,10 @@ class StatisticsRepository(context: Context) {
         val type = object : TypeToken<List<SessionData>>() {}.type
         return gson.fromJson(json, type) ?: emptyList()
     }
+
+    data class DayStats(val focusMinutes: Int, val breakMinutes: Int)
     
-    fun getWeeklyData(category: String? = null): Map<Int, Int> {
+    fun getWeeklyData(category: String? = null): Map<Int, DayStats> {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -39,11 +41,11 @@ class StatisticsRepository(context: Context) {
         val sessions = getAllSessions().filter { 
             it.date >= weekStart && (category == null || it.category == category)
         }
-        val weekData = mutableMapOf<Int, Int>()
+        val weekData = mutableMapOf<Int, DayStats>()
         
-        // Initialize all 7 days with 0
+        // Initialize all 7 days
         for (i in 1..7) {
-            weekData[i] = 0
+            weekData[i] = DayStats(0, 0)
         }
         
         val sessionCal = Calendar.getInstance()
@@ -52,13 +54,53 @@ class StatisticsRepository(context: Context) {
             val dayOfWeek = sessionCal.get(Calendar.DAY_OF_WEEK)
             // Convert Sunday=1 to Monday=1 system
             val adjustedDay = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
-            weekData[adjustedDay] = (weekData[adjustedDay] ?: 0) + session.durationMinutes
+            
+            val current = weekData[adjustedDay] ?: DayStats(0, 0)
+            if (session.isBreak) {
+                weekData[adjustedDay] = current.copy(breakMinutes = current.breakMinutes + session.durationMinutes)
+            } else {
+                weekData[adjustedDay] = current.copy(focusMinutes = current.focusMinutes + session.durationMinutes)
+            }
         }
         
         return weekData
     }
+
+    fun getPreviousWeeklyData(category: String? = null): Map<Int, DayStats> {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val weekStart = calendar.timeInMillis
+        val prevWeekStart = weekStart - 7 * 24 * 60 * 60 * 1000L
+        
+        val sessions = getAllSessions().filter { 
+            it.date >= prevWeekStart && it.date < weekStart && (category == null || it.category == category)
+        }
+        val weekData = mutableMapOf<Int, DayStats>()
+        for (i in 1..7) {
+            weekData[i] = DayStats(0, 0)
+        }
+        
+        val sessionCal = Calendar.getInstance()
+        sessions.forEach { session ->
+            sessionCal.timeInMillis = session.date
+            val dayOfWeek = sessionCal.get(Calendar.DAY_OF_WEEK)
+            val adjustedDay = if (dayOfWeek == Calendar.SUNDAY) 7 else dayOfWeek - 1
+            
+            val current = weekData[adjustedDay] ?: DayStats(0, 0)
+            if (session.isBreak) {
+                weekData[adjustedDay] = current.copy(breakMinutes = current.breakMinutes + session.durationMinutes)
+            } else {
+                weekData[adjustedDay] = current.copy(focusMinutes = current.focusMinutes + session.durationMinutes)
+            }
+        }
+        return weekData
+    }
     
-    fun getMonthlyData(category: String? = null): Map<Int, Int> {
+    fun getMonthlyData(category: String? = null): Map<Int, DayStats> {
         val calendar = Calendar.getInstance()
         val currentMonth = calendar.get(Calendar.MONTH)
         val currentYear = calendar.get(Calendar.YEAR)
@@ -74,24 +116,63 @@ class StatisticsRepository(context: Context) {
             (category == null || session.category == category)
         }
         
-        val monthData = mutableMapOf<Int, Int>()
+        val monthData = mutableMapOf<Int, DayStats>()
         
-        // Initialize all days with 0
+        // Initialize all days
         for (i in 1..daysInMonth) {
-            monthData[i] = 0
+            monthData[i] = DayStats(0, 0)
         }
         
         val sessionCal = Calendar.getInstance()
         sessions.forEach { session ->
             sessionCal.timeInMillis = session.date
             val day = sessionCal.get(Calendar.DAY_OF_MONTH)
-            monthData[day] = (monthData[day] ?: 0) + session.durationMinutes
+            val current = monthData[day] ?: DayStats(0, 0)
+            if (session.isBreak) {
+                monthData[day] = current.copy(breakMinutes = current.breakMinutes + session.durationMinutes)
+            } else {
+                monthData[day] = current.copy(focusMinutes = current.focusMinutes + session.durationMinutes)
+            }
         }
         
         return monthData
     }
+
+    fun getPreviousMonthlyData(category: String? = null): Map<Int, DayStats> {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.MONTH, -1)
+        val prevMonth = calendar.get(Calendar.MONTH)
+        val prevYear = calendar.get(Calendar.YEAR)
+        val daysInMonth = calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+        
+        val filterCal = Calendar.getInstance()
+        val sessions = getAllSessions().filter { session ->
+            filterCal.timeInMillis = session.date
+            filterCal.get(Calendar.MONTH) == prevMonth && 
+            filterCal.get(Calendar.YEAR) == prevYear &&
+            (category == null || session.category == category)
+        }
+        
+        val monthData = mutableMapOf<Int, DayStats>()
+        for (i in 1..daysInMonth) {
+            monthData[i] = DayStats(0, 0)
+        }
+        
+        val sessionCal = Calendar.getInstance()
+        sessions.forEach { session ->
+            sessionCal.timeInMillis = session.date
+            val day = sessionCal.get(Calendar.DAY_OF_MONTH)
+            val current = monthData[day] ?: DayStats(0, 0)
+            if (session.isBreak) {
+                monthData[day] = current.copy(breakMinutes = current.breakMinutes + session.durationMinutes)
+            } else {
+                monthData[day] = current.copy(focusMinutes = current.focusMinutes + session.durationMinutes)
+            }
+        }
+        return monthData
+    }
     
-    fun getYearlyData(category: String? = null): Map<Int, Int> {
+    fun getYearlyData(category: String? = null): Map<Int, DayStats> {
         val calendar = Calendar.getInstance()
         val currentYear = calendar.get(Calendar.YEAR)
         
@@ -102,25 +183,61 @@ class StatisticsRepository(context: Context) {
             (category == null || session.category == category)
         }
         
-        val yearData = mutableMapOf<Int, Int>()
+        val yearData = mutableMapOf<Int, DayStats>()
         
-        // Initialize all 12 months with 0
+        // Initialize all 12 months
         for (i in 1..12) {
-            yearData[i] = 0
+            yearData[i] = DayStats(0, 0)
         }
         
         val sessionCal = Calendar.getInstance()
         sessions.forEach { session ->
             sessionCal.timeInMillis = session.date
             val month = sessionCal.get(Calendar.MONTH) + 1 // 0-based to 1-based
-            yearData[month] = (yearData[month] ?: 0) + session.durationMinutes
+            val current = yearData[month] ?: DayStats(0, 0)
+            if (session.isBreak) {
+                yearData[month] = current.copy(breakMinutes = current.breakMinutes + session.durationMinutes)
+            } else {
+                yearData[month] = current.copy(focusMinutes = current.focusMinutes + session.durationMinutes)
+            }
         }
         
         return yearData
     }
+
+    fun getPreviousYearlyData(category: String? = null): Map<Int, DayStats> {
+        val calendar = Calendar.getInstance()
+        calendar.add(Calendar.YEAR, -1)
+        val prevYear = calendar.get(Calendar.YEAR)
+        
+        val filterCal = Calendar.getInstance()
+        val sessions = getAllSessions().filter { session ->
+            filterCal.timeInMillis = session.date
+            filterCal.get(Calendar.YEAR) == prevYear &&
+            (category == null || session.category == category)
+        }
+        
+        val yearData = mutableMapOf<Int, DayStats>()
+        for (i in 1..12) {
+            yearData[i] = DayStats(0, 0)
+        }
+        
+        val sessionCal = Calendar.getInstance()
+        sessions.forEach { session ->
+            sessionCal.timeInMillis = session.date
+            val month = sessionCal.get(Calendar.MONTH) + 1 // 0-based to 1-based
+            val current = yearData[month] ?: DayStats(0, 0)
+            if (session.isBreak) {
+                yearData[month] = current.copy(breakMinutes = current.breakMinutes + session.durationMinutes)
+            } else {
+                yearData[month] = current.copy(focusMinutes = current.focusMinutes + session.durationMinutes)
+            }
+        }
+        return yearData
+    }
     
-    fun getTotalMinutes(data: Map<Int, Int>): Int {
-        return data.values.sum()
+    fun getTotalMinutes(data: Map<Int, DayStats>): Int {
+        return data.values.sumOf { it.focusMinutes }
     }
     
     /**
@@ -145,5 +262,51 @@ class StatisticsRepository(context: Context) {
         }
         
         return breakdown
+    }
+
+    /**
+     * Returns the current streak: number of consecutive days (including today)
+     * that have at least one session.
+     */
+    fun getCurrentStreak(): Int {
+        val sessions = getAllSessions()
+        if (sessions.isEmpty()) return 0
+
+        // Collect unique days that have sessions
+        val sessionDays = mutableSetOf<Long>()
+        val cal = Calendar.getInstance()
+        sessions.forEach { session ->
+            cal.timeInMillis = session.date
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+            sessionDays.add(cal.timeInMillis)
+        }
+
+        // Start from today and count backwards
+        val today = Calendar.getInstance()
+        today.set(Calendar.HOUR_OF_DAY, 0)
+        today.set(Calendar.MINUTE, 0)
+        today.set(Calendar.SECOND, 0)
+        today.set(Calendar.MILLISECOND, 0)
+
+        var streak = 0
+        val checkDay = today.clone() as Calendar
+
+        // Check today first, if no session today, check yesterday as the start
+        if (!sessionDays.contains(checkDay.timeInMillis)) {
+            checkDay.add(Calendar.DAY_OF_YEAR, -1)
+            if (!sessionDays.contains(checkDay.timeInMillis)) {
+                return 0
+            }
+        }
+
+        while (sessionDays.contains(checkDay.timeInMillis)) {
+            streak++
+            checkDay.add(Calendar.DAY_OF_YEAR, -1)
+        }
+
+        return streak
     }
 }

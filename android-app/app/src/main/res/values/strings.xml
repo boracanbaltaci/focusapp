@@ -93,6 +93,11 @@
     <string name="format_24_hour">24-Hour Format</string>
     <string name="about">About</string>
     <string name="subscription">Subscription</string>
+    <string name="subscription_title">Unlock Your Full Potential</string>
+    <string name="subscription_desc_1">Access to all premium widgets and themes</string>
+    <string name="subscription_desc_2">Ad-free, undisturbed focus sessions</string>
+    <string name="subscription_desc_3">Detailed statistics and unlimited streaks</string>
+    <string name="subscription_button">Get Premium</string>
     <string name="milestones">Rewards</string>
     <string name="rate_us">Rate Us</string>
 
@@ -116,5 +121,7 @@
     <string name="break_off">Off</string>
     <string name="sessions">Sessions</string>
     <string name="sessions_count">%d sessions</string>
+    <string name="streak_title">Streak</string>
+    <string name="streak_days">days</string>
 
 </resources>

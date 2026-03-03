@@ -93,6 +93,11 @@
     <string name="format_24_hour">24 Saatlik Biçim</string>
     <string name="about">Hakkında</string>
     <string name="subscription">Abonelik</string>
+    <string name="subscription_title">Tam Potansiyelini Aç</string>
+    <string name="subscription_desc_1">Tüm premium widget ve temalara erişim</string>
+    <string name="subscription_desc_2">Reklamsız, kesintisiz odaklanma oturumları</string>
+    <string name="subscription_desc_3">Detaylı istatistikler ve sınırsız seriler</string>
+    <string name="subscription_button">Premium\'a Geç</string>
     <string name="milestones">Ödüller</string>
     <string name="rate_us">Bizi Değerlendir</string>
 
@@ -116,5 +121,7 @@
     <string name="break_off">Kapalı</string>
     <string name="sessions">Oturumlar</string>
     <string name="sessions_count">%d oturum</string>
+    <string name="streak_title">Seri</string>
+    <string name="streak_days">gün</string>
 
 </resources>
