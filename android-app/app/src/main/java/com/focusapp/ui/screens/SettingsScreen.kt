@@ -76,9 +76,9 @@ fun SettingsScreen(
     }
     
     // Theme-based colors
-    val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
-    val textColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
-    val containerColor = if (theme == "dark") Color(0xFF181C14) else Color.White
+    val backgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFF6F5F2)
+    val textColor = if (theme == "dark") Color(0xFFECDFCC) else Color(0xFF181C14)
+    val containerColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFF6F5F2)
     
     val settingsScale = LocalScreenScale.current
     Box(
@@ -367,8 +367,8 @@ fun SettingsScreen(
                         
                         // Subscription
                         ClickableSettingItem(
-                            title = "⭐️ ${stringResource(R.string.subscription)}",
-                            subtitle = "Tüm özelliklere erişim.",
+                            title = stringResource(R.string.subscription),
+                            subtitle = stringResource(R.string.subscription_subtitle),
                             onClick = { showSubscriptionSubmenu = true },
                             textColor = Color(0xFFFF9800)
                         )
@@ -638,7 +638,7 @@ private fun FontSubmenu(
                 ) {
                     if (isPlaceholder) {
                         Text(
-                            text = "Yakında...",
+                            text = stringResource(R.string.coming_soon),
                             style = TextStyle(
                                 fontFamily = GeistFontFamily,
                                 fontSize = 10.sp,

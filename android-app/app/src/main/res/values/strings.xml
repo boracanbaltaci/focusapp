@@ -35,6 +35,8 @@
     <string name="hour_short">h</string>
     <string name="minute_short">min</string>
     <string name="confirm">Confirm</string>
+    <string name="coming_soon">Coming soon...</string>
+    <string name="subscription_subtitle">Access to all features.</string>
     
     <!-- Language names -->
     <string name="lang_english">English</string>
@@ -59,6 +61,24 @@
     <string name="stat_total_focus">total focus time</string>
 
     <!-- Day abbreviations -->
+    <string name="analytics_title">Analytics</string>
+    <string name="analytics_subtitle">Visualizing your path to ultimate productivity.</string>
+    <string name="stat_weekly">Weekly</string>
+    <string name="stat_monthly">Monthly</string>
+    <string name="stat_yearly">Yearly</string>
+    <string name="total_focus_time">TOTAL FOCUS TIME</string>
+    <string name="stat_focus">FOCUS</string>
+    <string name="stat_total_sessions">TOTAL SESSIONS</string>
+    <string name="stat_longest_streak">LONGEST STREAK</string>
+    <string name="stat_daily_average">DAILY AVERAGE</string>
+    <string name="sessions_lowercase">sessions</string>
+    <string name="stat_tags">Tags</string>
+    <string name="stat_stats">Stats</string>
+    <string name="cat_learning">Learning</string>
+    <string name="cat_work">Work</string>
+    <string name="cat_sport">Sport</string>
+    <string name="cat_relax">Relax</string>
+    <string name="cat_gaming">Gaming</string>
     <string name="day_mon">Mon</string>
     <string name="day_tue">Tue</string>
     <string name="day_wed">Wed</string>

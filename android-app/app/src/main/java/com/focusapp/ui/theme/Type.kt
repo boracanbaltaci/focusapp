@@ -75,7 +75,7 @@ val ChillaxFontFamily = FontFamily(
 
 val Typography = Typography(
     displayLarge = TextStyle(
-        fontFamily = MenilFontFamily,
+        fontFamily = GeistFontFamily,
         fontWeight = FontWeight.Normal,
         fontSize = 120.sp,
         lineHeight = 128.sp,

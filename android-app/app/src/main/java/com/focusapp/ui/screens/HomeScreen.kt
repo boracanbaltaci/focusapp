@@ -86,8 +86,8 @@ fun HomeScreen(
     val colorPairIndex by settingsViewModel.colorPairIndex.collectAsState()
     
     // Default theme colors (used for statistics screen always)
-    val defaultBackgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFFBFBFB)
-    val defaultTextColor = if (theme == "dark") Color(0xFFECDFCC) else Color.Black
+    val defaultBackgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFF6F5F2)
+    val defaultTextColor = if (theme == "dark") Color(0xFFECDFCC) else Color(0xFF181C14)
     
     // Color pairs: each is (lightColor, darkColor)
     val colorPairs = listOf(
@@ -792,7 +792,7 @@ private fun TimerScreen(
             modifier = Modifier.fillMaxSize()
         ) {
             val pinIconScale = LocalScreenScale.current
-            val pinIconSize = 32.dp.scaled(pinIconScale, min = 24.dp)
+            val pinIconSize = 40.dp.scaled(pinIconScale, min = 30.dp)
             val pinXOffset = maxWidth * 0.07f - (pinIconSize / 2)
             val pinYOffset = maxHeight * 0.88f - pinIconSize
 
@@ -926,7 +926,7 @@ private fun DurationPickerDialog(
     val minShort = stringResource(R.string.minute_short)
     
     // Theme colors
-    val dialogBg = if (isDark) Color(0xFF1E2218) else Color(0xFFFBFBFB)
+    val dialogBg = if (isDark) Color(0xFF1E2218) else Color(0xFFF6F5F2)
     val textPrimary = if (isDark) Color(0xFFECDFCC) else Color(0xFF1A1A1A)
     val textSecondary = if (isDark) Color(0xFFECDFCC).copy(alpha = 0.4f) else Color(0xFF999999)
     val dividerColor = if (isDark) Color(0xFFECDFCC).copy(alpha = 0.08f) else Color(0xFFE0E0E0)
@@ -1098,9 +1098,9 @@ private fun ColorPickerModal(
     onSelect: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val dialogBg = if (isDark) Color(0xFF1E1E1E) else Color(0xFFF8F8F8)
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.08f)
-    val checkColor = if (isDark) Color.White else Color.Black
+    val dialogBg = if (isDark) Color(0xFF1E2218) else Color(0xFFF6F5F2)
+    val borderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color(0xFF181C14).copy(alpha = 0.08f)
+    val checkColor = if (isDark) Color(0xFFECDFCC) else Color(0xFF181C14)
     
     Dialog(onDismissRequest = onDismiss) {
         Box(

@@ -158,7 +158,7 @@ fun FocusApp() {
     
     NavHost(
         navController = navController,
-        startDestination = "splash",
+        startDestination = "home",
         enterTransition = { slideInHorizontally(initialOffsetX = { it }) },
         exitTransition = { slideOutHorizontally(targetOffsetX = { -it }) },
         popEnterTransition = { slideInHorizontally(initialOffsetX = { -it }) },

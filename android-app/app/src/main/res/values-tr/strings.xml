@@ -35,6 +35,8 @@
     <string name="hour_short">sa</string>
     <string name="minute_short">dk</string>
     <string name="confirm">Onayla</string>
+    <string name="coming_soon">Yakında...</string>
+    <string name="subscription_subtitle">Tüm özelliklere erişim.</string>
     
     <!-- Language names -->
     <string name="lang_english">İngilizce</string>
@@ -59,6 +61,24 @@
     <string name="stat_total_focus">toplam odaklanma süresi</string>
 
     <!-- Day abbreviations -->
+    <string name="analytics_title">Analitik</string>
+    <string name="analytics_subtitle">Eşsiz üretkenliğe giden yolunu görselleştir.</string>
+    <string name="stat_weekly">Haftalık</string>
+    <string name="stat_monthly">Aylık</string>
+    <string name="stat_yearly">Yıllık</string>
+    <string name="total_focus_time">TOPLAM ODAKLANMA ZAMANI</string>
+    <string name="stat_focus">ODAK</string>
+    <string name="stat_total_sessions">TOPLAM OTURUM</string>
+    <string name="stat_longest_streak">EN UZUN SERİ</string>
+    <string name="stat_daily_average">GÜNLÜK ORTALAMA</string>
+    <string name="sessions_lowercase">oturum</string>
+    <string name="stat_tags">Etiketler</string>
+    <string name="stat_stats">İstatistikler</string>
+    <string name="cat_learning">Öğrenme</string>
+    <string name="cat_work">Çalışma</string>
+    <string name="cat_sport">Spor</string>
+    <string name="cat_relax">Rahatlama</string>
+    <string name="cat_gaming">Oyun</string>
     <string name="day_mon">Pzt</string>
     <string name="day_tue">Sal</string>
     <string name="day_wed">Çar</string>
