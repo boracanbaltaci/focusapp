@@ -265,11 +265,11 @@ class StatisticsRepository(context: Context) {
     }
 
     /**
-     * Returns the current streak: number of consecutive days (including today)
-     * that have at least one session.
+     * Returns the longest streak: maximum number of consecutive days 
+     * that have at least one session > 1 minute.
      */
-    fun getCurrentStreak(): Int {
-        val sessions = getAllSessions()
+    fun getLongestStreak(): Int {
+        val sessions = getAllSessions().filter { it.durationMinutes >= 1 }
         if (sessions.isEmpty()) return 0
 
         // Collect unique days that have sessions
@@ -284,29 +284,52 @@ class StatisticsRepository(context: Context) {
             sessionDays.add(cal.timeInMillis)
         }
 
-        // Start from today and count backwards
-        val today = Calendar.getInstance()
-        today.set(Calendar.HOUR_OF_DAY, 0)
-        today.set(Calendar.MINUTE, 0)
-        today.set(Calendar.SECOND, 0)
-        today.set(Calendar.MILLISECOND, 0)
+        val sortedDays = sessionDays.sorted()
+        if (sortedDays.isEmpty()) return 0
 
-        var streak = 0
-        val checkDay = today.clone() as Calendar
-
-        // Check today first, if no session today, check yesterday as the start
-        if (!sessionDays.contains(checkDay.timeInMillis)) {
-            checkDay.add(Calendar.DAY_OF_YEAR, -1)
-            if (!sessionDays.contains(checkDay.timeInMillis)) {
-                return 0
+        var maxStreak = 1
+        var currentStreak = 1
+        
+        for (i in 1 until sortedDays.size) {
+            val diff = sortedDays[i] - sortedDays[i - 1]
+            // approximate 1 day in millis, allowing for daylight savings
+            if (diff in (23 * 60 * 60 * 1000L)..(25 * 60 * 60 * 1000L)) {
+                currentStreak++
+                if (currentStreak > maxStreak) {
+                    maxStreak = currentStreak
+                }
+            } else {
+                currentStreak = 1
             }
         }
 
-        while (sessionDays.contains(checkDay.timeInMillis)) {
-            streak++
-            checkDay.add(Calendar.DAY_OF_YEAR, -1)
+        return maxStreak
+    }
+    
+    /**
+     * Returns the daily average focus time, strictly based on days 
+     * where the user actually used the app (has focus session > 1 min).
+     */
+    fun getAverageDailyActiveMinutes(): Int {
+        val sessions = getAllSessions().filter { !it.isBreak && it.durationMinutes >= 1 }
+        if (sessions.isEmpty()) return 0
+        
+        val sessionDays = mutableSetOf<Long>()
+        val cal = Calendar.getInstance()
+        var totalMinutes = 0
+        
+        sessions.forEach { session ->
+            cal.timeInMillis = session.date
+            cal.set(Calendar.HOUR_OF_DAY, 0)
+            cal.set(Calendar.MINUTE, 0)
+            cal.set(Calendar.SECOND, 0)
+            cal.set(Calendar.MILLISECOND, 0)
+            sessionDays.add(cal.timeInMillis)
+            
+            totalMinutes += session.durationMinutes
         }
-
-        return streak
+        
+        if (sessionDays.isEmpty()) return 0
+        return totalMinutes / sessionDays.size
     }
 }

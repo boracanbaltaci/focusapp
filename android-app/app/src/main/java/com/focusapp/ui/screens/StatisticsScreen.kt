@@ -97,15 +97,17 @@ fun StatisticsScreen(
     }
     val hours = totalMinutes / 60
     val minutes = totalMinutes % 60
-    val streak = remember(refreshTick) { statisticsRepository.getCurrentStreak() }
+    val streak = remember(refreshTick) { statisticsRepository.getLongestStreak() }
     
     // Derived values for bottom cards
     val totalSessions = remember(viewMode, refreshTick) {
         statisticsRepository.getAllSessions().size
     }
     
-    val rawHours = totalMinutes / 60f
-    val dailyAvgText = String.format(java.util.Locale.US, "%.1f Hrs", if (data.isNotEmpty()) rawHours / data.size.coerceAtLeast(1) else 0f)
+    val avgMinutes = remember(refreshTick) { statisticsRepository.getAverageDailyActiveMinutes() }
+    val avgHours = avgMinutes / 60
+    val avgMins = avgMinutes % 60
+    val dailyAvgText = if (avgHours > 0) "${avgHours}h ${avgMins}m" else "${avgMins}m"
 
     var showStatsPopup by remember { mutableStateOf(false) }
     var showTagsPopup by remember { mutableStateOf(false) }
@@ -167,7 +169,7 @@ fun StatisticsScreen(
                 Box(modifier = Modifier.align(Alignment.Center)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         // Invisible spacer on the left to balance the width of the icons on the right 
-                        // Right side width: 24.dp (spacer) + 28.dp (icon) + 16.dp (spacer) + 28.dp (icon) = 96.dp
+                        // Right side width: 24.dp (spacer) + 28.dp (box) + 16.dp (spacer) + 28.dp (box) = 96.dp
                         Spacer(modifier = Modifier.width(96.dp))
 
                         HorizontalTabGroup(
@@ -181,24 +183,26 @@ fun StatisticsScreen(
                         
                         Spacer(modifier = Modifier.width(24.dp))
                         
-                        IconButton(
-                            onClick = { showTagsPopup = !showTagsPopup; showStatsPopup = false }, 
+                        Box(
                             modifier = Modifier
                                 .size(28.dp)
                                 .clip(androidx.compose.foundation.shape.CircleShape)
                                 .background(Color(0xFF1B2A20))
+                                .clickable { showTagsPopup = !showTagsPopup; showStatsPopup = false },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.List, contentDescription = "Tags", tint = textColor, modifier = Modifier.size(14.dp))
+                            Icon(Icons.Default.List, contentDescription = "Tags", tint = textColor, modifier = Modifier.size(16.dp))
                         }
                         Spacer(modifier = Modifier.width(16.dp))
-                        IconButton(
-                            onClick = { showStatsPopup = !showStatsPopup; showTagsPopup = false }, 
+                        Box(
                             modifier = Modifier
                                 .size(28.dp)
                                 .clip(androidx.compose.foundation.shape.CircleShape)
                                 .background(Color(0xFF1B2A20))
+                                .clickable { showStatsPopup = !showStatsPopup; showTagsPopup = false },
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(Icons.Default.Star, contentDescription = "Stats", tint = textColor, modifier = Modifier.size(14.dp))
+                            Icon(Icons.Default.Star, contentDescription = "Stats", tint = textColor, modifier = Modifier.size(16.dp))
                         }
                     }
                 }
@@ -228,11 +232,10 @@ fun StatisticsScreen(
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text("${hours}h ${minutes}m", color = textColor, fontSize = 28.sp, fontWeight = FontWeight.Bold, fontFamily = GeistFontFamily)
                                 Spacer(modifier = Modifier.width(12.dp))
-                                // Trend Pill
                                 Box(
                                     modifier = Modifier
                                         .clip(RoundedCornerShape(12.dp))
-                                        .background(Color(0xFF0F3D1F))
+                                        .background(if (trendPercent < 0) Color(0xFF4A1C1C) else Color(0xFF0F3D1F))
                                         .padding(horizontal = 8.dp, vertical = 4.dp),
                                     contentAlignment = Alignment.Center
                                 ) {
@@ -318,16 +321,31 @@ fun StatisticsScreen(
                                                 ) {
                                                     Box(
                                                         modifier = Modifier
+                                                            .wrapContentWidth(unbounded = true)
                                                             .clip(RoundedCornerShape(6.dp))
                                                             .background(Color.White)
-                                                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                                                            .padding(horizontal = 6.dp, vertical = 4.dp)
                                                     ) {
                                                         Row(
-                                                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                                            horizontalArrangement = Arrangement.spacedBy(6.dp),
                                                             verticalAlignment = Alignment.CenterVertically
                                                         ) {
-                                                            Text("${entry.value.focusMinutes}m", color = Color(0xFF102216), fontSize = 9.sp, fontWeight = FontWeight.Bold)
-                                                            Text("${entry.value.breakMinutes}m", color = Color(0xFFE65100), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                                            val fMins = entry.value.focusMinutes
+                                                            val fText = if (fMins >= 60) "${fMins/60}h ${fMins%60}m" else "${fMins}m"
+                                                            
+                                                            val bMins = entry.value.breakMinutes
+                                                            val bText = if (bMins >= 60) "${bMins/60}h ${bMins%60}m" else "${bMins}m"
+
+                                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(bgTabActive))
+                                                                Spacer(modifier = Modifier.width(4.dp))
+                                                                Text(fText, color = Color(0xFF102216), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                                            }
+                                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                                Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(Color(0xFFE65100)))
+                                                                Spacer(modifier = Modifier.width(4.dp))
+                                                                Text(bText, color = Color(0xFFE65100), fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                                            }
                                                         }
                                                     }
                                                 }
@@ -393,9 +411,9 @@ fun StatisticsScreen(
                                         modifier = Modifier.fillMaxWidth(if (barCount > 15) 0.9f else 0.7f),
                                         contentAlignment = Alignment.Center
                                     ) {
-                                        if (barCount <= 12 || entry.key % 5 == 0 || entry.key == 1) {
+                                        if (barCount <= 12 || entry.key % 5 == 0 || entry.key == 1 || tooltipEntry?.key == entry.key) {
                                             Text(
-                                                label.take(3).uppercase(java.util.Locale.getDefault()),
+                                                if (viewMode == ViewMode.MONTH) label else label.take(3).uppercase(java.util.Locale.getDefault()),
                                                 color = textTabInactive,
                                                 fontSize = 11.sp,
                                                 fontWeight = FontWeight.SemiBold,
@@ -471,12 +489,17 @@ fun StatisticsScreen(
             }
         }
 
-        if (showTagsPopup) {
+        androidx.compose.animation.AnimatedVisibility(
+            visible = showTagsPopup,
+            enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.slideInVertically(initialOffsetY = { -50 }),
+            exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.slideOutVertically(targetOffsetY = { -50 }),
+            modifier = Modifier.fillMaxSize()
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(end = 64.dp, top = 80.dp),
-                contentAlignment = Alignment.TopEnd
+                    .padding(top = 80.dp),
+                contentAlignment = Alignment.TopCenter
             ) {
                 Column(
                     modifier = Modifier
@@ -486,7 +509,7 @@ fun StatisticsScreen(
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text("Categories", color = textColor, fontWeight = FontWeight.Bold, fontFamily = GeistFontFamily, fontSize = 14.sp)
+                    Text("Etiketler", color = textColor, fontWeight = FontWeight.Bold, fontFamily = GeistFontFamily, fontSize = 14.sp)
                     Divider(color = textTabInactive.copy(alpha = 0.2f))
                     
                     val tags = listOf(
