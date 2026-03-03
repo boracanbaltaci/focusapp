@@ -23,11 +23,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.border
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.clip
@@ -156,11 +158,13 @@ fun HomeScreen(
     var isOnBreak by remember { mutableStateOf(false) } // Track break state
     var timerGeneration by remember { mutableStateOf(0) } // Force LaunchedEffect restart
     var selectedCategory by remember { mutableStateOf<FocusCategory?>(null) }
+    var currentSessionIndex by remember { mutableStateOf(0) }
     
     // Auto break settings
     val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
     val is24HourFormat by settingsViewModel.is24HourFormat.collectAsState()
+    val pomodoroSessions by settingsViewModel.pomodoroSessions.collectAsState()
 
     
     // Update clock every second
@@ -193,6 +197,7 @@ fun HomeScreen(
         } else {
             // Focus session finished - save to statistics
             statisticsRepository.saveSession(initialTimerSeconds / 60, initialTimerSeconds, selectedCategory?.name, isBreak = false)
+            currentSessionIndex++
             // Always switch to break mode
             isOnBreak = true
             timerSeconds = breakDurationMinutes * 60
@@ -303,6 +308,9 @@ fun HomeScreen(
                     isRunning = isTimerRunning,
                     seconds = timerSeconds,
                     isOnBreak = isOnBreak,
+                    totalSessions = pomodoroSessions,
+                    currentSessionIndex = currentSessionIndex,
+                    initialTimerSeconds = initialTimerSeconds,
                     onStartStop = { 
                         if (isTimerRunning) {
                             // Pausing timer
@@ -345,6 +353,7 @@ fun HomeScreen(
                             }
                             // Reset to initial duration
                             timerSeconds = initialTimerSeconds
+                            currentSessionIndex = 0
                         }
                     },
                     onNavigateToSettings = handleNavigateToSettings,
@@ -548,7 +557,10 @@ private fun TimerScreen(
     onToggleImmersiveMode: () -> Unit,
     isDark: Boolean = false,
     selectedCategory: FocusCategory? = null,
-    onCategorySelected: (FocusCategory?) -> Unit = {}
+    onCategorySelected: (FocusCategory?) -> Unit = {},
+    totalSessions: Int = 4,
+    currentSessionIndex: Int = 0,
+    initialTimerSeconds: Int = 0
 ) {
     val context = LocalContext.current
     
@@ -642,51 +654,65 @@ private fun TimerScreen(
                         fontWeight = FontWeight.Normal
                     )
                     
-                    ProportionalScaleBox(
-                        referenceText = hourPrefix + timeStr,
-                        referenceStyle = baseStyle,
-                        referenceFontSize = 240.sp,
-                        modifier = Modifier.padding(horizontal = 56.dp)
-                    ) { scale ->
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.clickable {
-                                if (!isRunning && !isOnBreak) {
-                                    onTimerClick()
-                                } else {
-                                    onToggleImmersiveMode()
+                    Box(contentAlignment = Alignment.Center) {
+                        ProportionalScaleBox(
+                            referenceText = hourPrefix + timeStr,
+                            referenceStyle = baseStyle,
+                            referenceFontSize = 240.sp,
+                            modifier = Modifier.padding(horizontal = 56.dp)
+                        ) { scale ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier.clickable {
+                                    if (!isRunning && !isOnBreak) {
+                                        onTimerClick()
+                                    } else {
+                                        onToggleImmersiveMode()
+                                    }
                                 }
-                            }
-                        ) {
-                            // Show hour label if >= 1 hour
-                            if (totalMinutes >= 60) {
+                            ) {
+                                // Show hour label if >= 1 hour
+                                if (totalMinutes >= 60) {
+                                    Text(
+                                        text = hourPrefix.trimEnd(),
+                                        style = TextStyle(
+                                            fontFamily = clockFontFamily,
+                                            fontWeight = FontWeight.Normal,
+                                            fontSize = 70.sp * scale,
+                                            color = timerColor,
+                                            textAlign = TextAlign.End
+                                        ),
+                                        modifier = Modifier.padding(end = (8 * scale).dp)
+                                    )
+                                }
+                                
                                 Text(
-                                    text = hourPrefix.trimEnd(),
+                                    text = timeStr,
                                     style = TextStyle(
                                         fontFamily = clockFontFamily,
                                         fontWeight = FontWeight.Normal,
-                                        fontSize = 70.sp * scale,
+                                        fontSize = 240.sp * scale,
                                         color = timerColor,
-                                        textAlign = TextAlign.End
-                                    ),
-                                    modifier = Modifier.padding(end = (8 * scale).dp)
+                                        textAlign = TextAlign.Center
+                                    )
                                 )
                             }
-                            
-                            Text(
-                                text = timeStr,
-                                style = TextStyle(
-                                    fontFamily = clockFontFamily,
-                                    fontWeight = FontWeight.Normal,
-                                    fontSize = 240.sp * scale,
-                                    color = timerColor,
-                                    textAlign = TextAlign.Center
-                                )
-                            )
                         }
-                    }
-            } // Close Column wrapping break label + timer
+                        // The Box acts as a wrapper so that the scaling text keeps it centered
+                    } // Close Box wrapping timer
+                    
+                    // Session Progress Indicator directly underneath, not inside an overlay Box
+                    SessionProgressIndicator(
+                        modifier = Modifier.padding(top = 16.dp),
+                        totalSessions = totalSessions,
+                        currentSessionIndex = currentSessionIndex,
+                        timerSeconds = seconds,
+                        initialTimerSeconds = initialTimerSeconds,
+                        isOnBreak = isOnBreak,
+                        textColor = textColor
+                    )
+                } // Close Column wrapping break label + timer
             
             // Start/Stop button on the far left
             Box(
@@ -698,49 +724,53 @@ private fun TimerScreen(
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
+                    val themeColor = if (isRunning) Color(0xFF9E9E9E) else Color(0xFF4CAF50)
+                    val bgColor = if (isRunning) Color(0xFF2A2A2A) else Color(0xFF16251A)
+                    
                     Button(
                         onClick = onStartStop,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isRunning) Color(0xFFFF4444) else Color(0xFF4CAF50)
+                            containerColor = bgColor
                         ),
                         modifier = Modifier
-                            .padding(start = 24.dp.scaled(timerScale, min = 8.dp))
-                            .size(56.dp.scaled(timerScale, min = 36.dp)),
+                            .padding(start = 32.dp.scaled(timerScale, min = 12.dp))
+                            .size(72.dp.scaled(timerScale, min = 48.dp))
+                            .border(1.dp, themeColor.copy(alpha = 0.5f), CircleShape),
                         shape = CircleShape,
                         contentPadding = PaddingValues(0.dp)
                     ) {
                         // Play or Pause icon using Canvas
-                        Canvas(modifier = Modifier.size(24.dp.scaled(timerScale, min = 16.dp))) {
+                        Canvas(modifier = Modifier.size(26.dp.scaled(timerScale, min = 18.dp))) {
                             if (isRunning) {
                                 // Pause icon (two vertical lines)
-                                val lineWidth = size.width * 0.15f
-                                val lineHeight = size.height * 0.6f
+                                val lineWidth = size.width * 0.25f
+                                val lineHeight = size.height * 0.7f
                                 val topOffset = (size.height - lineHeight) / 2f
                                 
                                 // Left line
                                 drawRect(
-                                    color = Color.White,
-                                    topLeft = Offset(size.width * 0.3f, topOffset),
+                                    color = themeColor,
+                                    topLeft = Offset(size.width * 0.15f, topOffset),
                                     size = Size(lineWidth, lineHeight)
                                 )
                                 
                                 // Right line
                                 drawRect(
-                                    color = Color.White,
-                                    topLeft = Offset(size.width * 0.55f, topOffset),
+                                    color = themeColor,
+                                    topLeft = Offset(size.width * 0.6f, topOffset),
                                     size = Size(lineWidth, lineHeight)
                                 )
                             } else {
-                                // Play icon (triangle)
+                                // Play icon (triangle) matching Image 2
                                 val path = Path().apply {
-                                    moveTo(size.width * 0.3f, size.height * 0.2f)
-                                    lineTo(size.width * 0.3f, size.height * 0.8f)
-                                    lineTo(size.width * 0.75f, size.height * 0.5f)
+                                    moveTo(size.width * 0.25f, size.height * 0.15f)
+                                    lineTo(size.width * 0.25f, size.height * 0.85f)
+                                    lineTo(size.width * 0.9f, size.height * 0.5f)
                                     close()
                                 }
                                 drawPath(
                                     path = path,
-                                    color = Color.White
+                                    color = themeColor
                                 )
                             }
                         }
@@ -758,21 +788,24 @@ private fun TimerScreen(
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
+                    val finishColor = Color(0xFF9E9E9E)
+                    val finishBg = Color(0xFF2A2A2A)
                     Button(
                         onClick = onFinish,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF9E9E9E) // Gray color for finish
+                            containerColor = finishBg
                         ),
                         modifier = Modifier
-                            .padding(end = 24.dp.scaled(timerScale, min = 8.dp))
-                            .size(56.dp.scaled(timerScale, min = 36.dp)),
+                            .padding(end = 32.dp.scaled(timerScale, min = 12.dp))
+                            .size(72.dp.scaled(timerScale, min = 48.dp))
+                            .border(1.dp, finishColor.copy(alpha = 0.5f), CircleShape),
                         shape = CircleShape,
                         contentPadding = PaddingValues(0.dp)
                     ) {
-                        // Stop/Finish icon (square) using Canvas
-                        Canvas(modifier = Modifier.size(20.dp.scaled(timerScale, min = 14.dp))) {
+                        // Stop/Finish icon (square) using Canvas matching Image 1
+                        Canvas(modifier = Modifier.size(22.dp.scaled(timerScale, min = 15.dp))) {
                             drawRect(
-                                color = Color.White,
+                                color = finishColor,
                                 topLeft = Offset(0f, 0f),
                                 size = Size(size.width, size.height)
                             )
@@ -834,36 +867,42 @@ fun SettingsIconButton(onClick: () -> Unit, iconColor: Color) {
                 val centerX = size.width / 2f
                 val centerY = size.height / 2f
                 val radius = size.width * 0.4f
-                val strokeWidth = 2.dp.toPx()
+                val strokeWidth = size.width * 0.15f // Thicker rim for the new aesthetic
                 
-                // Draw a simple cog/settings icon with 6 teeth
-                // Center circle
-                drawCircle(
-                    color = iconColor,
-                    radius = radius * 0.35f,
-                    center = Offset(centerX, centerY),
-                    style = Stroke(width = strokeWidth)
-                )
-                
-                // Draw 6 rectangular teeth around the circle
-                for (i in 0 until 6) {
-                    val angle = (i * 60f).toRadians()
-                    val toothLength = radius * 0.4f
-                    val toothWidth = radius * 0.25f
+                // Draw 8 rectangular teeth first so they merge nicely under the ring
+                val toothWidth = strokeWidth * 0.8f
+                for (i in 0 until 8) {
+                    val angle = (i * 45f).toRadians()
                     
-                    val startX = centerX + (radius * 0.35f) * kotlin.math.cos(angle)
-                    val startY = centerY + (radius * 0.35f) * kotlin.math.sin(angle)
+                    val startX = centerX + (radius * 0.4f) * kotlin.math.cos(angle)
+                    val startY = centerY + (radius * 0.4f) * kotlin.math.sin(angle)
                     val endX = centerX + (radius * 0.75f) * kotlin.math.cos(angle)
                     val endY = centerY + (radius * 0.75f) * kotlin.math.sin(angle)
                     
-                    // Draw tooth as a line
                     drawLine(
                         color = iconColor,
                         start = Offset(startX, startY),
                         end = Offset(endX, endY),
-                        strokeWidth = toothWidth
+                        strokeWidth = toothWidth,
+                        cap = StrokeCap.Square
                     )
                 }
+                
+                // Outer strong ring
+                drawCircle(
+                    color = iconColor,
+                    radius = radius * 0.5f,
+                    center = Offset(centerX, centerY),
+                    style = Stroke(width = strokeWidth)
+                )
+                
+                // Inner solid dot
+                drawCircle(
+                    color = iconColor,
+                    radius = radius * 0.2f,
+                    center = Offset(centerX, centerY),
+                    style = Fill
+                )
             }
         }
     }
@@ -1048,42 +1087,40 @@ fun ColorPickerIconButton(onClick: () -> Unit, iconColor: Color) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val centerX = size.width / 2f
                 val centerY = size.height / 2f
-                val r = size.width * 0.38f
-                val strokeW = 2.dp.toPx()
+                val strokeW = 2.dp.toPx() * 1.25f
+                val r = size.width * 0.4f
                 
-                // Draw eyedropper icon
-                // Main body (angled rectangle)
-                val bodyPath = Path().apply {
-                    moveTo(centerX + r * 0.1f, centerY - r * 0.9f)
-                    lineTo(centerX + r * 0.5f, centerY - r * 0.5f)
-                    lineTo(centerX - r * 0.4f, centerY + r * 0.6f)
-                    lineTo(centerX - r * 0.8f, centerY + r * 0.2f)
+                // Pencil pointing to bottom-left
+                val path = Path().apply {
+                    // Top-right rounded end (eraser)
+                    moveTo(centerX + r * 0.5f, centerY - r * 0.3f)
+                    quadraticBezierTo(
+                        centerX + r * 0.8f, centerY - r * 0.8f,
+                        centerX + r * 0.3f, centerY - r * 0.5f
+                    )
+                    // Left body line
+                    lineTo(centerX - r * 0.4f, centerY + r * 0.2f)
+                    // Tip (bottom-left)
+                    lineTo(centerX - r * 0.7f, centerY + r * 0.7f)
+                    // Tip going to right body line
+                    lineTo(centerX - r * 0.2f, centerY + r * 0.4f)
+                    // Right body line
                     close()
                 }
+                
                 drawPath(
-                    path = bodyPath,
+                    path = path,
                     color = iconColor,
-                    style = Stroke(width = strokeW, cap = StrokeCap.Round)
+                    style = Stroke(width = strokeW, join = StrokeJoin.Round)
                 )
                 
-                // Tip (triangle)
-                val tipPath = Path().apply {
-                    moveTo(centerX - r * 0.4f, centerY + r * 0.6f)
-                    lineTo(centerX - r * 0.65f, centerY + r * 0.85f)
-                    lineTo(centerX - r * 0.8f, centerY + r * 0.2f)
-                }
-                drawPath(
-                    path = tipPath,
+                // Inner center line for graphite / body detail
+                drawLine(
                     color = iconColor,
-                    style = Stroke(width = strokeW, cap = StrokeCap.Round)
-                )
-                
-                // Top bulb (circle)
-                drawCircle(
-                    color = iconColor,
-                    radius = r * 0.22f,
-                    center = Offset(centerX + r * 0.3f, centerY - r * 0.7f),
-                    style = Stroke(width = strokeW)
+                    start = Offset(centerX + r * 0.35f, centerY - r * 0.35f),
+                    end = Offset(centerX - r * 0.15f, centerY + r * 0.15f),
+                    strokeWidth = strokeW * 0.6f,
+                    cap = StrokeCap.Round
                 )
             }
         }
@@ -1258,6 +1295,76 @@ private fun ColorPickerModal(
                             }
                         }
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SessionProgressIndicator(
+    modifier: Modifier = Modifier,
+    totalSessions: Int,
+    currentSessionIndex: Int,
+    timerSeconds: Int,
+    initialTimerSeconds: Int,
+    isOnBreak: Boolean,
+    textColor: Color
+) {
+    if (totalSessions <= 0) return
+    
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val maxDisplay = minOf(totalSessions, 12)
+        val activeIndex = currentSessionIndex % totalSessions
+        
+        for (i in 0 until maxDisplay) {
+            when {
+                i < activeIndex -> {
+                    // Completed session - circle with border
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .border(1.dp, textColor.copy(alpha = 0.8f), CircleShape)
+                            .background(Color.Transparent, CircleShape)
+                    )
+                }
+                i == activeIndex -> {
+                    // Current session - pill shape spanning slowly
+                    val progress = if (initialTimerSeconds > 0 && !isOnBreak) {
+                        1f - (timerSeconds.toFloat() / initialTimerSeconds.toFloat())
+                    } else if (isOnBreak) {
+                       1f // On break, the previous session is technically 'finished' but waiting to transition. Let's show it full.
+                    } else {
+                        0f
+                    }
+                    
+                    Box(
+                        modifier = Modifier
+                            .width(28.dp)
+                            .height(8.dp)
+                            .border(1.dp, textColor.copy(alpha = 0.5f), RoundedCornerShape(4.dp))
+                            .clip(RoundedCornerShape(4.dp)),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(progress.coerceIn(0f, 1f))
+                                .background(textColor)
+                        )
+                    }
+                }
+                else -> {
+                    // Future session - dim circle
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .background(textColor.copy(alpha = 0.2f), CircleShape)
+                    )
                 }
             }
         }

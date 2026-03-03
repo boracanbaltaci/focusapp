@@ -33,6 +33,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.material.icons.filled.List
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -262,7 +264,7 @@ fun StatisticsScreen(
                         
                         // Legend
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 8.dp)) {
-                            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(bgTabActive))
+                            Box(modifier = Modifier.size(8.dp).clip(CircleShape).background(chartFocusColor))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(stringResource(R.string.stat_focus).uppercase(), color = textColor, fontSize = 9.sp, fontWeight = FontWeight.Bold, fontFamily = GeistFontFamily)
                             Spacer(modifier = Modifier.width(16.dp))
@@ -740,7 +742,7 @@ fun PinCategorySelector(
             modifier = Modifier
                 .size(40.dp)
                 .scale(buttonScale)
-                .clip(CircleShape)
+                .clip(RoundedCornerShape(14.dp))
                 .background(
                     if (isExpanded) accentColor
                     else if (hasSelection) selectedColor.copy(alpha = 0.5f)
@@ -796,7 +798,7 @@ fun PinCategorySelector(
                     modifier = Modifier
                         .size(36.dp)
                         .scale(itemScale)
-                        .clip(CircleShape)
+                        .clip(RoundedCornerShape(12.dp))
                         .background(
                             if (isSelected) categoryColor.copy(alpha = 0.4f)
                             else categoryBgColor
@@ -839,24 +841,33 @@ fun PinCategorySelector(
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawTagIcon(color: Color) {
     val w = size.width
     val h = size.height
-    val stroke = Stroke(width = w * 0.09f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-
-    val tagPath = Path().apply {
-        moveTo(w * 0.1f, h * 0.2f)
-        lineTo(w * 0.6f, h * 0.2f)
-        lineTo(w * 0.9f, h * 0.5f)
-        lineTo(w * 0.6f, h * 0.8f)
-        lineTo(w * 0.1f, h * 0.8f)
-        close()
+    
+    // Slanted tag pointing to the top-left, with a hole.
+    // We achieve this by drawing a left-pointing tag and rotating it 45 degrees.
+    withTransform({
+        rotate(45f, Offset(w / 2f, h / 2f))
+    }) {
+        val tagPath = Path().apply {
+            moveTo(w * 0.15f, h * 0.5f) // Tip on the left
+            lineTo(w * 0.45f, h * 0.2f) // Top slope
+            lineTo(w * 0.9f, h * 0.2f) // Top straight
+            lineTo(w * 0.9f, h * 0.8f) // Right straight
+            lineTo(w * 0.45f, h * 0.8f) // Bottom straight
+            close()
+        }
+        drawPath(
+            path = tagPath,
+            color = color,
+            style = Stroke(width = w * 0.12f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+        // Hole near the tip
+        drawCircle(
+            color = color,
+            radius = w * 0.08f,
+            center = Offset(w * 0.35f, h * 0.5f),
+            style = Fill
+        )
     }
-    drawPath(tagPath, color = color, style = stroke)
-
-    drawCircle(
-        color = color,
-        radius = w * 0.07f,
-        center = Offset(w * 0.28f, h * 0.5f),
-        style = Fill
-    )
 }
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBookIcon(color: Color) {
