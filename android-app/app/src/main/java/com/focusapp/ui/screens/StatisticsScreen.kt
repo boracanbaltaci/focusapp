@@ -165,38 +165,41 @@ fun StatisticsScreen(
                 }
 
                 Box(modifier = Modifier.align(Alignment.Center)) {
-                    HorizontalTabGroup(
-                        viewMode = viewMode,
-                        onViewModeSelected = { viewMode = it },
-                        bgContainer = Color(0xFF1B2A20),
-                        bgActive = bgTabActive,
-                        textActive = textTabActive,
-                        textInactive = textTabInactive
-                    )
-                }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Invisible spacer on the left to balance the width of the icons on the right 
+                        // Right side width: 24.dp (spacer) + 28.dp (icon) + 16.dp (spacer) + 28.dp (icon) = 96.dp
+                        Spacer(modifier = Modifier.width(96.dp))
 
-                Row(
-                    modifier = Modifier.align(Alignment.CenterEnd), 
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(
-                        onClick = { showTagsPopup = !showTagsPopup; showStatsPopup = false }, 
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(androidx.compose.foundation.shape.CircleShape)
-                            .background(Color(0xFF1B2A20))
-                    ) {
-                        Icon(Icons.Default.List, contentDescription = "Tags", tint = textColor, modifier = Modifier.size(16.dp))
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    IconButton(
-                        onClick = { showStatsPopup = !showStatsPopup; showTagsPopup = false }, 
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(androidx.compose.foundation.shape.CircleShape)
-                            .background(Color(0xFF1B2A20))
-                    ) {
-                        Icon(Icons.Default.Star, contentDescription = "Stats", tint = textColor, modifier = Modifier.size(16.dp))
+                        HorizontalTabGroup(
+                            viewMode = viewMode,
+                            onViewModeSelected = { viewMode = it },
+                            bgContainer = Color(0xFF1B2A20),
+                            bgActive = bgTabActive,
+                            textActive = textTabActive,
+                            textInactive = textTabInactive
+                        )
+                        
+                        Spacer(modifier = Modifier.width(24.dp))
+                        
+                        IconButton(
+                            onClick = { showTagsPopup = !showTagsPopup; showStatsPopup = false }, 
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(Color(0xFF1B2A20))
+                        ) {
+                            Icon(Icons.Default.List, contentDescription = "Tags", tint = textColor, modifier = Modifier.size(14.dp))
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        IconButton(
+                            onClick = { showStatsPopup = !showStatsPopup; showTagsPopup = false }, 
+                            modifier = Modifier
+                                .size(28.dp)
+                                .clip(androidx.compose.foundation.shape.CircleShape)
+                                .background(Color(0xFF1B2A20))
+                        ) {
+                            Icon(Icons.Default.Star, contentDescription = "Stats", tint = textColor, modifier = Modifier.size(14.dp))
+                        }
                     }
                 }
             }
@@ -334,11 +337,18 @@ fun StatisticsScreen(
 
                                             Row(
                                                 modifier = Modifier.fillMaxWidth(if (barCount > 15) 0.9f else 0.7f),
-                                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                                horizontalArrangement = Arrangement.Center,
                                                 verticalAlignment = Alignment.Bottom
                                             ) {
+                                                val hasFocus = entry.value.focusMinutes > 0 || focusFraction > 0f
+                                                val hasBreak = entry.value.breakMinutes > 0 || breakFraction > 0f
+
+                                                if (hasFocus && !hasBreak) {
+                                                    Spacer(modifier = Modifier.weight(0.5f))
+                                                }
+                                                
                                                 // Focus Bar
-                                                if (entry.value.focusMinutes > 0 || focusFraction > 0f) { 
+                                                if (hasFocus) { 
                                                     Box(
                                                         modifier = Modifier
                                                             .weight(1f)
@@ -346,14 +356,14 @@ fun StatisticsScreen(
                                                             .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                                             .background(bgTabActive) 
                                                     )
-                                                } else {
-                                                    Spacer(modifier = Modifier.weight(1f))
                                                 }
                                                 
-                                                Spacer(modifier = Modifier.width(2.dp))
+                                                if (hasFocus && hasBreak) {
+                                                    Spacer(modifier = Modifier.width(2.dp))
+                                                }
                                                 
                                                 // Break Bar
-                                                if (entry.value.breakMinutes > 0 || breakFraction > 0f) { 
+                                                if (hasBreak) { 
                                                     Box(
                                                         modifier = Modifier
                                                             .weight(1f)
@@ -361,8 +371,16 @@ fun StatisticsScreen(
                                                             .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
                                                             .background(Color(0xFFFF9800)) 
                                                     )
-                                                } else {
-                                                    Spacer(modifier = Modifier.weight(1f))
+                                                }
+                                                
+                                                if (hasBreak && !hasFocus) {
+                                                    Spacer(modifier = Modifier.weight(0.5f))
+                                                }
+                                                if (hasFocus && !hasBreak) {
+                                                    Spacer(modifier = Modifier.weight(0.5f))
+                                                }
+                                                if (!hasFocus && !hasBreak) {
+                                                    Spacer(modifier = Modifier.weight(2f).height(4.dp))
                                                 }
                                             }
                                         }
@@ -371,16 +389,22 @@ fun StatisticsScreen(
                                     Spacer(modifier = Modifier.height(4.dp))
                                     // Label under bar
                                     val label = getDayLabel(entry.key, context, viewMode)
-                                    if (barCount <= 12 || entry.key % 5 == 0 || entry.key == 1) {
-                                        Text(
-                                            label.take(3).uppercase(java.util.Locale.getDefault()),
-                                            color = textTabInactive,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            fontFamily = GeistFontFamily
-                                        )
-                                    } else {
-                                        Text(" ", fontSize = 11.sp, fontFamily = GeistFontFamily) // maintain height
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(if (barCount > 15) 0.9f else 0.7f),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (barCount <= 12 || entry.key % 5 == 0 || entry.key == 1) {
+                                            Text(
+                                                label.take(3).uppercase(java.util.Locale.getDefault()),
+                                                color = textTabInactive,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.SemiBold,
+                                                fontFamily = GeistFontFamily,
+                                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                                            )
+                                        } else {
+                                            Text(" ", fontSize = 11.sp, fontFamily = GeistFontFamily) // maintain height
+                                        }
                                     }
                                 }
                             }
