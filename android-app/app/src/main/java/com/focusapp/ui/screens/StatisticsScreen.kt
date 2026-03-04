@@ -842,32 +842,22 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawTagIcon(color: 
     val w = size.width
     val h = size.height
     
-    // Slanted tag pointing to the top-left, with a hole.
-    // We achieve this by drawing a left-pointing tag and rotating it 45 degrees.
-    withTransform({
-        rotate(45f, Offset(w / 2f, h / 2f))
-    }) {
-        val tagPath = Path().apply {
-            moveTo(w * 0.15f, h * 0.5f) // Tip on the left
-            lineTo(w * 0.45f, h * 0.2f) // Top slope
-            lineTo(w * 0.9f, h * 0.2f) // Top straight
-            lineTo(w * 0.9f, h * 0.8f) // Right straight
-            lineTo(w * 0.45f, h * 0.8f) // Bottom straight
-            close()
-        }
-        drawPath(
-            path = tagPath,
-            color = color,
-            style = Stroke(width = w * 0.12f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-        )
-        // Hole near the tip
-        drawCircle(
-            color = color,
-            radius = w * 0.08f,
-            center = Offset(w * 0.35f, h * 0.5f),
-            style = Fill
-        )
+    // Vertical Bookmark icon (replacing pin/tag)
+    val bookmarkPath = Path().apply {
+        moveTo(w * 0.25f, h * 0.15f)
+        lineTo(w * 0.75f, h * 0.15f)
+        lineTo(w * 0.75f, h * 0.85f)
+        // Cutout pointing upwards at the bottom
+        lineTo(w * 0.5f, h * 0.65f)
+        lineTo(w * 0.25f, h * 0.85f)
+        close()
     }
+    
+    drawPath(
+        path = bookmarkPath,
+        color = color,
+        style = Stroke(width = w * 0.12f, cap = StrokeCap.Round, join = StrokeJoin.Round)
+    )
 }
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBookIcon(color: Color) {

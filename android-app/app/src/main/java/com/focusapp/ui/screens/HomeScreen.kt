@@ -724,8 +724,9 @@ private fun TimerScreen(
                     enter = fadeIn(),
                     exit = fadeOut()
                 ) {
-                    val themeColor = if (isRunning) Color(0xFF9E9E9E) else Color(0xFF4CAF50)
-                    val bgColor = if (isRunning) Color(0xFF2A2A2A) else Color(0xFF16251A)
+                    // Reverted logic: Green when stopped (Play icon), Red when running (Pause icon)
+                    val themeColor = if (isRunning) Color(0xFFFF4444) else Color(0xFF4CAF50)
+                    val bgColor = if (isRunning) Color(0xFF330B0B) else Color(0xFF16251A)
                     
                     Button(
                         onClick = onStartStop,
@@ -866,42 +867,34 @@ fun SettingsIconButton(onClick: () -> Unit, iconColor: Color) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val centerX = size.width / 2f
                 val centerY = size.height / 2f
-                val radius = size.width * 0.4f
-                val strokeWidth = size.width * 0.15f // Thicker rim for the new aesthetic
+                val radius = size.width * 0.3f
+                val strokeWidth = size.width * 0.14f // Thicker rim for the hollow 6-tooth gear
                 
-                // Draw 8 rectangular teeth first so they merge nicely under the ring
-                val toothWidth = strokeWidth * 0.8f
-                for (i in 0 until 8) {
-                    val angle = (i * 45f).toRadians()
+                // Draw 6 rounded teeth
+                val toothWidth = strokeWidth * 1.4f
+                for (i in 0 until 6) {
+                    val angle = (i * 60f).toRadians()
                     
-                    val startX = centerX + (radius * 0.4f) * kotlin.math.cos(angle)
-                    val startY = centerY + (radius * 0.4f) * kotlin.math.sin(angle)
-                    val endX = centerX + (radius * 0.75f) * kotlin.math.cos(angle)
-                    val endY = centerY + (radius * 0.75f) * kotlin.math.sin(angle)
+                    val startX = centerX + (radius * 0.5f) * kotlin.math.cos(angle)
+                    val startY = centerY + (radius * 0.5f) * kotlin.math.sin(angle)
+                    val endX = centerX + (radius * 1.3f) * kotlin.math.cos(angle)
+                    val endY = centerY + (radius * 1.3f) * kotlin.math.sin(angle)
                     
                     drawLine(
                         color = iconColor,
                         start = Offset(startX, startY),
                         end = Offset(endX, endY),
                         strokeWidth = toothWidth,
-                        cap = StrokeCap.Square
+                        cap = StrokeCap.Round
                     )
                 }
                 
                 // Outer strong ring
                 drawCircle(
                     color = iconColor,
-                    radius = radius * 0.5f,
+                    radius = radius,
                     center = Offset(centerX, centerY),
                     style = Stroke(width = strokeWidth)
-                )
-                
-                // Inner solid dot
-                drawCircle(
-                    color = iconColor,
-                    radius = radius * 0.2f,
-                    center = Offset(centerX, centerY),
-                    style = Fill
                 )
             }
         }
@@ -965,10 +958,11 @@ private fun DurationPickerDialog(
     val minShort = stringResource(R.string.minute_short)
     
     // Theme colors
-    val dialogBg = if (isDark) Color(0xFF1E2218) else Color(0xFFF6F5F2)
+    val dialogBg = if (isDark) Color(0xFF1E2218).copy(alpha = 0.85f) else Color(0xFFF6F5F2).copy(alpha = 0.85f)
     val textPrimary = if (isDark) Color(0xFFECDFCC) else Color(0xFF1A1A1A)
-    val textSecondary = if (isDark) Color(0xFFECDFCC).copy(alpha = 0.4f) else Color(0xFF999999)
+    val textSecondary = if (isDark) Color(0xFFECDFCC).copy(alpha = 0.7f) else Color(0xFF666666)
     val dividerColor = if (isDark) Color(0xFFECDFCC).copy(alpha = 0.08f) else Color(0xFFE0E0E0)
+    val glassBorder = if (isDark) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f)
     
     val durationOptions = listOf(
         Pair("5 $minShort", 5 * 60),
@@ -993,7 +987,8 @@ private fun DurationPickerDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.85f)
-                .wrapContentHeight(),
+                .wrapContentHeight()
+                .border(1.dp, glassBorder, RoundedCornerShape(28.dp.scaled(dialogScale, min = 16.dp))),
             shape = RoundedCornerShape(28.dp.scaled(dialogScale, min = 16.dp)),
             color = dialogBg,
             shadowElevation = 8.dp
@@ -1087,25 +1082,32 @@ fun ColorPickerIconButton(onClick: () -> Unit, iconColor: Color) {
             Canvas(modifier = Modifier.fillMaxSize()) {
                 val centerX = size.width / 2f
                 val centerY = size.height / 2f
-                val strokeW = 2.dp.toPx() * 1.25f
-                val r = size.width * 0.4f
+                val strokeW = 3.dp.toPx()
+                val r = size.width * 0.45f
                 
-                // Pencil pointing to bottom-left
+                // Pencil pointing to bottom-left matching Image 2
                 val path = Path().apply {
-                    // Top-right rounded end (eraser)
-                    moveTo(centerX + r * 0.5f, centerY - r * 0.3f)
-                    quadraticBezierTo(
-                        centerX + r * 0.8f, centerY - r * 0.8f,
-                        centerX + r * 0.3f, centerY - r * 0.5f
-                    )
-                    // Left body line
+                    // Right line
+                    moveTo(centerX + r * 0.2f, centerY - r * 0.4f)
                     lineTo(centerX - r * 0.4f, centerY + r * 0.2f)
-                    // Tip (bottom-left)
-                    lineTo(centerX - r * 0.7f, centerY + r * 0.7f)
-                    // Tip going to right body line
+                    
+                    // Tip
+                    lineTo(centerX - r * 0.6f, centerY + r * 0.6f)
                     lineTo(centerX - r * 0.2f, centerY + r * 0.4f)
-                    // Right body line
-                    close()
+                    
+                    // Left line
+                    lineTo(centerX + r * 0.4f, centerY - r * 0.2f)
+                    
+                    // Top square cap
+                    lineTo(centerX + r * 0.6f, centerY - r * 0.4f)
+                    lineTo(centerX + r * 0.4f, centerY - r * 0.6f)
+                    lineTo(centerX + r * 0.2f, centerY - r * 0.4f)
+                }
+                
+                // Pencil tip middle line
+                val tipLine = Path().apply {
+                    moveTo(centerX - r * 0.4f, centerY + r * 0.2f)
+                    lineTo(centerX - r * 0.2f, centerY + r * 0.4f)
                 }
                 
                 drawPath(
@@ -1114,13 +1116,10 @@ fun ColorPickerIconButton(onClick: () -> Unit, iconColor: Color) {
                     style = Stroke(width = strokeW, join = StrokeJoin.Round)
                 )
                 
-                // Inner center line for graphite / body detail
-                drawLine(
+                drawPath(
+                    path = tipLine,
                     color = iconColor,
-                    start = Offset(centerX + r * 0.35f, centerY - r * 0.35f),
-                    end = Offset(centerX - r * 0.15f, centerY + r * 0.15f),
-                    strokeWidth = strokeW * 0.6f,
-                    cap = StrokeCap.Round
+                    style = Stroke(width = strokeW, join = StrokeJoin.Round)
                 )
             }
         }
@@ -1135,9 +1134,10 @@ private fun ColorPickerModal(
     onSelect: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    val dialogBg = if (isDark) Color(0xFF1E2218) else Color(0xFFF6F5F2)
+    val dialogBg = if (isDark) Color(0xFF1E2218).copy(alpha = 0.85f) else Color(0xFFF6F5F2).copy(alpha = 0.85f)
     val borderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color(0xFF181C14).copy(alpha = 0.08f)
     val checkColor = if (isDark) Color(0xFFECDFCC) else Color(0xFF181C14)
+    val glassBorder = if (isDark) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f)
     
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -1150,6 +1150,7 @@ private fun ColorPickerModal(
                 )
                 .clip(RoundedCornerShape(28.dp))
                 .background(dialogBg)
+                .border(1.dp, glassBorder, RoundedCornerShape(28.dp))
                 .padding(24.dp)
         ) {
             Column(
