@@ -406,6 +406,7 @@ fun HomeScreen(
                 ) {
                     NavigationDot(
                         isActive = index == pagerState.currentPage,
+                        textColor = textColor,
                         onClick = { 
                             coroutineScope.launch {
                                 pagerState.animateScrollToPage(index)
@@ -554,12 +555,13 @@ private fun TimerScreen(
 ) {
     val context = LocalContext.current
     
-    Box(modifier = Modifier
+    BoxWithConstraints(modifier = Modifier
         .fillMaxSize()
         .pointerInput(Unit) {
             detectTapGestures(onTap = { onToggleImmersiveMode() })
         }
     ) {
+        val screenHeight = maxHeight
         // Settings icon with absolute positioning (7% from top, 7% from right)
         androidx.compose.animation.AnimatedVisibility(
             visible = !isImmersiveMode,
@@ -692,9 +694,11 @@ private fun TimerScreen(
                         // The Box acts as a wrapper so that the scaling text keeps it centered
                     } // Close Box wrapping timer
                     
-                    // Session Progress Indicator directly underneath, not inside an overlay Box
+                    // Session Progress Indicator: shifted up ~20% of screen height
                     SessionProgressIndicator(
-                        modifier = Modifier.padding(top = 24.dp),
+                        modifier = Modifier
+                            .padding(top = 24.dp)
+                            .offset(y = -(screenHeight * 0.20f)),
                         totalSessions = totalSessions,
                         currentSessionIndex = currentSessionIndex,
                         timerSeconds = seconds,
@@ -919,15 +923,30 @@ private fun formatTime(seconds: Int): String {
 @Composable
 private fun NavigationDot(
     isActive: Boolean,
+    textColor: Color,
     onClick: () -> Unit
 ) {
-    val size = if (isActive) 12.dp else 8.dp
-    val color = if (isActive) Color(0xFF000000) else Color(0xFF545454)
-    
+    val targetSize = if (isActive) 13.dp else 8.dp
+    val animatedSize by androidx.compose.animation.core.animateDpAsState(
+        targetValue = targetSize,
+        animationSpec = androidx.compose.animation.core.spring(
+            dampingRatio = 0.6f,
+            stiffness = androidx.compose.animation.core.Spring.StiffnessMedium
+        ),
+        label = "dotSize"
+    )
+
+    // Active: bright (full textColor). Inactive: dark translucent circle
+    val dotColor = if (isActive) {
+        textColor.copy(alpha = 1f)
+    } else {
+        textColor.copy(alpha = 0.25f)
+    }
+
     Box(
         modifier = Modifier
-            .size(size)
-            .background(color, shape = androidx.compose.foundation.shape.CircleShape)
+            .size(animatedSize)
+            .background(dotColor, shape = CircleShape)
             .clickable(onClick = onClick)
     )
 }

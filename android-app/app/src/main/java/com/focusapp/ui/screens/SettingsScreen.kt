@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
@@ -546,11 +547,10 @@ private fun ThemeSettingItem(
 private fun FontSubmenu(
     selectedFont: String,
     onFontSelect: (String) -> Unit,
-    onBack: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onBack: () -> Unit,
     textColor: Color
 ) {
     // Get current time for preview
-    val calendar = remember { java.util.Calendar.getInstance() }
     var currentTimePreview by remember { mutableStateOf("") }
     
     LaunchedEffect(Unit) {
@@ -609,13 +609,13 @@ private fun FontSubmenu(
 
         androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
             columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(4),
-            modifier = Modifier.fillMaxWidth().height(480.dp), // Height adjustment for 4 rows
+            modifier = Modifier.fillMaxWidth().height(480.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 8.dp)
+            contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             items(gridItems.size) { index ->
-                val (label, value) = gridItems[index]
+                val (_, value) = gridItems[index]
                 val isPlaceholder = value.startsWith("coming_soon")
                 val isSelected = selectedFont == value
                 val fontFamily = fontFamilyMap[value] ?: MenilFontFamily
@@ -667,7 +667,7 @@ private fun FontSubmenu(
 private fun LanguageSubmenu(
     selectedLanguage: String,
     onLanguageSelect: (String) -> Unit,
-    onBack: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onBack: () -> Unit,
     textColor: Color
 ) {
     Column(
@@ -724,9 +724,9 @@ private fun LanguageSubmenu(
                             drawPath(
                                 path = path,
                                 color = checkColor,
-                                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                                style = Stroke(
                                     width = 3.dp.toPx(),
-                                    cap = androidx.compose.ui.graphics.StrokeCap.Round
+                                    cap = StrokeCap.Round
                                 )
                             )
                         }
@@ -743,7 +743,7 @@ private fun BreakSubmenu(
     breakDurationMinutes: Int,
     onAutoBreakChange: (Boolean) -> Unit,
     onDurationChange: (Int) -> Unit,
-    onBack: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onBack: () -> Unit,
     textColor: Color
 ) {
     var showCustomInput by remember { mutableStateOf(false) }
@@ -1041,9 +1041,9 @@ private fun SettingItem(
 
 @Composable
 private fun AboutSubmenu(
-    onBack: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onBack: () -> Unit,
     textColor: Color,
-    isDark: Boolean
+    @Suppress("UNUSED_PARAMETER") isDark: Boolean
 ) {
     val accentColor = Color(0xFF4CAF50)
     
@@ -1296,7 +1296,7 @@ private fun updateLocale(context: android.content.Context, languageCode: String)
 
 @Composable
 private fun SubscriptionSubmenu(
-    onBack: () -> Unit,
+    @Suppress("UNUSED_PARAMETER") onBack: () -> Unit,
     textColor: Color,
     isDark: Boolean
 ) {
@@ -1407,7 +1407,7 @@ private fun PremiumFeatureItem(text: String, textColor: Color, accentColor: Colo
                 style = Stroke(
                     width = 3.dp.toPx(),
                     cap = StrokeCap.Round,
-                    join = androidx.compose.ui.graphics.StrokeJoin.Round
+                    join = StrokeJoin.Round
                 )
             )
         }
