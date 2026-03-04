@@ -62,7 +62,7 @@
 
     <!-- Day abbreviations -->
     <string name="analytics_title">Analítica</string>
-    <string name="analytics_subtitle">Visualiza tu camino hacia la máxima productividad.</string>
+    <string name="analytics_subtitle">Visualiza tu camino hacia la productividad.</string>
     <string name="stat_weekly">Semanal</string>
     <string name="stat_monthly">Mensual</string>
     <string name="stat_yearly">Anual</string>

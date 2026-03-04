@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.border
 import androidx.compose.material3.Text
 import androidx.compose.material3.Icon
 import androidx.compose.ui.input.pointer.pointerInput
@@ -465,7 +466,8 @@ fun StatisticsScreen(
                         .width(200.dp)
                         .shadow(if (isDark) 0.dp else 12.dp, RoundedCornerShape(20.dp))
                         .clip(RoundedCornerShape(20.dp))
-                        .background(cardBg)
+                        .background(cardBg.copy(alpha = 0.85f))
+                        .border(1.dp, if (isDark) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f), RoundedCornerShape(20.dp))
                         .padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
@@ -520,7 +522,8 @@ fun StatisticsScreen(
                         .width(200.dp)
                         .shadow(if (isDark) 0.dp else 12.dp, RoundedCornerShape(16.dp))
                         .clip(RoundedCornerShape(16.dp))
-                        .background(cardBg)
+                        .background(cardBg.copy(alpha = 0.85f))
+                        .border(1.dp, if (isDark) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {

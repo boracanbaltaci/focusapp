@@ -62,7 +62,7 @@
 
     <!-- Day abbreviations -->
     <string name="analytics_title">Analytik</string>
-    <string name="analytics_subtitle">Visualisieren Sie Ihren Weg zu höchster Produktivität.</string>
+    <string name="analytics_subtitle">Visualisieren Sie Ihren Weg zur Produktivität.</string>
     <string name="stat_weekly">Wöchentlich</string>
     <string name="stat_monthly">Monatlich</string>
     <string name="stat_yearly">Jährlich</string>

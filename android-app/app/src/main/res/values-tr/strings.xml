@@ -62,7 +62,7 @@
 
     <!-- Day abbreviations -->
     <string name="analytics_title">Analitik</string>
-    <string name="analytics_subtitle">Eşsiz üretkenliğe giden yolunu görselleştir.</string>
+    <string name="analytics_subtitle">Üretkenliğe giden yolunu görselleştir.</string>
     <string name="stat_weekly">Haftalık</string>
     <string name="stat_monthly">Aylık</string>
     <string name="stat_yearly">Yıllık</string>

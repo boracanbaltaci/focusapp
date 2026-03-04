@@ -224,25 +224,15 @@ fun HomeScreen(
     // Pause timer explicitly when leaving the Timer screen (page 2)
     LaunchedEffect(pagerState.currentPage) {
         if (pagerState.currentPage != 2 && isTimerRunning) {
-            // User scrolled away from Timer screen, Pause it and record usage
+            // User scrolled away from Timer screen — just pause, don't save
             isTimerRunning = false
-            val elapsedSeconds = initialTimerSeconds - timerSeconds
-            if (elapsedSeconds > 0) {
-                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name, isBreak = isOnBreak)
-            }
-            // Update initialTimerSeconds so if user returns and resumes, it treats the remainder as a new session chunk 
-            initialTimerSeconds = timerSeconds
         }
     }
 
     val handleNavigateToSettings = {
         if (isTimerRunning) {
+            // Just pause — don't save, user can resume when they return
             isTimerRunning = false
-            val elapsedSeconds = initialTimerSeconds - timerSeconds
-            if (elapsedSeconds > 0) {
-                statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name, isBreak = isOnBreak)
-            }
-            initialTimerSeconds = timerSeconds
         }
         onNavigateToSettings()
     }
@@ -704,7 +694,7 @@ private fun TimerScreen(
                     
                     // Session Progress Indicator directly underneath, not inside an overlay Box
                     SessionProgressIndicator(
-                        modifier = Modifier.padding(top = 16.dp),
+                        modifier = Modifier.padding(top = 24.dp),
                         totalSessions = totalSessions,
                         currentSessionIndex = currentSessionIndex,
                         timerSeconds = seconds,
@@ -865,36 +855,53 @@ fun SettingsIconButton(onClick: () -> Unit, iconColor: Color) {
                 .offset(x = xOffset, y = yOffset)
         ) {
             Canvas(modifier = Modifier.fillMaxSize()) {
-                val centerX = size.width / 2f
-                val centerY = size.height / 2f
-                val radius = size.width * 0.3f
-                val strokeWidth = size.width * 0.14f // Thicker rim for the hollow 6-tooth gear
-                
-                // Draw 6 rounded teeth
-                val toothWidth = strokeWidth * 1.4f
-                for (i in 0 until 6) {
-                    val angle = (i * 60f).toRadians()
-                    
-                    val startX = centerX + (radius * 0.5f) * kotlin.math.cos(angle)
-                    val startY = centerY + (radius * 0.5f) * kotlin.math.sin(angle)
-                    val endX = centerX + (radius * 1.3f) * kotlin.math.cos(angle)
-                    val endY = centerY + (radius * 1.3f) * kotlin.math.sin(angle)
-                    
-                    drawLine(
-                        color = iconColor,
-                        start = Offset(startX, startY),
-                        end = Offset(endX, endY),
-                        strokeWidth = toothWidth,
-                        cap = StrokeCap.Round
-                    )
-                }
-                
-                // Outer strong ring
+                val w = size.width
+                val stroke = w * 0.11f
+                val cap = StrokeCap.Round
+
+                // Line 1 (top) — full width
+                drawLine(
+                    color = iconColor,
+                    start = Offset(w * 0.12f, w * 0.25f),
+                    end = Offset(w * 0.88f, w * 0.25f),
+                    strokeWidth = stroke,
+                    cap = cap
+                )
+                // Accent dot on line 1 (right side)
                 drawCircle(
                     color = iconColor,
-                    radius = radius,
-                    center = Offset(centerX, centerY),
-                    style = Stroke(width = strokeWidth)
+                    radius = stroke * 0.85f,
+                    center = Offset(w * 0.72f, w * 0.25f)
+                )
+
+                // Line 2 (middle) — full width
+                drawLine(
+                    color = iconColor,
+                    start = Offset(w * 0.12f, w * 0.5f),
+                    end = Offset(w * 0.88f, w * 0.5f),
+                    strokeWidth = stroke,
+                    cap = cap
+                )
+                // Accent dot on line 2 (left side)
+                drawCircle(
+                    color = iconColor,
+                    radius = stroke * 0.85f,
+                    center = Offset(w * 0.32f, w * 0.5f)
+                )
+
+                // Line 3 (bottom) — full width
+                drawLine(
+                    color = iconColor,
+                    start = Offset(w * 0.12f, w * 0.75f),
+                    end = Offset(w * 0.88f, w * 0.75f),
+                    strokeWidth = stroke,
+                    cap = cap
+                )
+                // Accent dot on line 3 (right side)
+                drawCircle(
+                    color = iconColor,
+                    radius = stroke * 0.85f,
+                    center = Offset(w * 0.62f, w * 0.75f)
                 )
             }
         }
@@ -986,7 +993,7 @@ private fun DurationPickerDialog(
         val dialogScale = LocalScreenScale.current
         Surface(
             modifier = Modifier
-                .fillMaxWidth(0.85f)
+                .fillMaxWidth(0.75f)
                 .wrapContentHeight()
                 .border(1.dp, glassBorder, RoundedCornerShape(28.dp.scaled(dialogScale, min = 16.dp))),
             shape = RoundedCornerShape(28.dp.scaled(dialogScale, min = 16.dp)),
@@ -1027,7 +1034,7 @@ private fun DurationPickerDialog(
                     state = listState,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(340.dp.scaled(dialogScale, min = 200.dp))
+                        .height(218.dp.scaled(dialogScale, min = 128.dp))
                         .padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
