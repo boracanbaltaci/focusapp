@@ -125,7 +125,11 @@ fun StatisticsScreen(
     val bgTabActive = if (isDark) Color(0xFF0DF259) else Color(0xFF10B981)
     val textTabActive = if (isDark) Color(0xFF102216) else Color.White
     val textTabInactive = if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8)
-    val cardBg = bgTabContainer
+    
+    // New card styling similar to Subscription Screen
+    val cardBg = if (isDark) Color(0xFF141A10) else Color(0xFFF0F5F0)
+    val cardBorderColor = Color(0xFF3DDC6F).copy(alpha = 0.35f)
+    
     val barColor = bgTabActive
     val chartFocusColor = selectedCategoryFilter?.let { getCategoryColor(it) } ?: bgTabActive
     val screenBg = if (isDark) Color(0xFF181C14) else Color(0xFFF6F5F2)
@@ -230,6 +234,7 @@ fun StatisticsScreen(
                     .shadow(if (isDark) 0.dp else 8.dp, RoundedCornerShape(20.dp))
                     .clip(RoundedCornerShape(20.dp))
                     .background(cardBg)
+                    .border(1.5.dp, cardBorderColor, RoundedCornerShape(20.dp))
                     .padding(20.dp)
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {

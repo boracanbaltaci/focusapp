@@ -138,4 +138,32 @@
     <string name="streak_title">Série</string>
     <string name="streak_days">jours</string>
 
+    <!-- Subscription Screen V2 -->
+    <string name="subs_unlock_clockera">Déverrouillez</string>
+    <string name="subs_unlock_name">Clockera</string>
+    <string name="subs_subtitle_1">Choisissez le forfait qui vous convient.</string>
+    <string name="subs_subtitle_2">Expérimentez la productivité avec esthétisme.</string>
+    <string name="subs_feature_1_title">Horloges Esthétiques</string>
+    <string name="subs_feature_1_desc">Des dizaines de belles polices et\npalettes pour votre style.</string>
+    <string name="subs_feature_2_title">Minuteur Pomodoro &amp; Focus</string>
+    <string name="subs_feature_2_desc">Restez concentré avec des sessions\nde travail et pauses personnalisables.</string>
+    <string name="subs_feature_3_title">Statistiques de Focus</string>
+    <string name="subs_feature_3_desc">Suivez votre temps de focus\nhebdomadaire et mensuel en un coup d\'œil.</string>
+    <string name="subs_standard">STANDARD</string>
+    <string name="subs_monthly">Mensuel</string>
+    <string name="subs_monthly_price">2,50€</string>
+    <string name="subs_per_month">/mois</string>
+    <string name="subs_unlimited">ILLIMITÉ</string>
+    <string name="subs_yearly">Annuel</string>
+    <string name="subs_yearly_price">16,99€</string>
+    <string name="subs_per_year">/an</string>
+    <string name="subs_save_badge">Économisez 43%% par rapport au mois</string>
+    <string name="subs_select_monthly">Sélectionner Mensuel</string>
+    <string name="subs_select_yearly">Sélectionner Annuel</string>
+    <string name="subs_most_popular">PLUS POPULAIRE</string>
+    <string name="subs_cheapest">LE MOINS CHER</string>
+    <string name="subs_plan_feature_1">Toutes les polices/palettes et accès aux nouveautés.</string>
+    <string name="subs_plan_feature_2">Espace de travail attrayant et esthétique.</string>
+    <string name="subs_plan_feature_3">Heures de travail plus productives.</string>
+
 </resources>

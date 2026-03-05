@@ -138,4 +138,32 @@
     <string name="streak_title">Serie</string>
     <string name="streak_days">giorni</string>
 
+    <!-- Subscription Screen V2 -->
+    <string name="subs_unlock_clockera">Sblocca </string>
+    <string name="subs_unlock_name">Clockera</string>
+    <string name="subs_subtitle_1">Scegli il piano più adatto a te.</string>
+    <string name="subs_subtitle_2">Sperimenta la produttività con stile.</string>
+    <string name="subs_feature_1_title">Orologi Estetici</string>
+    <string name="subs_feature_1_desc">Decine di font bellissimi e\ntavolozze di colori per il tuo stile.</string>
+    <string name="subs_feature_2_title">Pomodoro &amp; Timer Focus</string>
+    <string name="subs_feature_2_desc">Rimani concentrato con sessioni\ndi lavoro e pause personalizzabili.</string>
+    <string name="subs_feature_3_title">Statistiche Focus</string>
+    <string name="subs_feature_3_desc">Tieni traccia del tempo di focus\nsettimanale e mensile a colpo d\'occhio.</string>
+    <string name="subs_standard">STANDARD</string>
+    <string name="subs_monthly">Mensile</string>
+    <string name="subs_monthly_price">2,50€</string>
+    <string name="subs_per_month">/mese</string>
+    <string name="subs_unlimited">ILLIMITATO</string>
+    <string name="subs_yearly">Annuale</string>
+    <string name="subs_yearly_price">16,99€</string>
+    <string name="subs_per_year">/anno</string>
+    <string name="subs_save_badge">Risparmia 43%% rispetto al mensile</string>
+    <string name="subs_select_monthly">Seleziona Mensile</string>
+    <string name="subs_select_yearly">Seleziona Annuale</string>
+    <string name="subs_most_popular">PIÙ POPOLARE</string>
+    <string name="subs_cheapest">PIÙ ECONOMICO</string>
+    <string name="subs_plan_feature_1">Tutti i font/colori e le novità in arrivo.</string>
+    <string name="subs_plan_feature_2">Ambiente di lavoro esteticamente curato.</string>
+    <string name="subs_plan_feature_3">Ore di lavoro molto più produttive.</string>
+
 </resources>

@@ -138,4 +138,32 @@
     <string name="streak_title">Serie</string>
     <string name="streak_days">Tage</string>
 
+    <!-- Subscription Screen V2 -->
+    <string name="subs_unlock_clockera">Schalte </string>
+    <string name="subs_unlock_name">Clockera frei</string>
+    <string name="subs_subtitle_1">Wählen Sie den Plan, der zu Ihnen passt.</string>
+    <string name="subs_subtitle_2">Erleben Sie Produktivität auf ästhetische Weise.</string>
+    <string name="subs_feature_1_title">Ästhetische Uhrblätter</string>
+    <string name="subs_feature_1_desc">Dutzende schöne Schriftarten und\nFarbpaletten passend zu Ihrem Stil.</string>
+    <string name="subs_feature_2_title">Pomodoro &amp; Fokus-Timer</string>
+    <string name="subs_feature_2_desc">Bleiben Sie im Fluss mit anpassbaren\nArbeits- und Pausensitzungen.</string>
+    <string name="subs_feature_3_title">Fokus-Statistiken</string>
+    <string name="subs_feature_3_desc">Verfolgen Sie Ihre wöchentliche und\nmonatliche Fokuszeit auf einen Blick.</string>
+    <string name="subs_standard">STANDARD</string>
+    <string name="subs_monthly">Monatlich</string>
+    <string name="subs_monthly_price">2,50€</string>
+    <string name="subs_per_month">/mtl</string>
+    <string name="subs_unlimited">UNBEGRENZT</string>
+    <string name="subs_yearly">Jährlich</string>
+    <string name="subs_yearly_price">16,99€</string>
+    <string name="subs_per_year">/jahr</string>
+    <string name="subs_save_badge">Sparen Sie 43%% gegenüber monatlich</string>
+    <string name="subs_select_monthly">Monatlich wählen</string>
+    <string name="subs_select_yearly">Jährlich wählen</string>
+    <string name="subs_most_popular">AM BELIEBTESTEN</string>
+    <string name="subs_cheapest">AM GÜNSTIGSTEN</string>
+    <string name="subs_plan_feature_1">Alle Schriften/Farbpaletten und neue Funktionen.</string>
+    <string name="subs_plan_feature_2">Ästhetisch ansprechender Arbeitsbereich.</string>
+    <string name="subs_plan_feature_3">Viel produktivere Arbeitszeiten.</string>
+
 </resources>

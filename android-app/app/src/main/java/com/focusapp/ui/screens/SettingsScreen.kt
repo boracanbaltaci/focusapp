@@ -1282,6 +1282,7 @@ private fun updateLocale(context: android.content.Context, languageCode: String)
     context.resources.updateConfiguration(config, context.resources.displayMetrics)
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun SubscriptionSubmenu(
     @Suppress("UNUSED_PARAMETER") onBack: () -> Unit,
@@ -1289,8 +1290,11 @@ private fun SubscriptionSubmenu(
     isDark: Boolean
 ) {
     val accent = Color(0xFF3DDC6F)
-    val cardBg = Color(0xFF141A10)
-    val cardBgStandard = Color(0xFF111510)
+    val cardBg = if (isDark) Color(0xFF141A10) else Color(0xFFF0F5F0)
+    val cardBgStandard = if (isDark) Color(0xFF111510) else Color(0xFFE8EFE8)
+    val textPrimary = if (isDark) Color.White else Color(0xFF181C14)
+    val textSecondary = if (isDark) Color.White.copy(alpha = 0.4f) else Color(0xFF181C14).copy(alpha = 0.6f)
+    val badgeBg = if (isDark) Color(0xFF0B1008) else Color.White
     val scale = LocalScreenScale.current
 
     Box(
@@ -1306,27 +1310,31 @@ private fun SubscriptionSubmenu(
             // LEFT column: title + feature icons
             Column(
                 modifier = Modifier
-                    .width(200.dp)
+                    .weight(0.45f) // Replaced fixed width(200.dp) with dynamic weight
                     .fillMaxHeight()
-                    .padding(bottom = 32.dp), // Adds padding at bottom to push content up
+                    .padding(bottom = 32.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Row {
+                    // Title Text allowing wrap or multiline
+                    androidx.compose.foundation.layout.FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
                         Text(
                             text = stringResource(R.string.subs_unlock_clockera),
                             style = TextStyle(
                                 fontFamily = GeistFontFamily,
-                                fontSize = 22.sp.scaled(scale, min = 16.sp),
+                                fontSize = 24.sp.scaled(scale, min = 18.sp),
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = textPrimary
                             )
                         )
                         Text(
                             text = stringResource(R.string.subs_unlock_name),
                             style = TextStyle(
                                 fontFamily = GeistFontFamily,
-                                fontSize = 22.sp.scaled(scale, min = 16.sp),
+                                fontSize = 24.sp.scaled(scale, min = 18.sp),
                                 fontWeight = FontWeight.Bold,
                                 color = accent
                             )
@@ -1337,15 +1345,15 @@ private fun SubscriptionSubmenu(
                         style = TextStyle(
                             fontFamily = GeistFontFamily,
                             fontSize = 9.sp,
-                            color = Color.White.copy(alpha = 0.4f),
+                            color = textSecondary,
                             lineHeight = 13.sp
                         )
                     )
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-                    SubFeatureIconItem(stringResource(R.string.subs_feature_1_title), stringResource(R.string.subs_feature_1_desc), accent, "clock")
-                    SubFeatureIconItem(stringResource(R.string.subs_feature_2_title), stringResource(R.string.subs_feature_2_desc), accent, "timer")
-                    SubFeatureIconItem(stringResource(R.string.subs_feature_3_title), stringResource(R.string.subs_feature_3_desc), accent, "stats")
+                    SubFeatureIconItem(stringResource(R.string.subs_feature_1_title), stringResource(R.string.subs_feature_1_desc), accent, "clock", textPrimary, textSecondary)
+                    SubFeatureIconItem(stringResource(R.string.subs_feature_2_title), stringResource(R.string.subs_feature_2_desc), accent, "timer", textPrimary, textSecondary)
+                    SubFeatureIconItem(stringResource(R.string.subs_feature_3_title), stringResource(R.string.subs_feature_3_desc), accent, "stats", textPrimary, textSecondary)
                 }
             }
 
@@ -1400,16 +1408,16 @@ private fun SubscriptionSubmenu(
                                         style = TextStyle(fontFamily = GeistFontFamily, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 1.sp)
                                     )
                                 }
-                                Text(stringResource(R.string.subs_monthly), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 18.sp.scaled(scale, min = 14.sp), fontWeight = FontWeight.Bold, color = Color.White))
+                                Text(stringResource(R.string.subs_monthly), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 18.sp.scaled(scale, min = 14.sp), fontWeight = FontWeight.Bold, color = textPrimary))
                                 Row(verticalAlignment = Alignment.Bottom) {
-                                    Text(stringResource(R.string.subs_monthly_price), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 28.sp.scaled(scale, min = 20.sp), fontWeight = FontWeight.Bold, color = Color.White))
-                                    Text(stringResource(R.string.subs_per_month), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 11.sp, color = Color.White.copy(alpha = 0.5f)), modifier = Modifier.padding(bottom = 4.dp))
+                                    Text(stringResource(R.string.subs_monthly_price), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 28.sp.scaled(scale, min = 20.sp), fontWeight = FontWeight.Bold, color = textPrimary))
+                                    Text(stringResource(R.string.subs_per_month), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 11.sp, color = textSecondary), modifier = Modifier.padding(bottom = 4.dp))
                                 }
                             }
                             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_1), accent)
-                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_2), accent)
-                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_3), accent)
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_1), accent, textSecondary)
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_2), accent, textSecondary)
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_3), accent, textSecondary)
                             }
                             Box(
                                 modifier = Modifier.fillMaxWidth().height(36.dp),
@@ -1481,27 +1489,27 @@ private fun SubscriptionSubmenu(
                                         style = TextStyle(fontFamily = GeistFontFamily, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 1.sp)
                                     )
                                 }
-                                Text(stringResource(R.string.subs_yearly), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 18.sp.scaled(scale, min = 14.sp), fontWeight = FontWeight.Bold, color = Color.White))
+                                Text(stringResource(R.string.subs_yearly), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 18.sp.scaled(scale, min = 14.sp), fontWeight = FontWeight.Bold, color = textPrimary))
                                 Row(verticalAlignment = Alignment.Bottom) {
-                                    Text(stringResource(R.string.subs_yearly_price), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 28.sp.scaled(scale, min = 20.sp), fontWeight = FontWeight.Bold, color = Color.White))
-                                    Text(stringResource(R.string.subs_per_year), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 11.sp, color = Color.White.copy(alpha = 0.5f)), modifier = Modifier.padding(bottom = 4.dp))
+                                    Text(stringResource(R.string.subs_yearly_price), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 28.sp.scaled(scale, min = 20.sp), fontWeight = FontWeight.Bold, color = textPrimary))
+                                    Text(stringResource(R.string.subs_per_year), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 11.sp, color = textSecondary), modifier = Modifier.padding(bottom = 4.dp))
                                 }
                                 Box(
                                     modifier = Modifier.background(accent, RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)
                                 ) {
-                                    Text(stringResource(R.string.subs_save_badge), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0B1008)))
+                                    Text(stringResource(R.string.subs_save_badge), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, fontWeight = FontWeight.Bold, color = badgeBg))
                                 }
                             }
                             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_1), accent)
-                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_2), accent)
-                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_3), accent)
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_1), accent, textSecondary)
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_2), accent, textSecondary)
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_3), accent, textSecondary)
                             }
                             Box(
                                 modifier = Modifier.fillMaxWidth().height(36.dp).background(accent, RoundedCornerShape(18.dp)).clickable { },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(stringResource(R.string.subs_select_yearly), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 12.sp.scaled(scale, min = 10.sp), fontWeight = FontWeight.Bold, color = Color(0xFF0B1008)))
+                                Text(stringResource(R.string.subs_select_yearly), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 12.sp.scaled(scale, min = 10.sp), fontWeight = FontWeight.Bold, color = badgeBg))
                             }
                         }
                     }
@@ -1513,7 +1521,7 @@ private fun SubscriptionSubmenu(
                             .background(accent, RoundedCornerShape(8.dp))
                             .padding(horizontal = 10.dp, vertical = 3.dp)
                     ) {
-                        Text(stringResource(R.string.subs_most_popular), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0B1008), letterSpacing = 0.8.sp))
+                        Text(stringResource(R.string.subs_most_popular), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, fontWeight = FontWeight.Bold, color = badgeBg, letterSpacing = 0.8.sp))
                     }
                 }
             }
@@ -1522,26 +1530,19 @@ private fun SubscriptionSubmenu(
 }
 
 @Composable
-private fun SubPlanFeatureRow(text: String, accent: Color) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
-    ) {
-        Canvas(modifier = Modifier.size(12.dp)) {
-            drawCircle(color = accent.copy(alpha = 0.2f), radius = size.width / 2f)
-            val path = androidx.compose.ui.graphics.Path().apply {
-                moveTo(size.width * 0.25f, size.height * 0.5f)
-                lineTo(size.width * 0.42f, size.height * 0.68f)
-                lineTo(size.width * 0.75f, size.height * 0.3f)
-            }
-            drawPath(path = path, color = accent, style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
+private fun SubPlanFeatureRow(text: String, accent: Color, textColor: Color) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Canvas(modifier = Modifier.size(14.dp)) {
+            drawCircle(color = accent, radius = size.width / 2f)
+            drawLine(color = Color(0xFF0B1008), start = Offset(size.width * 0.3f, size.height * 0.5f), end = Offset(size.width * 0.45f, size.height * 0.7f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
+            drawLine(color = Color(0xFF0B1008), start = Offset(size.width * 0.45f, size.height * 0.7f), end = Offset(size.width * 0.7f, size.height * 0.35f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
         }
-        Text(text, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 8.sp, color = Color.White.copy(alpha = 0.7f), lineHeight = 11.sp))
+        Text(text, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 8.sp, color = textColor))
     }
 }
 
 @Composable
-private fun SubFeatureIconItem(label: String, sublabel: String, accent: Color, iconType: String) {
+private fun SubFeatureIconItem(label: String, sublabel: String, accent: Color, iconType: String, titleColor: Color, descColor: Color) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -1573,8 +1574,8 @@ private fun SubFeatureIconItem(label: String, sublabel: String, accent: Color, i
             }
         }
         Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(label, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White))
-            Text(sublabel, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, color = accent.copy(alpha = 0.7f), lineHeight = 10.sp))
+            Text(label, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = titleColor))
+            Text(sublabel, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, color = descColor, lineHeight = 10.sp))
         }
     }
 }

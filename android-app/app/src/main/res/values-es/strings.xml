@@ -138,4 +138,32 @@
     <string name="streak_title">Racha</string>
     <string name="streak_days">días</string>
 
+    <!-- Subscription Screen V2 -->
+    <string name="subs_unlock_clockera">Desbloquear </string>
+    <string name="subs_unlock_name">Clockera</string>
+    <string name="subs_subtitle_1">Elige el plan que mejor se adapte a ti.</string>
+    <string name="subs_subtitle_2">Experimenta la productividad de forma estética.</string>
+    <string name="subs_feature_1_title">Relojes Estéticos</string>
+    <string name="subs_feature_1_desc">Decenas de hermosas fuentes y\npaletas para tu estilo.</string>
+    <string name="subs_feature_2_title">Temporizador Pomodoro y Focus</string>
+    <string name="subs_feature_2_desc">Mantén el enfoque con sesiones\nde trabajo y descansos personalizables.</string>
+    <string name="subs_feature_3_title">Estadísticas de Enfoque</string>
+    <string name="subs_feature_3_desc">Supervisa tu tiempo de enfoque\nsemanal y mensual de un vistazo.</string>
+    <string name="subs_standard">ESTÁNDAR</string>
+    <string name="subs_monthly">Mensual</string>
+    <string name="subs_monthly_price">2,50€</string>
+    <string name="subs_per_month">/mes</string>
+    <string name="subs_unlimited">ILIMITADO</string>
+    <string name="subs_yearly">Anual</string>
+    <string name="subs_yearly_price">16,99€</string>
+    <string name="subs_per_year">/año</string>
+    <string name="subs_save_badge">Ahorra 43%% respecto al plan mensual</string>
+    <string name="subs_select_monthly">Elegir Mensual</string>
+    <string name="subs_select_yearly">Elegir Anual</string>
+    <string name="subs_most_popular">MÁS POPULAR</string>
+    <string name="subs_cheapest">MÁS BARATO</string>
+    <string name="subs_plan_feature_1">Todas las fuentes/paletas y futuras novedades.</string>
+    <string name="subs_plan_feature_2">Espacio de trabajo estéticamente atractivo.</string>
+    <string name="subs_plan_feature_3">Horas de trabajo más productivas.</string>
+
 </resources>
