@@ -722,7 +722,8 @@ fun PinCategorySelector(
     onCategorySelected: (FocusCategory?) -> Unit,
     textColor: Color,
     isDark: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onExpand: () -> Unit = {}
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
@@ -756,7 +757,10 @@ fun PinCategorySelector(
                     else if (hasSelection) selectedColor.copy(alpha = 0.5f)
                     else if (isDark) Color(0xFF333333) else Color.White
                 )
-                .clickable { isExpanded = !isExpanded },
+                .clickable {
+                    if (!isExpanded) onExpand() 
+                    isExpanded = !isExpanded 
+                },
             contentAlignment = Alignment.Center
         ) {
             Canvas(modifier = Modifier.size(20.dp)) {

@@ -1325,7 +1325,7 @@ private fun SubscriptionSubmenu(
                             text = stringResource(R.string.subs_unlock_clockera),
                             style = TextStyle(
                                 fontFamily = GeistFontFamily,
-                                fontSize = 24.sp.scaled(scale, min = 18.sp),
+                                fontSize = 32.sp.scaled(scale, min = 26.sp),
                                 fontWeight = FontWeight.Bold,
                                 color = textPrimary
                             )
@@ -1334,7 +1334,7 @@ private fun SubscriptionSubmenu(
                             text = stringResource(R.string.subs_unlock_name),
                             style = TextStyle(
                                 fontFamily = GeistFontFamily,
-                                fontSize = 24.sp.scaled(scale, min = 18.sp),
+                                fontSize = 32.sp.scaled(scale, min = 26.sp),
                                 fontWeight = FontWeight.Bold,
                                 color = accent
                             )
@@ -1344,9 +1344,9 @@ private fun SubscriptionSubmenu(
                         text = "${stringResource(R.string.subs_subtitle_1)}\n${stringResource(R.string.subs_subtitle_2)}",
                         style = TextStyle(
                             fontFamily = GeistFontFamily,
-                            fontSize = 9.sp,
+                            fontSize = 12.sp.scaled(scale, min = 10.sp),
                             color = textSecondary,
-                            lineHeight = 13.sp
+                            lineHeight = 16.sp.scaled(scale, min = 12.sp)
                         )
                     )
                 }

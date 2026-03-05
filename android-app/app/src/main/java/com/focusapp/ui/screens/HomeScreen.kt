@@ -287,7 +287,10 @@ fun HomeScreen(
                 1 -> ClockScreen(
                     currentTime = currentTime,
                     onNavigateToSettings = handleNavigateToSettings,
-                    onOpenColorPicker = { showColorPicker = true },
+                    onOpenColorPicker = { 
+                        if (isTimerRunning) isTimerRunning = false
+                        showColorPicker = true 
+                    },
                     clockFontFamily = clockFontFamily,
                     textColor = textColor,
                     clockFontKey = clockFont,
@@ -347,7 +350,10 @@ fun HomeScreen(
                         }
                     },
                     onNavigateToSettings = handleNavigateToSettings,
-                    onOpenColorPicker = { showColorPicker = true },
+                    onOpenColorPicker = { 
+                        if (isTimerRunning) isTimerRunning = false
+                        showColorPicker = true 
+                    },
                     clockFontFamily = clockFontFamily,
                     textColor = textColor,
                     isImmersiveMode = isImmersiveMode,
@@ -356,7 +362,10 @@ fun HomeScreen(
                     },
                     isDark = theme == "dark",
                     selectedCategory = selectedCategory,
-                    onCategorySelected = { selectedCategory = it }
+                    onCategorySelected = { selectedCategory = it },
+                    onCategoryExpand = {
+                        if (isTimerRunning) isTimerRunning = false
+                    }
                 )
             }
         }
@@ -549,6 +558,7 @@ private fun TimerScreen(
     isDark: Boolean = false,
     selectedCategory: FocusCategory? = null,
     onCategorySelected: (FocusCategory?) -> Unit = {},
+    onCategoryExpand: () -> Unit = {},
     totalSessions: Int = 4,
     currentSessionIndex: Int = 0,
     initialTimerSeconds: Int = 0
@@ -824,7 +834,8 @@ private fun TimerScreen(
                         onCategorySelected(category)
                     },
                     textColor = textColor,
-                    isDark = isDark
+                    isDark = isDark,
+                    onExpand = onCategoryExpand
                 )
             }
         }
