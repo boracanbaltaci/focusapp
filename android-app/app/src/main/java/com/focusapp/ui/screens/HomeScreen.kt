@@ -611,22 +611,7 @@ private fun TimerScreen(
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Show break label when on break
-                    if (isOnBreak) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = stringResource(R.string.on_break_label),
-                                style = TextStyle(
-                                    fontFamily = clockFontFamily,
-                                    fontSize = 24.sp.scaled(timerScale, min = 14.sp),
-                                    fontWeight = FontWeight.Normal,
-                                    color = textColor.copy(alpha = 0.4f),
-                                    letterSpacing = 2.sp
-                                )
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                        }
-                    }
+                    // Orijinal Mola yazısı (üst kısımdan kırmızıyla işaretlenen alt kısma taşındı)
                     
                     // Timer color: lighter during break, normal otherwise
                     val timerColor = if (isOnBreak) textColor.copy(alpha = 0.4f) else textColor
@@ -657,17 +642,24 @@ private fun TimerScreen(
                         fontWeight = FontWeight.Normal
                     )
                     
+                    // Provide a constant reference text to avoid scale jitter.
+                    // "0000:00" approximates "1 hour" (at 70sp) + "00:00" (at 240sp) combined width.
+                    // 110.dp padding ensures text edges stop precisely before hitting the 104dp buttons.
+                    val refText = if (totalMinutes >= 60) "0000:00" else "00:00"
+                    
                     Box(contentAlignment = Alignment.Center) {
                         ProportionalScaleBox(
-                            referenceText = hourPrefix + timeStr,
+                            referenceText = refText,
                             referenceStyle = baseStyle,
                             referenceFontSize = 240.sp,
-                            modifier = Modifier.padding(horizontal = 56.dp)
+                            modifier = Modifier.padding(horizontal = 110.dp.scaled(timerScale, min = 80.dp))
                         ) { scale ->
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center,
-                                modifier = Modifier.clickable {
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
                                     if (!isRunning && !isOnBreak) {
                                         onTimerClick()
                                     } else {
@@ -675,7 +667,7 @@ private fun TimerScreen(
                                     }
                                 }
                             ) {
-                                // Show hour label if >= 1 hour
+                                // Saat öneki geldiğinde yan yana doğal dizilimle ortalansın (kutuyla sıkıştırıp alt alta kırılmasını önler)
                                 if (totalMinutes >= 60) {
                                     Text(
                                         text = hourPrefix.trimEnd(),
@@ -686,10 +678,13 @@ private fun TimerScreen(
                                             color = timerColor,
                                             textAlign = TextAlign.End
                                         ),
-                                        modifier = Modifier.padding(end = (8 * scale).dp)
+                                        modifier = Modifier.padding(end = (8 * scale).dp),
+                                        maxLines = 1,
+                                        softWrap = false
                                     )
                                 }
                                 
+                                // Ana saniye ve dakika bölümü
                                 FixedDigitTimeText(
                                     text = timeStr,
                                     style = TextStyle(
@@ -704,6 +699,7 @@ private fun TimerScreen(
                         }
                         // The Box acts as a wrapper so that the scaling text keeps it centered
                     } // Close Box wrapping timer
+                    // Mola metni buradan silindi ve mutlak koordinatlarla ana `Box` düzeyinde (en alta) yerleştirildi.
                     
                 } // Close Column wrapping break label + timer
             
@@ -809,9 +805,9 @@ private fun TimerScreen(
             }
         }
         
-        
         Spacer(modifier = Modifier.height(80.dp))
-        }
+        } // End of main centered Column
+
 
         // Pin category selector at bottom-left, aligned with color picker icon
         // Uses same 7% offset as ColorPickerIconButton but mirrored to bottom
@@ -841,13 +837,13 @@ private fun TimerScreen(
             }
         }
 
-        // Session Progress Indicator â€” top center, 10% from top
-        Box(
+        // Session Progress Indicator and Break Label — top center, 10% from top
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter)
                 .padding(top = screenHeight * 0.10f),
-            contentAlignment = Alignment.TopCenter
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
             SessionProgressIndicator(
                 totalSessions = totalSessions,
@@ -857,6 +853,26 @@ private fun TimerScreen(
                 isOnBreak = isOnBreak,
                 textColor = textColor
             )
+            
+            // "Mola" text placed directly underneath the Sessions Indicator
+            // It will not shift any other components because it is inside this absolute-positioned container.
+            androidx.compose.animation.AnimatedVisibility(
+                visible = isOnBreak,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Text(
+                    text = stringResource(R.string.on_break_label),
+                    style = TextStyle(
+                        fontFamily = clockFontFamily,
+                        fontSize = 24.sp.scaled(LocalScreenScale.current, min = 14.sp),
+                        fontWeight = FontWeight.Normal,
+                        color = textColor.copy(alpha = 0.4f),
+                        letterSpacing = 2.sp
+                    ),
+                    modifier = Modifier.padding(top = 16.dp.scaled(LocalScreenScale.current, min = 8.dp))
+                )
+            }
         }
     }
 }
@@ -1425,16 +1441,28 @@ fun FixedDigitTimeText(
     val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
     val density = androidx.compose.ui.platform.LocalDensity.current
 
-    // Sadece rakamlar için maksimum genişliği hesapla
-    val maxDigitWidth = remember(style, textMeasurer, density) {
+    val parts = text.split(":")
+    if (parts.size != 2) {
+        // Beklenmeyen format (tek parça, 3 parça vs.) gelirse normal text bas
+        Text(text = text, style = style, modifier = modifier, textAlign = TextAlign.Center)
+        return
+    }
+
+    val minutes = parts[0]
+    val seconds = parts[1]
+
+    // 00'dan 99'a kadar tüm iki basamaklı kombinasyonların en genişini bul
+    // Bu sayede el yazısı fontlarında (ör. cursive) rakamlar bitişik (kerned) olarak mükemmel görünür
+    // ve toplam genişliği her saniye tamamen sabit kalacağı için asla titreme yapmaz!
+    val maxTwoDigitsWidth = remember(style, textMeasurer, density) {
         var maxWidth = 0f
         for (i in 0..9) {
-            val width = textMeasurer.measure(i.toString(), style).size.width.toFloat()
-            if (width > maxWidth) {
-                maxWidth = width
+            for (j in 0..9) {
+                val w = textMeasurer.measure("$i$j", style).size.width.toFloat()
+                if (w > maxWidth) maxWidth = w
             }
         }
-        with(density) { maxWidth.toDp() }
+        with(density) { (maxWidth + 2f).toDp() }
     }
 
     Row(
@@ -1442,25 +1470,35 @@ fun FixedDigitTimeText(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        text.forEach { char ->
-            if (char.isDigit()) {
-                Box(
-                    modifier = Modifier.width(maxDigitWidth),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = char.toString(),
-                        style = style,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
-                Text(
-                    text = char.toString(),
-                    style = style,
-                    textAlign = TextAlign.Center
-                )
-            }
+        // Sol Kısım (Dakikalar) - İki noktaya doğru sağa hizalı
+        Box(
+            modifier = Modifier.width(maxTwoDigitsWidth),
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            Text(
+                text = minutes,
+                style = style,
+                textAlign = TextAlign.End
+            )
+        }
+
+        // Sabit Merkez (İki Nokta)
+        Text(
+            text = ":",
+            style = style,
+            textAlign = TextAlign.Center
+        )
+
+        // Sağ Kısım (Saniyeler) - İki noktadan uzaklaşan sola hizalı
+        Box(
+            modifier = Modifier.width(maxTwoDigitsWidth),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                text = seconds,
+                style = style,
+                textAlign = TextAlign.Start
+            )
         }
     }
 }
