@@ -509,7 +509,7 @@ private fun ClockScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
-                    Text(
+                    FixedDigitTimeText(
                         text = time,
                         style = TextStyle(
                             fontFamily = clockFontFamily,
@@ -690,7 +690,7 @@ private fun TimerScreen(
                                     )
                                 }
                                 
-                                Text(
+                                FixedDigitTimeText(
                                     text = timeStr,
                                     style = TextStyle(
                                         fontFamily = clockFontFamily,
@@ -1411,6 +1411,55 @@ fun SessionProgressIndicator(
                             .background(textColor.copy(alpha = 0.2f), CircleShape)
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun FixedDigitTimeText(
+    text: String,
+    style: TextStyle,
+    modifier: Modifier = Modifier
+) {
+    val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val density = androidx.compose.ui.platform.LocalDensity.current
+
+    // Sadece rakamlar için maksimum genişliği hesapla
+    val maxDigitWidth = remember(style, textMeasurer, density) {
+        var maxWidth = 0f
+        for (i in 0..9) {
+            val width = textMeasurer.measure(i.toString(), style).size.width.toFloat()
+            if (width > maxWidth) {
+                maxWidth = width
+            }
+        }
+        with(density) { maxWidth.toDp() }
+    }
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        text.forEach { char ->
+            if (char.isDigit()) {
+                Box(
+                    modifier = Modifier.width(maxDigitWidth),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = char.toString(),
+                        style = style,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                Text(
+                    text = char.toString(),
+                    style = style,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
