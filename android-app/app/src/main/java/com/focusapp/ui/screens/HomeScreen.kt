@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.foundation.border
@@ -151,14 +152,14 @@ fun HomeScreen(
     var currentTime by remember { mutableStateOf(getCurrentTimeString(amString, pmString)) }
     
     // Timer state
-    var isTimerRunning by remember { mutableStateOf(false) }
-    var timerSeconds by remember { mutableStateOf(25 * 60) } // Default 25 minutes
-    var initialTimerSeconds by remember { mutableStateOf(25 * 60) } // Track initial duration
-    var showDurationPicker by remember { mutableStateOf(false) }
-    var isOnBreak by remember { mutableStateOf(false) } // Track break state
-    var timerGeneration by remember { mutableStateOf(0) } // Force LaunchedEffect restart
-    var selectedCategory by remember { mutableStateOf<FocusCategory?>(null) }
-    var currentSessionIndex by remember { mutableStateOf(0) }
+    var isTimerRunning by rememberSaveable { mutableStateOf(false) }
+    var timerSeconds by rememberSaveable { mutableStateOf(25 * 60) } // Default 25 minutes
+    var initialTimerSeconds by rememberSaveable { mutableStateOf(25 * 60) } // Track initial duration
+    var showDurationPicker by rememberSaveable { mutableStateOf(false) }
+    var isOnBreak by rememberSaveable { mutableStateOf(false) } // Track break state
+    var timerGeneration by rememberSaveable { mutableStateOf(0) } // Force LaunchedEffect restart
+    var selectedCategory by rememberSaveable { mutableStateOf<FocusCategory?>(null) }
+    var currentSessionIndex by rememberSaveable { mutableStateOf(0) }
     
     // Auto break settings
     val autoBreakEnabled by settingsViewModel.autoBreakEnabled.collectAsState()
