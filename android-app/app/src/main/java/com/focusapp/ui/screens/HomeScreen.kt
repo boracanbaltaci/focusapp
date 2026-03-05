@@ -1,4 +1,4 @@
-package com.focusapp.ui.screens
+﻿package com.focusapp.ui.screens
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -694,18 +694,6 @@ private fun TimerScreen(
                         // The Box acts as a wrapper so that the scaling text keeps it centered
                     } // Close Box wrapping timer
                     
-                    // Session Progress Indicator: shifted up ~20% of screen height
-                    SessionProgressIndicator(
-                        modifier = Modifier
-                            .padding(top = 24.dp)
-                            .offset(y = -(screenHeight * 0.20f)),
-                        totalSessions = totalSessions,
-                        currentSessionIndex = currentSessionIndex,
-                        timerSeconds = seconds,
-                        initialTimerSeconds = initialTimerSeconds,
-                        isOnBreak = isOnBreak,
-                        textColor = textColor
-                    )
                 } // Close Column wrapping break label + timer
             
             // Start/Stop button on the far left
@@ -839,6 +827,24 @@ private fun TimerScreen(
                     isDark = isDark
                 )
             }
+        }
+
+        // Session Progress Indicator â€” top center, 10% from top
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+                .padding(top = screenHeight * 0.10f),
+            contentAlignment = Alignment.TopCenter
+        ) {
+            SessionProgressIndicator(
+                totalSessions = totalSessions,
+                currentSessionIndex = currentSessionIndex,
+                timerSeconds = seconds,
+                initialTimerSeconds = initialTimerSeconds,
+                isOnBreak = isOnBreak,
+                textColor = textColor
+            )
         }
     }
 }

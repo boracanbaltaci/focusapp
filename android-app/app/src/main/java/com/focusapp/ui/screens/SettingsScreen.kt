@@ -5,6 +5,7 @@ import android.content.res.Configuration
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -58,7 +59,6 @@ fun SettingsScreen(
     var showLanguageSubmenu by remember { mutableStateOf(false) }
     var showBreakSubmenu by remember { mutableStateOf(false) }
     var showAboutSubmenu by remember { mutableStateOf(false) }
-    var showRewardsSubmenu by remember { mutableStateOf(false) }
     var showSessionsSubmenu by remember { mutableStateOf(false) }
     var showSubscriptionSubmenu by remember { mutableStateOf(false) }
     var pendingLanguageChange by remember { mutableStateOf<String?>(null) }
@@ -99,7 +99,6 @@ fun SettingsScreen(
                 showLanguageSubmenu -> stringResource(R.string.language) to { showLanguageSubmenu = false }
                 showBreakSubmenu -> stringResource(R.string.auto_break) to { showBreakSubmenu = false }
                 showAboutSubmenu -> stringResource(R.string.about) to { showAboutSubmenu = false }
-                showRewardsSubmenu -> stringResource(R.string.milestones) to { showRewardsSubmenu = false }
                 showSessionsSubmenu -> stringResource(R.string.sessions) to { showSessionsSubmenu = false }
                 showSubscriptionSubmenu -> stringResource(R.string.subscription) to { showSubscriptionSubmenu = false }
                 else -> stringResource(R.string.settings) to onBack
@@ -179,7 +178,6 @@ fun SettingsScreen(
                     showLanguageSubmenu -> "language"
                     showBreakSubmenu -> "break"
                     showAboutSubmenu -> "about"
-                    showRewardsSubmenu -> "rewards"
                     showSessionsSubmenu -> "sessions"
                     showSubscriptionSubmenu -> "subscription"
                     else -> "main"
@@ -191,13 +189,21 @@ fun SettingsScreen(
                     scrollState.scrollTo(0)
                 }
                 
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(scrollState)
-                        .padding(16.dp.scaled(settingsScale, min = 8.dp)),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
+                if (showSubscriptionSubmenu) {
+                    // Subscription renders directly (no scroll wrapper) so fillMaxHeight works
+                    SubscriptionSubmenu(
+                        onBack = { showSubscriptionSubmenu = false },
+                        textColor = textColor,
+                        isDark = theme == "dark"
+                    )
+                } else {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(scrollState)
+                            .padding(16.dp.scaled(settingsScale, min = 8.dp)),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
                     if (showFontSubmenu) {
                         // Font Selection Submenu
                         FontSubmenu(
@@ -239,12 +245,6 @@ fun SettingsScreen(
                             textColor = textColor,
                             isDark = theme == "dark"
                         )
-                    } else if (showRewardsSubmenu) {
-                        // Rewards Grid
-                        RewardsSubmenu(
-                            textColor = textColor,
-                            isDark = theme == "dark"
-                        )
                     } else if (showSessionsSubmenu) {
                         // Sessions Selector
                         SessionsSubmenu(
@@ -253,7 +253,7 @@ fun SettingsScreen(
                             textColor = textColor
                         )
                     } else if (showSubscriptionSubmenu) {
-                        // Subscription Page
+                        // Subscription Page — rendered outside scroll so fillMaxHeight works
                         SubscriptionSubmenu(
                             onBack = { showSubscriptionSubmenu = false },
                             textColor = textColor,
@@ -340,19 +340,6 @@ fun SettingsScreen(
                             color = textColor.copy(alpha = 0.1f)
                         )
                         
-                        // Rewards
-                        ClickableSettingItem(
-                            title = stringResource(R.string.milestones),
-                            subtitle = "",
-                            onClick = { showRewardsSubmenu = true },
-                            textColor = textColor
-                        )
-                        
-                        Divider(
-                            modifier = Modifier.padding(vertical = 1.dp),
-                            color = textColor.copy(alpha = 0.1f)
-                        )
-                        
                         // About
                         ClickableSettingItem(
                             title = stringResource(R.string.about),
@@ -374,6 +361,7 @@ fun SettingsScreen(
                             textColor = Color(0xFFFF9800)
                         )
                     }
+                    } // end else block
                 }
             }
         }
@@ -1300,127 +1288,300 @@ private fun SubscriptionSubmenu(
     textColor: Color,
     isDark: Boolean
 ) {
-    val accentColor = Color(0xFF4CAF50)
-    val cardBg = if (isDark) Color(0xFF2A2E24) else Color(0xFFF0F0F0)
+    val accent = Color(0xFF3DDC6F)
+    val cardBg = Color(0xFF141A10)
+    val cardBgStandard = Color(0xFF111510)
+    val scale = LocalScreenScale.current
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // App logo or premium icon
-        Box(
+        Row(
             modifier = Modifier
-                .size(80.dp)
-                .background(cardBg, RoundedCornerShape(20.dp)),
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(horizontal = 4.dp, vertical = 2.dp),
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Canvas(modifier = Modifier.size(40.dp)) {
-                // Draw a simple diamond/gem shape to represent premium
-                val path = androidx.compose.ui.graphics.Path().apply {
-                    moveTo(size.width / 2f, 0f)
-                    lineTo(size.width, size.height * 0.3f)
-                    lineTo(size.width / 2f, size.height)
-                    lineTo(0f, size.height * 0.3f)
-                    close()
+            // LEFT column: title + feature icons
+            Column(
+                modifier = Modifier
+                    .width(200.dp)
+                    .fillMaxHeight()
+                    .padding(bottom = 32.dp), // Adds padding at bottom to push content up
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row {
+                        Text(
+                            text = stringResource(R.string.subs_unlock_clockera),
+                            style = TextStyle(
+                                fontFamily = GeistFontFamily,
+                                fontSize = 22.sp.scaled(scale, min = 16.sp),
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        )
+                        Text(
+                            text = stringResource(R.string.subs_unlock_name),
+                            style = TextStyle(
+                                fontFamily = GeistFontFamily,
+                                fontSize = 22.sp.scaled(scale, min = 16.sp),
+                                fontWeight = FontWeight.Bold,
+                                color = accent
+                            )
+                        )
+                    }
+                    Text(
+                        text = "${stringResource(R.string.subs_subtitle_1)}\n${stringResource(R.string.subs_subtitle_2)}",
+                        style = TextStyle(
+                            fontFamily = GeistFontFamily,
+                            fontSize = 9.sp,
+                            color = Color.White.copy(alpha = 0.4f),
+                            lineHeight = 13.sp
+                        )
+                    )
                 }
-                drawPath(
-                    path = path,
-                    color = accentColor,
-                    style = androidx.compose.ui.graphics.drawscope.Fill
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    SubFeatureIconItem(stringResource(R.string.subs_feature_1_title), stringResource(R.string.subs_feature_1_desc), accent, "clock")
+                    SubFeatureIconItem(stringResource(R.string.subs_feature_2_title), stringResource(R.string.subs_feature_2_desc), accent, "timer")
+                    SubFeatureIconItem(stringResource(R.string.subs_feature_3_title), stringResource(R.string.subs_feature_3_desc), accent, "stats")
+                }
+            }
+
+            // RIGHT: two plan cards
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Standard/Monthly card
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(top = 10.dp) // Provide room for the badge
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(cardBgStandard, RoundedCornerShape(16.dp))
+                    ) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            drawRoundRect(
+                                color = accent.copy(alpha = 0.35f),
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx()),
+                                style = Stroke(width = 1.5.dp.toPx())
+                            )
+                        }
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(20.dp),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Canvas(modifier = Modifier.size(14.dp)) {
+                                        val r = size.width * 0.15f
+                                        drawRoundRect(
+                                            color = accent,
+                                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(r),
+                                            style = Stroke(width = 1.5.dp.toPx())
+                                        )
+                                        drawLine(color = accent, start = Offset(size.width * 0.35f, 0f), end = Offset(size.width * 0.35f, size.height * 0.3f), strokeWidth = 1.5.dp.toPx())
+                                        drawLine(color = accent, start = Offset(size.width * 0.65f, 0f), end = Offset(size.width * 0.65f, size.height * 0.3f), strokeWidth = 1.5.dp.toPx())
+                                        drawLine(color = accent.copy(alpha = 0.4f), start = Offset(0f, size.height * 0.4f), end = Offset(size.width, size.height * 0.4f), strokeWidth = 1.dp.toPx())
+                                    }
+                                    Text(
+                                        text = stringResource(R.string.subs_standard),
+                                        style = TextStyle(fontFamily = GeistFontFamily, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 1.sp)
+                                    )
+                                }
+                                Text(stringResource(R.string.subs_monthly), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 18.sp.scaled(scale, min = 14.sp), fontWeight = FontWeight.Bold, color = Color.White))
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text(stringResource(R.string.subs_monthly_price), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 28.sp.scaled(scale, min = 20.sp), fontWeight = FontWeight.Bold, color = Color.White))
+                                    Text(stringResource(R.string.subs_per_month), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 11.sp, color = Color.White.copy(alpha = 0.5f)), modifier = Modifier.padding(bottom = 4.dp))
+                                }
+                            }
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_1), accent)
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_2), accent)
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_3), accent)
+                            }
+                            Box(
+                                modifier = Modifier.fillMaxWidth().height(36.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Canvas(modifier = Modifier.fillMaxSize()) {
+                                    drawRoundRect(
+                                        color = accent.copy(alpha = 0.35f),
+                                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(18.dp.toPx()),
+                                        style = Stroke(width = 1.5.dp.toPx())
+                                    )
+                                }
+                                Text(
+                                    stringResource(R.string.subs_select_monthly),
+                                    style = TextStyle(fontFamily = GeistFontFamily, fontSize = 12.sp.scaled(scale, min = 10.sp), fontWeight = FontWeight.Medium, color = accent),
+                                    modifier = Modifier.clickable { }
+                                )
+                            }
+                        }
+                    }
+                    // CHEAPEST badge
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = (-10).dp)
+                            .background(cardBgStandard, RoundedCornerShape(8.dp)) // background to cover card border
+                            .border(1.dp, accent.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 3.dp)
+                    ) {
+                        Text(stringResource(R.string.subs_cheapest), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 0.8.sp))
+                    }
+                }
+
+                // Unlimited/Yearly card
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight()
+                        .padding(top = 10.dp) // Provide room for the badge
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(cardBg, RoundedCornerShape(16.dp))
+                    ) {
+                        Canvas(modifier = Modifier.fillMaxSize()) {
+                            drawRoundRect(
+                                color = accent,
+                                cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx()),
+                                style = Stroke(width = 1.5.dp.toPx())
+                            )
+                        }
+                        Column(
+                            modifier = Modifier.fillMaxSize().padding(20.dp),
+                            verticalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Canvas(modifier = Modifier.size(14.dp)) {
+                                        val cx = size.width / 2f; val cy = size.height / 2f; val r = size.width * 0.2f
+                                        drawCircle(color = accent, radius = r, center = Offset(cx - r, cy), style = Stroke(width = 1.5.dp.toPx()))
+                                        drawCircle(color = accent, radius = r, center = Offset(cx + r, cy), style = Stroke(width = 1.5.dp.toPx()))
+                                    }
+                                    Text(
+                                        text = stringResource(R.string.subs_unlimited),
+                                        style = TextStyle(fontFamily = GeistFontFamily, fontSize = 8.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 1.sp)
+                                    )
+                                }
+                                Text(stringResource(R.string.subs_yearly), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 18.sp.scaled(scale, min = 14.sp), fontWeight = FontWeight.Bold, color = Color.White))
+                                Row(verticalAlignment = Alignment.Bottom) {
+                                    Text(stringResource(R.string.subs_yearly_price), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 28.sp.scaled(scale, min = 20.sp), fontWeight = FontWeight.Bold, color = Color.White))
+                                    Text(stringResource(R.string.subs_per_year), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 11.sp, color = Color.White.copy(alpha = 0.5f)), modifier = Modifier.padding(bottom = 4.dp))
+                                }
+                                Box(
+                                    modifier = Modifier.background(accent, RoundedCornerShape(4.dp)).padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Text(stringResource(R.string.subs_save_badge), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0B1008)))
+                                }
+                            }
+                            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_1), accent)
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_2), accent)
+                                SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_3), accent)
+                            }
+                            Box(
+                                modifier = Modifier.fillMaxWidth().height(36.dp).background(accent, RoundedCornerShape(18.dp)).clickable { },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(stringResource(R.string.subs_select_yearly), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 12.sp.scaled(scale, min = 10.sp), fontWeight = FontWeight.Bold, color = Color(0xFF0B1008)))
+                            }
+                        }
+                    }
+                    // MOST POPULAR badge
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = (-10).dp)
+                            .background(accent, RoundedCornerShape(8.dp))
+                            .padding(horizontal = 10.dp, vertical = 3.dp)
+                    ) {
+                        Text(stringResource(R.string.subs_most_popular), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, fontWeight = FontWeight.Bold, color = Color(0xFF0B1008), letterSpacing = 0.8.sp))
+                    }
+                }
             }
         }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Title
-        Text(
-            text = stringResource(R.string.subscription_title),
-            style = TextStyle(
-                fontFamily = GeistFontFamily,
-                fontSize = 24.sp.scaled(LocalScreenScale.current, min = 18.sp),
-                fontWeight = FontWeight.Bold,
-                color = textColor,
-                letterSpacing = 0.5.sp
-            )
-        )
-        
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Subscription Features
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            PremiumFeatureItem(text = stringResource(R.string.subscription_desc_1), textColor = textColor, accentColor = accentColor)
-            PremiumFeatureItem(text = stringResource(R.string.subscription_desc_2), textColor = textColor, accentColor = accentColor)
-            PremiumFeatureItem(text = stringResource(R.string.subscription_desc_3), textColor = textColor, accentColor = accentColor)
+    }
+}
+
+@Composable
+private fun SubPlanFeatureRow(text: String, accent: Color) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Canvas(modifier = Modifier.size(12.dp)) {
+            drawCircle(color = accent.copy(alpha = 0.2f), radius = size.width / 2f)
+            val path = androidx.compose.ui.graphics.Path().apply {
+                moveTo(size.width * 0.25f, size.height * 0.5f)
+                lineTo(size.width * 0.42f, size.height * 0.68f)
+                lineTo(size.width * 0.75f, size.height * 0.3f)
+            }
+            drawPath(path = path, color = accent, style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
-        
-        Spacer(modifier = Modifier.weight(1f))
-        
-        // Subscribe Button
-        Button(
-            onClick = { /* TODO: Initiate subscription flow */ },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp)
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = accentColor,
-                contentColor = Color.White
-            ),
-            shape = RoundedCornerShape(28.dp)
+        Text(text, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 8.sp, color = Color.White.copy(alpha = 0.7f), lineHeight = 11.sp))
+    }
+}
+
+@Composable
+private fun SubFeatureIconItem(label: String, sublabel: String, accent: Color, iconType: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Box(
+            modifier = Modifier.size(24.dp), // Removed background box, just sized for icon
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = stringResource(R.string.subscription_button),
-                style = TextStyle(
-                    fontFamily = GeistFontFamily,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            )
+            Canvas(modifier = Modifier.size(18.dp)) {
+                when (iconType) {
+                    "clock" -> {
+                        drawCircle(color = accent, radius = size.width / 2f, style = Stroke(width = 1.5.dp.toPx()))
+                        drawLine(color = accent, start = Offset(size.width / 2f, size.height / 2f), end = Offset(size.width / 2f, size.height * 0.25f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                        drawLine(color = accent, start = Offset(size.width / 2f, size.height / 2f), end = Offset(size.width * 0.75f, size.height / 2f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                    }
+                    "timer" -> {
+                        drawCircle(color = accent, radius = size.width * 0.45f, center = Offset(size.width / 2f, size.height * 0.55f), style = Stroke(width = 1.5.dp.toPx()))
+                        drawLine(color = accent, start = Offset(size.width * 0.35f, 0f), end = Offset(size.width * 0.65f, 0f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                        drawLine(color = accent, start = Offset(size.width / 2f, 0f), end = Offset(size.width / 2f, size.height * 0.2f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
+                    }
+                    "stats" -> {
+                        val barW = size.width * 0.18f; val gap = size.width * 0.1f; val baseY = size.height * 0.85f
+                        listOf(0.5f, 0.8f, 0.35f, 0.65f).forEachIndexed { i, h ->
+                            drawRect(color = accent, topLeft = Offset(i * (barW + gap) + gap / 2f, baseY - size.height * h), size = androidx.compose.ui.geometry.Size(barW, size.height * h))
+                        }
+                    }
+                }
+            }
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(label, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = Color.White))
+            Text(sublabel, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, color = accent.copy(alpha = 0.7f), lineHeight = 10.sp))
+        }
     }
 }
 
 @Composable
 private fun PremiumFeatureItem(text: String, textColor: Color, accentColor: Color) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Canvas(modifier = Modifier.size(20.dp)) {
-            val path = androidx.compose.ui.graphics.Path().apply {
-                moveTo(size.width * 0.2f, size.height * 0.5f)
-                lineTo(size.width * 0.4f, size.height * 0.7f)
-                lineTo(size.width * 0.8f, size.height * 0.2f)
-            }
-            drawPath(
-                path = path,
-                color = accentColor,
-                style = Stroke(
-                    width = 3.dp.toPx(),
-                    cap = StrokeCap.Round,
-                    join = StrokeJoin.Round
-                )
-            )
-        }
-        Spacer(modifier = Modifier.width(16.dp))
-        Text(
-            text = text,
-            style = TextStyle(
-                fontFamily = GeistFontFamily,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Normal,
-                color = textColor.copy(alpha = 0.8f)
-            )
-        )
-    }
+    // kept for reference only – not used in new layout
 }
+
 

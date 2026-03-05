@@ -144,4 +144,32 @@
     <string name="streak_title">Seri</string>
     <string name="streak_days">gün</string>
 
+    <!-- Subscription Screen V2 -->
+    <string name="subs_unlock_clockera">Clockera\'yı </string>
+    <string name="subs_unlock_name">Açın</string>
+    <string name="subs_subtitle_1">Size uygun planı seçin.</string>
+    <string name="subs_subtitle_2">Estetik bir şekilde üretkenliği deneyimleyin.</string>
+    <string name="subs_feature_1_title">Estetik Saat Yüzleri</string>
+    <string name="subs_feature_1_desc">Tarzınıza uygun düzinelerce\ngüzel yazı tipi ve renk paleti.</string>
+    <string name="subs_feature_2_title">Pomodoro ve Odaklanma Zamanlayıcısı</string>
+    <string name="subs_feature_2_desc">Özelleştirilebilir çalışma ve mola\noturumlarıyla akışta kalın.</string>
+    <string name="subs_feature_3_title">Odaklanma İstatistikleri</string>
+    <string name="subs_feature_3_desc">Haftalık ve aylık odaklanma\nsürenizi bir bakışta takip edin.</string>
+    <string name="subs_standard">STANDART</string>
+    <string name="subs_monthly">Aylık</string>
+    <string name="subs_monthly_price">₺89.99</string>
+    <string name="subs_per_month">/ay</string>
+    <string name="subs_unlimited">LİMİTSİZ</string>
+    <string name="subs_yearly">Yıllık Plan</string>
+    <string name="subs_yearly_price">₺599.99</string>
+    <string name="subs_per_year">/yıl</string>
+    <string name="subs_save_badge">Aylığa göre %43 tasarruf edin</string>
+    <string name="subs_select_monthly">Aylık Seç</string>
+    <string name="subs_select_yearly">Yıllık Seç</string>
+    <string name="subs_most_popular">EN POPÜLER</string>
+    <string name="subs_cheapest">EN UCUZ</string>
+    <string name="subs_plan_feature_1">Tüm fontlar/renk paletleri ve gelecek özellikler.</string>
+    <string name="subs_plan_feature_2">Estetik görünümlü çalışma alanı.</string>
+    <string name="subs_plan_feature_3">Daha verimli çalışma saatleri.</string>
+
 </resources>
