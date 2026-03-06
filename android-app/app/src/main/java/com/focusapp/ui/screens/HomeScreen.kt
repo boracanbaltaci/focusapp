@@ -1227,6 +1227,7 @@ fun ColorPickerIconButton(onClick: () -> Unit, iconColor: Color) {
     }
 }
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun ColorPickerModal(
     colorPairs: List<Pair<Color, Color>>,
@@ -1281,167 +1282,147 @@ private fun ColorPickerModal(
                     )
                 }
 
-                // Default (no custom color) option
-                val isDefaultSelected = selectedIndex == 0
-                
-                Box(
-                    modifier = Modifier
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (isDefaultSelected) checkColor.copy(alpha = 0.1f)
-                            else Color.Transparent
-                        )
-                        .clickable { onSelect(0); onDismiss() },
-                    contentAlignment = Alignment.Center
+                androidx.compose.foundation.layout.FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Reset icon (circle with slash)
-                    Canvas(modifier = Modifier.size(28.dp)) {
-                        val s = size.width
-                        val sw = 2.dp.toPx()
-                        drawCircle(
-                            color = checkColor.copy(alpha = 0.5f),
-                            radius = s * 0.4f,
-                            style = Stroke(width = sw)
-                        )
-                        drawLine(
-                            color = checkColor.copy(alpha = 0.5f),
-                            start = Offset(s * 0.25f, s * 0.75f),
-                            end = Offset(s * 0.75f, s * 0.25f),
-                            strokeWidth = sw,
-                            cap = StrokeCap.Round
-                        )
-                    }
-                    if (isDefaultSelected) {
-                        Canvas(modifier = Modifier
-                            .size(12.dp)
-                            .align(Alignment.BottomEnd)
-                        ) {
-                            val path = Path().apply {
-                                moveTo(size.width * 0.15f, size.height * 0.5f)
-                                lineTo(size.width * 0.4f, size.height * 0.8f)
-                                lineTo(size.width * 0.85f, size.height * 0.2f)
-                            }
-                            drawPath(
-                                path = path,
-                                color = checkColor,
-                                style = Stroke(
-                                    width = 2.dp.toPx(),
-                                    cap = StrokeCap.Round
-                                )
+                    // Default (no custom color) option
+                    val isDefaultSelected = selectedIndex == 0
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (isDefaultSelected) checkColor.copy(alpha = 0.1f)
+                                else Color.Transparent
+                            )
+                            .clickable { onSelect(0); onDismiss() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Reset icon (circle with slash)
+                        Canvas(modifier = Modifier.size(28.dp)) {
+                            val s = size.width
+                            val sw = 2.dp.toPx()
+                            drawCircle(
+                                color = checkColor.copy(alpha = 0.5f),
+                                radius = s * 0.4f,
+                                style = Stroke(width = sw)
+                            )
+                            drawLine(
+                                color = checkColor.copy(alpha = 0.5f),
+                                start = Offset(s * 0.25f, s * 0.75f),
+                                end = Offset(s * 0.75f, s * 0.25f),
+                                strokeWidth = sw,
+                                cap = StrokeCap.Round
                             )
                         }
+                        if (isDefaultSelected) {
+                            Canvas(modifier = Modifier
+                                .size(12.dp)
+                                .align(Alignment.BottomEnd)
+                            ) {
+                                val path = Path().apply {
+                                    moveTo(size.width * 0.15f, size.height * 0.5f)
+                                    lineTo(size.width * 0.4f, size.height * 0.8f)
+                                    lineTo(size.width * 0.85f, size.height * 0.2f)
+                                }
+                                drawPath(
+                                    path = path,
+                                    color = checkColor,
+                                    style = Stroke(
+                                        width = 2.dp.toPx(),
+                                        cap = StrokeCap.Round
+                                    )
+                                )
+                            }
+                        }
                     }
-                }
-                
-                Divider(
-                    color = borderColor,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
-                
-                // Color pair circles in grid (rows of 3)
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    colorPairs.chunked(3).forEachIndexed { rowIndex, rowPairs ->
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth(),
+
+                    colorPairs.forEachIndexed { index, pair ->
+                        val pairIndex = index + 1
+                        val isSelected = selectedIndex == pairIndex
+                        val isLocked = !isPremium && pairIndex > unlockedCount
+                        
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(
+                                    if (isSelected) checkColor.copy(alpha = 0.08f)
+                                    else Color.Transparent
+                                )
+                                .clickable { 
+                                    if (isLocked) {
+                                        clickedLockedIndex = pairIndex
+                                        onDismiss()
+                                        showRewardDialog = true
+                                    } else {
+                                        onSelect(pairIndex)
+                                        onDismiss()
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
                         ) {
-                            rowPairs.forEachIndexed { colIndex, pair ->
-                                val pairIndex = rowIndex * 3 + colIndex + 1
-                                val isSelected = selectedIndex == pairIndex
-                                // Default palette (index 0) is always free.
-                                // Palettes 1 to unlockedCount are free.
-                                val isLocked = !isPremium && pairIndex > unlockedCount
-                                
+                            // Two overlapping circles
+                            val cpScale = LocalScreenScale.current
+                            val circleContainerSize = 42.dp.scaled(cpScale, min = 28.dp)
+                            val circleSize = 28.dp.scaled(cpScale, min = 20.dp)
+                            Box(modifier = Modifier.size(circleContainerSize)) {
+                                // Light color circle (back-left)
                                 Box(
                                     modifier = Modifier
-                                        .weight(1f)
-                                        .aspectRatio(1f)
-                                        .clip(RoundedCornerShape(16.dp))
-                                        .background(
-                                            if (isSelected) checkColor.copy(alpha = 0.08f)
-                                            else Color.Transparent
-                                        )
-                                        .clickable { 
-                                            if (isLocked) {
-                                                clickedLockedIndex = pairIndex
-                                                onDismiss()
-                                                showRewardDialog = true
-                                            } else {
-                                                onSelect(pairIndex)
-                                                onDismiss()
-                                            }
-                                        },
-                                    contentAlignment = Alignment.Center
+                                        .size(circleSize)
+                                        .align(Alignment.TopStart)
+                                        .shadow(2.dp, CircleShape)
+                                        .clip(CircleShape)
+                                        .background(pair.first)
+                                )
+                                // Dark color circle (front-right)
+                                Box(
+                                    modifier = Modifier
+                                        .size(circleSize)
+                                        .align(Alignment.BottomEnd)
+                                        .shadow(2.dp, CircleShape)
+                                        .clip(CircleShape)
+                                        .background(pair.second)
+                                )
+                            }
+                            
+                            // Selection checkmark
+                            if (isSelected) {
+                                Canvas(modifier = Modifier
+                                    .size(14.dp)
+                                    .align(Alignment.BottomCenter)
+                                    .offset(y = 2.dp)
                                 ) {
-                                    // Two overlapping circles for each pair
-                                    val cpScale = LocalScreenScale.current
-                                    val circleContainerSize = 48.dp.scaled(cpScale, min = 32.dp)
-                                    val circleSize = 32.dp.scaled(cpScale, min = 22.dp)
-                                    Box(modifier = Modifier.size(circleContainerSize)) {
-                                        // Light color circle (back-left)
-                                        Box(
-                                            modifier = Modifier
-                                                .size(circleSize)
-                                                .align(Alignment.TopStart)
-                                                .shadow(2.dp, CircleShape)
-                                                .clip(CircleShape)
-                                                .background(pair.first)
-                                        )
-                                        // Dark color circle (front-right)
-                                        Box(
-                                            modifier = Modifier
-                                                .size(circleSize)
-                                                .align(Alignment.BottomEnd)
-                                                .shadow(2.dp, CircleShape)
-                                                .clip(CircleShape)
-                                                .background(pair.second)
-                                        )
+                                    val path = Path().apply {
+                                        moveTo(size.width * 0.15f, size.height * 0.5f)
+                                        lineTo(size.width * 0.4f, size.height * 0.8f)
+                                        lineTo(size.width * 0.85f, size.height * 0.2f)
                                     }
-                                    
-                                    // Selection checkmark indicator
-                                    if (isSelected) {
-                                        Canvas(modifier = Modifier
-                                            .size(14.dp)
-                                            .align(Alignment.BottomCenter)
-                                            .offset(y = 2.dp)
-                                        ) {
-                                            val path = Path().apply {
-                                                moveTo(size.width * 0.15f, size.height * 0.5f)
-                                                lineTo(size.width * 0.4f, size.height * 0.8f)
-                                                lineTo(size.width * 0.85f, size.height * 0.2f)
-                                            }
-                                            drawPath(
-                                                path = path,
-                                                color = checkColor,
-                                                style = Stroke(
-                                                    width = 2.dp.toPx(),
-                                                    cap = StrokeCap.Round
-                                                )
-                                            )
-                                        }
-                                    }
-                                    
-                                    // Lock icon indicator
-                                    if (isLocked) {
-                                        androidx.compose.material3.Icon(
-                                            imageVector = androidx.compose.material.icons.Icons.Default.Lock,
-                                            contentDescription = "Locked Color Palette",
-                                            tint = checkColor.copy(alpha = 0.5f),
-                                            modifier = Modifier
-                                                .align(Alignment.TopEnd)
-                                                .size(14.dp)
-                                                .offset(x = (-2).dp, y = 2.dp)
+                                    drawPath(
+                                        path = path,
+                                        color = checkColor,
+                                        style = Stroke(
+                                            width = 2.dp.toPx(),
+                                            cap = StrokeCap.Round
                                         )
-                                    }
+                                    )
                                 }
                             }
-                            // Fill remaining space if row has fewer than 3 items
-                            repeat(3 - rowPairs.size) {
-                                Spacer(modifier = Modifier.weight(1f))
+                            
+                            // Lock icon
+                            if (isLocked) {
+                                androidx.compose.material3.Icon(
+                                    imageVector = androidx.compose.material.icons.Icons.Default.Lock,
+                                    contentDescription = "Locked Color Palette",
+                                    tint = checkColor.copy(alpha = 0.5f),
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .size(14.dp)
+                                        .offset(x = (-2).dp, y = 2.dp)
+                                )
                             }
                         }
                     }
@@ -1454,31 +1435,35 @@ private fun ColorPickerModal(
         val requiredHours = (clickedLockedIndex * 30) // 1st locked palette needs 1*30=30 hours
         val currentHours = virtualFocusMinutes / 60
         
+        val isDarkDialog = checkColor != Color(0xFF181C14)
+        val dialogBg = if (isDarkDialog) Color(0xFF1E2218).copy(alpha = 0.85f) else Color(0xFFF6F5F2).copy(alpha = 0.85f)
+        val glassBorder = if (isDarkDialog) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f)
+        
         androidx.compose.ui.window.Dialog(onDismissRequest = { showRewardDialog = false; onDismiss() }) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(28.dp))
+                    .fillMaxWidth(0.7f)
+                    .clip(RoundedCornerShape(20.dp))
                     .background(dialogBg)
-                    .border(1.dp, glassBorder, RoundedCornerShape(28.dp))
-                    .padding(24.dp)
+                    .border(1.dp, glassBorder, RoundedCornerShape(20.dp))
+                    .padding(20.dp)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     androidx.compose.material3.Icon(
                         imageVector = androidx.compose.material.icons.Icons.Default.Lock,
                         contentDescription = "Lock",
                         tint = checkColor.copy(alpha = 0.8f),
-                        modifier = Modifier.size(48.dp)
+                        modifier = Modifier.size(36.dp)
                     )
                     
                     Text(
                         text = stringResource(R.string.reward_locked_title),
                         style = TextStyle(
                             fontFamily = GeistFontFamily,
-                            fontSize = 20.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = checkColor
                         )
@@ -1488,7 +1473,7 @@ private fun ColorPickerModal(
                         text = stringResource(R.string.reward_palette_desc, requiredHours),
                         style = TextStyle(
                             fontFamily = GeistFontFamily,
-                            fontSize = 14.sp,
+                            fontSize = 12.sp,
                             color = checkColor.copy(alpha=0.8f),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
@@ -1499,25 +1484,25 @@ private fun ColorPickerModal(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(12.dp))
                             .background(Color(0xFF4CAF50).copy(alpha = 0.1f))
-                            .padding(12.dp),
+                            .padding(10.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = stringResource(R.string.reward_current_progress, currentHours),
-                            style = TextStyle(fontFamily = GeistFontFamily, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+                            style = TextStyle(fontFamily = GeistFontFamily, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
                         )
                     }
                     
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         // Watch Ad Button
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp)
-                                .clip(RoundedCornerShape(28.dp))
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(24.dp))
                                 .background(Color(0xFF4CAF50))
                                 .clickable {
                                     onWatchAd()
@@ -1527,7 +1512,7 @@ private fun ColorPickerModal(
                         ) {
                             Text(
                                 text = stringResource(R.string.reward_watch_ad),
-                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
                             )
                         }
                         
@@ -1535,8 +1520,8 @@ private fun ColorPickerModal(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(56.dp)
-                                .clip(RoundedCornerShape(28.dp))
+                                .height(48.dp)
+                                .clip(RoundedCornerShape(24.dp))
                                 .background(checkColor.copy(alpha = 0.1f))
                                 .clickable {
                                     showRewardDialog = false
