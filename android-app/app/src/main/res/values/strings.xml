@@ -157,16 +157,16 @@
     <string name="subs_feature_3_desc">Track your weekly and monthly\nfocus time at a glance.</string>
     <string name="subs_standard">STANDARD</string>
     <string name="subs_monthly">Monthly Plan</string>
-    <string name="subs_monthly_price">$2.49</string>
+    <string name="subs_monthly_price">$2.99</string>
     <string name="subs_per_month">/mo</string>
     <string name="subs_unlimited">UNLIMITED</string>
     <string name="subs_yearly">Yearly Plan</string>
-    <string name="subs_yearly_price">$16.99</string>
+    <string name="subs_yearly_price">$17.99</string>
     <string name="subs_per_year">/year</string>
-    <string name="subs_save_badge">Save 43%% compared to monthly</string>
+    <string name="subs_save_badge">Save 50%% compared to monthly</string>
     <string name="subs_select_monthly">Buy Monthly</string>
     <string name="subs_select_yearly">Buy Yearly</string>
-    <string name="subs_already_owned">Zaten Clockera Premium\'a sahipsiniz</string>
+    <string name="subs_already_owned">You already own Clockera Premium</string>
     <string name="subs_most_popular">MOST POPULAR</string>
     <string name="subs_cheapest">CHEAPEST</string>
     <string name="subs_plan_feature_1">All fonts/color palettes and upcoming features.</string>
@@ -174,15 +174,20 @@
     <string name="subs_plan_feature_3">More productive working hours.</string>
     
     <!-- Gamification / Rewards -->
-    <string name="reward_locked_title">Özellik Kilitli</string>
-    <string name="reward_font_desc">Bu fontu açmak için toplam %1$d saat daha odaklanmalı veya Premium\'a geçmelisiniz.</string>
-    <string name="reward_palette_desc">Bu renk paletini açmak için toplam %1$d saat daha odaklanmalı veya Premium\'a geçmelisiniz.</string>
-    <string name="reward_current_progress">Mevcut İlerleme: %1$d Saat</string>
-    <string name="reward_watch_ad">Reklam İzle (+2 Saat Kazan)</string>
-    <string name="reward_go_premium">Premium\'a Geç</string>
-    <string name="reward_cancel">İptal</string>
-    <string name="reward_font_next_remaining">%1$dsa kaldı</string>
-    <string name="reward_font_constant">35sa kaldı</string>
-    <string name="reward_palette_next_title">Sonraki hediye renk paleti için %1$d saat kaldı.</string>
+    <string name="reward_locked_title">Feature Locked</string>
+    <string name="reward_font_desc">Focus for another %1$d hours to unlock this font or upgrade to Premium.</string>
+    <string name="reward_palette_desc">Focus for another %1$d hours to unlock this color palette or upgrade to Premium.</string>
+    <string name="reward_current_progress">Total Progress: %1$d Hours</string>
+    <string name="reward_real_focus">Real Session Time: %1$d Hours</string>
+    <string name="reward_bonus_focus">Ad Bonus: %1$d Hours</string>
+    <string name="stat_all_time_focus">ALL-TIME FOCUS</string>
+    <string name="reward_watch_ad">Watch Ad (+2 Hours Bonus)</string>
+    <string name="reward_go_premium">Go Premium</string>
+    <string name="reward_cancel">Cancel</string>
+    <string name="reward_font_next_remaining">%1$d hours left</string>
+    <string name="reward_font_constant">35h left</string>
+    <string name="reward_press_to_unlock">Press to unlock</string>
+    <string name="reward_coming_soon">Coming soon...</string>
+    <string name="reward_palette_next_title">Next reward color palette in %1$d hours.</string>
 
 </resources>

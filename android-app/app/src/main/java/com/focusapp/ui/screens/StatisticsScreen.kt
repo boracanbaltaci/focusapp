@@ -509,6 +509,23 @@ fun StatisticsScreen(
                         value = dailyAvgText,
                         textColor = textColor
                     )
+                    
+                    // All-time Focus
+                    val allTimeMinutes = remember(refreshTick) { statisticsRepository.getTotalFocusMinutes() }
+                    val allTimeH = allTimeMinutes / 60
+                    val allTimeM = allTimeMinutes % 60
+                    val allTimeValue = if (allTimeH > 0) "${allTimeH}$hourShort ${allTimeM}$minShort" else "${allTimeM}$minShort"
+                    
+                    StatCard(
+                        modifier = Modifier.fillMaxWidth().height(68.dp),
+                        cardBg = if (isDark) Color(0xFF1B2A20) else Color(0xFFE2F0E5),
+                        iconBg = if (isDark) Color(0xFF2E4D36) else Color(0xFFC5E1CC),
+                        iconColor = bgTabActive,
+                        icon = Icons.Default.CheckCircle,
+                        title = stringResource(R.string.stat_all_time_focus).uppercase(),
+                        value = allTimeValue,
+                        textColor = textColor
+                    )
                 }
             }
         }

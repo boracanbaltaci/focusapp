@@ -19,6 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -212,7 +213,10 @@ fun SettingsScreen(
                     ) {
                     if (showFontSubmenu) {
                         val unlockedFontsCount = settingsViewModel.unlockedFontsCount
-                        val virtualFocusMinutes = settingsViewModel.virtualTotalFocusMinutes
+                        val realFocusMinutes = settingsViewModel.realFocusMinutes.collectAsState().value
+                        val adBonusMinutes = settingsViewModel.adBonusMinutes.collectAsState().value
+                        val virtualFocusMinutes = realFocusMinutes + adBonusMinutes
+                        
                         // Font Selection Submenu
                         FontSubmenu(
                             selectedFont = clockFont,
@@ -225,6 +229,8 @@ fun SettingsScreen(
                             isPremium = isPremium || activePlan != "none",
                             unlockedCount = unlockedFontsCount,
                             virtualFocusMinutes = virtualFocusMinutes,
+                            realFocusMinutes = realFocusMinutes,
+                            adBonusMinutes = adBonusMinutes,
                             onPremiumClick = { showSubscriptionSubmenu = true },
                             onWatchAd = { settingsViewModel.watchAdForBonus() }
                         )
@@ -554,6 +560,8 @@ private fun FontSubmenu(
     isPremium: Boolean,
     unlockedCount: Int,
     virtualFocusMinutes: Int,
+    realFocusMinutes: Int,
+    adBonusMinutes: Int,
     onPremiumClick: () -> Unit,
     onWatchAd: () -> Unit
 ) {
@@ -696,29 +704,36 @@ private fun FontSubmenu(
                                 .offset(x = (-4).dp, y = 4.dp)
                         )
                     }
-                    if (isLocked) {
-                        val nextToUnlockIndex = 4 + unlockedCount
-                        val textToShow = if (index == nextToUnlockIndex) {
-                            val remainingHours = 35 - ((virtualFocusMinutes / 60) % 35)
-                            stringResource(R.string.reward_font_next_remaining, remainingHours)
+                    if (isLocked || isPlaceholder) {
+                        val bannerText = if (isPlaceholder) {
+                            stringResource(R.string.reward_coming_soon)
                         } else {
-                            stringResource(R.string.reward_font_constant)
+                            stringResource(R.string.reward_press_to_unlock)
                         }
                         
-                        // Banner Overlay at the bottom of the box
+                        // Modern Green Banner with slight transparency/glass effect
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
+                                .padding(horizontal = 4.dp, vertical = 4.dp)
                                 .fillMaxWidth()
-                                .background(Color(0xFF4CAF50).copy(alpha = 0.85f))
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(
+                                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color(0xFF4CAF50).copy(alpha = 0.9f),
+                                            Color(0xFF388E3C).copy(alpha = 0.95f)
+                                        )
+                                    )
+                                )
                                 .padding(vertical = 6.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = textToShow,
+                                text = bannerText,
                                 style = TextStyle(
                                     fontFamily = GeistFontFamily,
-                                    fontSize = 10.sp,
+                                    fontSize = 11.sp, // Slightly smaller for better fit
                                     fontWeight = FontWeight.Bold,
                                     color = Color.White
                                 )
@@ -732,19 +747,19 @@ private fun FontSubmenu(
     if (showRewardDialog) {
         val requiredHours = ((clickedLockedIndex - 3) * 35) // since index 3 is the 4th font (free), index 4 needs 1*35=35 hours
         val currentHours = virtualFocusMinutes / 60
-        
         val isDark = textColor != Color(0xFF181C14)
-        val dialogBg = if (isDark) Color(0xFF1E2218).copy(alpha = 0.85f) else Color(0xFFF6F5F2).copy(alpha = 0.85f)
-        val glassBorder = if (isDark) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f)
+        
+        val dialogBg = if (isDark) Color(0xFF1E2218).copy(alpha = 0.95f) else Color(0xFFFDFDFD)
+        val glassBorder = if (isDark) Color.White.copy(alpha = 0.15f) else Color(0xFF181C14).copy(alpha = 0.1f)
         
         androidx.compose.ui.window.Dialog(onDismissRequest = { showRewardDialog = false }) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .clip(RoundedCornerShape(20.dp))
+                    .fillMaxWidth(0.85f) // Increased width for better readability on long texts
+                    .clip(RoundedCornerShape(24.dp))
                     .background(dialogBg)
-                    .border(1.dp, glassBorder, RoundedCornerShape(20.dp))
-                    .padding(20.dp)
+                    .border(1.dp, glassBorder, RoundedCornerShape(24.dp))
+                    .padding(24.dp)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -767,8 +782,9 @@ private fun FontSubmenu(
                         )
                     )
                     
+                    val neededHours = (requiredHours - currentHours).coerceAtLeast(0)
                     Text(
-                        text = stringResource(R.string.reward_font_desc, requiredHours),
+                        text = stringResource(R.string.reward_font_desc, neededHours),
                         style = TextStyle(
                             fontFamily = GeistFontFamily,
                             fontSize = 12.sp,
@@ -777,18 +793,31 @@ private fun FontSubmenu(
                         )
                     )
                     
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF4CAF50).copy(alpha = 0.1f))
-                            .padding(10.dp),
-                        contentAlignment = Alignment.Center
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = stringResource(R.string.reward_current_progress, currentHours),
-                            style = TextStyle(fontFamily = GeistFontFamily, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+                            text = stringResource(R.string.reward_real_focus, realFocusMinutes / 60),
+                            style = TextStyle(fontFamily = GeistFontFamily, fontSize = 11.sp, color = textColor.copy(alpha=0.6f))
                         )
+                        Text(
+                            text = stringResource(R.string.reward_bonus_focus, adBonusMinutes / 60),
+                            style = TextStyle(fontFamily = GeistFontFamily, fontSize = 11.sp, color = textColor.copy(alpha=0.6f))
+                        )
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(Color(0xFF4CAF50).copy(alpha = 0.1f))
+                                .padding(10.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.reward_current_progress, currentHours),
+                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+                            )
+                        }
                     }
                     
                     Column(
@@ -799,8 +828,8 @@ private fun FontSubmenu(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(24.dp))
+                                .height(40.dp)
+                                .clip(RoundedCornerShape(20.dp))
                                 .background(Color(0xFF4CAF50))
                                 .clickable {
                                     onWatchAd()
@@ -810,7 +839,7 @@ private fun FontSubmenu(
                         ) {
                             Text(
                                 text = stringResource(R.string.reward_watch_ad),
-                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color.White)
                             )
                         }
                         
@@ -818,8 +847,8 @@ private fun FontSubmenu(
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(24.dp))
+                                .height(40.dp)
+                                .clip(RoundedCornerShape(20.dp))
                                 .background(textColor.copy(alpha = 0.1f))
                                 .clickable {
                                     showRewardDialog = false
@@ -829,7 +858,7 @@ private fun FontSubmenu(
                         ) {
                             Text(
                                 text = stringResource(R.string.reward_go_premium),
-                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = textColor)
+                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 10.sp, fontWeight = FontWeight.Bold, color = textColor)
                             )
                         }
                     }
@@ -1486,20 +1515,27 @@ private fun SubscriptionSubmenu(
 
     // Confetti logic
     var previousPlan by remember { mutableStateOf(activePlan) }
-    var showConfetti by remember { mutableStateOf(false) }
+    var confettiBursts by remember { mutableStateOf<List<androidx.compose.ui.geometry.Offset>>(emptyList()) }
     val vibrator = context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as? android.os.Vibrator
 
     androidx.compose.runtime.LaunchedEffect(activePlan) {
         if ((previousPlan == "none" || previousPlan == "") && (activePlan == "monthly" || activePlan == "yearly")) {
-            showConfetti = true
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                vibrator?.vibrate(android.os.VibrationEffect.createOneShot(500, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator?.vibrate(500)
+            for (i in 0 until 4) {
+                // Generate a random center position (normalized coordinate) for each burst
+                val rx = 0.2f + 0.6f * kotlin.random.Random.nextFloat()
+                val ry = 0.2f + 0.6f * kotlin.random.Random.nextFloat()
+                confettiBursts = confettiBursts + androidx.compose.ui.geometry.Offset(rx, ry)
+                
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    vibrator?.vibrate(android.os.VibrationEffect.createOneShot(100, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator?.vibrate(100)
+                }
+                kotlinx.coroutines.delay(600)
             }
-            kotlinx.coroutines.delay(3000)
-            showConfetti = false
+            kotlinx.coroutines.delay(2000)
+            confettiBursts = emptyList() // Clear to avoid lingering particles
         }
         previousPlan = activePlan
     }
@@ -1559,9 +1595,9 @@ private fun SubscriptionSubmenu(
                         text = "${stringResource(R.string.subs_subtitle_1)}\n${stringResource(R.string.subs_subtitle_2)}",
                         style = TextStyle(
                             fontFamily = GeistFontFamily,
-                            fontSize = 12.sp.scaled(scale, min = 10.sp),
+                            fontSize = 13.sp.scaled(scale, min = 11.sp),
                             color = textSecondary,
-                            lineHeight = 16.sp.scaled(scale, min = 12.sp)
+                            lineHeight = 16.sp.scaled(scale, min = 14.sp)
                         )
                     )
                 }
@@ -1816,21 +1852,24 @@ private fun SubscriptionSubmenu(
             }
         }
         
-        if (showConfetti) {
-            ConfettiCelebration(modifier = Modifier.fillMaxSize())
+        confettiBursts.forEachIndexed { index, pos ->
+            androidx.compose.runtime.key(index) {
+                ConfettiCelebration(modifier = Modifier.fillMaxSize(), centerNormalized = pos)
+            }
         }
     }
 }
 
 @Composable
 private fun SubPlanFeatureRow(text: String, accent: Color, textColor: Color) {
+    val scale = LocalScreenScale.current
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Canvas(modifier = Modifier.size(14.dp)) {
             drawCircle(color = accent, radius = size.width / 2f)
             drawLine(color = Color(0xFF0B1008), start = Offset(size.width * 0.3f, size.height * 0.5f), end = Offset(size.width * 0.45f, size.height * 0.7f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
             drawLine(color = Color(0xFF0B1008), start = Offset(size.width * 0.45f, size.height * 0.7f), end = Offset(size.width * 0.7f, size.height * 0.35f), strokeWidth = 1.5.dp.toPx(), cap = StrokeCap.Round)
         }
-        Text(text, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 8.sp, color = textColor))
+        Text(text, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 13.sp.scaled(scale, min = 11.sp), color = textColor))
     }
 }
 
@@ -1880,7 +1919,7 @@ private fun PremiumFeatureItem(text: String, textColor: Color, accentColor: Colo
 
 
 @Composable
-fun ConfettiCelebration(modifier: Modifier = Modifier) {
+fun ConfettiCelebration(modifier: Modifier = Modifier, centerNormalized: androidx.compose.ui.geometry.Offset = androidx.compose.ui.geometry.Offset(0.5f, 0.5f)) {
     val progress = remember { androidx.compose.animation.core.Animatable(0f) }
     LaunchedEffect(Unit) {
         progress.animateTo(1f, animationSpec = androidx.compose.animation.core.tween(3000, easing = androidx.compose.animation.core.LinearOutSlowInEasing))
@@ -1899,8 +1938,8 @@ fun ConfettiCelebration(modifier: Modifier = Modifier) {
     }
     
     Canvas(modifier = modifier) {
-        val centerX = size.width / 2f
-        val centerY = size.height / 2f
+        val centerX = size.width * centerNormalized.x
+        val centerY = size.height * centerNormalized.y
         
         particles.forEach { (dx, dy, color) ->
             val currentX = centerX + dx * progress.value

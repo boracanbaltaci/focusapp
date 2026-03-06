@@ -546,6 +546,7 @@ private fun ClockScreen(
                 ) {
                     FixedDigitTimeText(
                         text = time,
+                        fontKey = clockFontKey,
                         modifier = if (clockFontKey == "break") Modifier.offset(y = (15 * scale).dp) else Modifier,
                         style = TextStyle(
                             fontFamily = clockFontFamily,
@@ -727,6 +728,7 @@ private fun TimerScreen(
                                 // Ana saniye ve dakika bölümü
                                 FixedDigitTimeText(
                                     text = timeStr,
+                                    fontKey = clockFontKey,
                                     modifier = if (clockFontKey == "break") Modifier.offset(y = (15 * scale).dp) else Modifier,
                                     style = TextStyle(
                                         fontFamily = clockFontFamily,
@@ -1241,26 +1243,22 @@ private fun ColorPickerModal(
     onPremiumClick: () -> Unit,
     onWatchAd: () -> Unit
 ) {
-    val dialogBg = if (isDark) Color(0xFF1E2218).copy(alpha = 0.85f) else Color(0xFFF6F5F2).copy(alpha = 0.85f)
-    val borderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color(0xFF181C14).copy(alpha = 0.08f)
+    val dialogBg = if (isDark) Color(0xFF1E2218).copy(alpha = 0.95f) else Color(0xFFFDFDFD)
     val checkColor = if (isDark) Color(0xFFECDFCC) else Color(0xFF181C14)
-    val glassBorder = if (isDark) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f)
-    
-    var showRewardDialog by remember { mutableStateOf(false) }
-    var clickedLockedIndex by remember { mutableStateOf(0) }
+    val glassBorder = if (isDark) Color.White.copy(alpha = 0.15f) else Color(0xFF181C14).copy(alpha = 0.1f)
     
     Dialog(onDismissRequest = onDismiss) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.85f)
+                .fillMaxWidth(0.98f) // Very wide as requested
                 .shadow(
                     elevation = 24.dp,
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(32.dp),
                     ambientColor = Color.Black.copy(alpha = 0.15f)
                 )
-                .clip(RoundedCornerShape(28.dp))
+                .clip(RoundedCornerShape(32.dp))
                 .background(dialogBg)
-                .border(1.dp, glassBorder, RoundedCornerShape(28.dp))
+                .border(1.dp, glassBorder, RoundedCornerShape(32.dp))
                 .padding(24.dp)
         ) {
             Column(
@@ -1282,12 +1280,12 @@ private fun ColorPickerModal(
                     )
                 }
 
-                androidx.compose.foundation.layout.FlowRow(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Default (no custom color) option
+                    // LEFT: Default (None) Option
                     val isDefaultSelected = selectedIndex == 0
                     Box(
                         modifier = Modifier
@@ -1300,7 +1298,6 @@ private fun ColorPickerModal(
                             .clickable { onSelect(0); onDismiss() },
                         contentAlignment = Alignment.Center
                     ) {
-                        // Reset icon (circle with slash)
                         Canvas(modifier = Modifier.size(28.dp)) {
                             val s = size.width
                             val sw = 2.dp.toPx()
@@ -1319,8 +1316,9 @@ private fun ColorPickerModal(
                         }
                         if (isDefaultSelected) {
                             Canvas(modifier = Modifier
-                                .size(12.dp)
-                                .align(Alignment.BottomEnd)
+                                .size(14.dp)
+                                .align(Alignment.BottomCenter)
+                                .offset(y = 2.dp)
                             ) {
                                 val path = Path().apply {
                                     moveTo(size.width * 0.15f, size.height * 0.5f)
@@ -1339,200 +1337,100 @@ private fun ColorPickerModal(
                         }
                     }
 
-                    colorPairs.forEachIndexed { index, pair ->
-                        val pairIndex = index + 1
-                        val isSelected = selectedIndex == pairIndex
-                        val isLocked = !isPremium && pairIndex > unlockedCount
-                        
-                        Box(
-                            modifier = Modifier
-                                .size(56.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    if (isSelected) checkColor.copy(alpha = 0.08f)
-                                    else Color.Transparent
-                                )
-                                .clickable { 
-                                    if (isLocked) {
-                                        clickedLockedIndex = pairIndex
-                                        onDismiss()
-                                        showRewardDialog = true
-                                    } else {
-                                        onSelect(pairIndex)
-                                        onDismiss()
-                                    }
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            // Two overlapping circles
-                            val cpScale = LocalScreenScale.current
-                            val circleContainerSize = 42.dp.scaled(cpScale, min = 28.dp)
-                            val circleSize = 28.dp.scaled(cpScale, min = 20.dp)
-                            Box(modifier = Modifier.size(circleContainerSize)) {
-                                // Light color circle (back-left)
-                                Box(
-                                    modifier = Modifier
-                                        .size(circleSize)
-                                        .align(Alignment.TopStart)
-                                        .shadow(2.dp, CircleShape)
-                                        .clip(CircleShape)
-                                        .background(pair.first)
-                                )
-                                // Dark color circle (front-right)
-                                Box(
-                                    modifier = Modifier
-                                        .size(circleSize)
-                                        .align(Alignment.BottomEnd)
-                                        .shadow(2.dp, CircleShape)
-                                        .clip(CircleShape)
-                                        .background(pair.second)
-                                )
-                            }
+                    // Divider
+                    Box(
+                        modifier = Modifier
+                            .width(1.dp)
+                            .height(50.dp)
+                            .background(checkColor.copy(alpha = 0.15f))
+                    )
+
+                    // RIGHT: Color Palette Grid (2 rows for horizontal rectangle look)
+                    androidx.compose.foundation.layout.FlowRow(
+                        modifier = Modifier.weight(1f),
+                        maxItemsInEachRow = 5, // Ensures horizontal spread
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        colorPairs.forEachIndexed { index, pair ->
+                            val pairIndex = index + 1
+                            val isSelected = selectedIndex == pairIndex
+                            val isLocked = !isPremium && pairIndex > unlockedCount
                             
-                            // Selection checkmark
-                            if (isSelected) {
-                                Canvas(modifier = Modifier
-                                    .size(14.dp)
-                                    .align(Alignment.BottomCenter)
-                                    .offset(y = 2.dp)
-                                ) {
-                                    val path = Path().apply {
-                                        moveTo(size.width * 0.15f, size.height * 0.5f)
-                                        lineTo(size.width * 0.4f, size.height * 0.8f)
-                                        lineTo(size.width * 0.85f, size.height * 0.2f)
-                                    }
-                                    drawPath(
-                                        path = path,
-                                        color = checkColor,
-                                        style = Stroke(
-                                            width = 2.dp.toPx(),
-                                            cap = StrokeCap.Round
+                            Box(
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(
+                                        if (isSelected) checkColor.copy(alpha = 0.08f)
+                                        else Color.Transparent
+                                    )
+                                    .clickable { 
+                                        if (isLocked) {
+                                            onDismiss()
+                                            onPremiumClick()
+                                        } else {
+                                            onSelect(pairIndex)
+                                            onDismiss()
+                                        }
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                val circleContainerSize = 38.dp
+                                val circleSize = 26.dp
+                                Box(modifier = Modifier.size(circleContainerSize)) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(circleSize)
+                                            .align(Alignment.TopStart)
+                                            .shadow(2.dp, CircleShape)
+                                            .clip(CircleShape)
+                                            .background(pair.first)
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(circleSize)
+                                            .align(Alignment.BottomEnd)
+                                            .shadow(2.dp, CircleShape)
+                                            .clip(CircleShape)
+                                            .background(pair.second)
+                                    )
+                                }
+                                
+                                if (isSelected) {
+                                    Canvas(modifier = Modifier
+                                        .size(14.dp)
+                                        .align(Alignment.BottomCenter)
+                                        .offset(y = 2.dp)
+                                    ) {
+                                        val path = Path().apply {
+                                            moveTo(size.width * 0.15f, size.height * 0.5f)
+                                            lineTo(size.width * 0.4f, size.height * 0.8f)
+                                            lineTo(size.width * 0.85f, size.height * 0.2f)
+                                        }
+                                        drawPath(
+                                            path = path,
+                                            color = checkColor,
+                                            style = Stroke(
+                                                width = 2.dp.toPx(),
+                                                cap = StrokeCap.Round
+                                            )
                                         )
+                                    }
+                                }
+                                
+                                if (isLocked) {
+                                    androidx.compose.material3.Icon(
+                                        imageVector = androidx.compose.material.icons.Icons.Default.Lock,
+                                        contentDescription = "Locked Color Palette",
+                                        tint = checkColor.copy(alpha = 0.5f),
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .size(14.dp)
+                                            .offset(x = (-2).dp, y = 2.dp)
                                     )
                                 }
                             }
-                            
-                            // Lock icon
-                            if (isLocked) {
-                                androidx.compose.material3.Icon(
-                                    imageVector = androidx.compose.material.icons.Icons.Default.Lock,
-                                    contentDescription = "Locked Color Palette",
-                                    tint = checkColor.copy(alpha = 0.5f),
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .size(14.dp)
-                                        .offset(x = (-2).dp, y = 2.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    if (showRewardDialog) {
-        val requiredHours = (clickedLockedIndex * 30) // 1st locked palette needs 1*30=30 hours
-        val currentHours = virtualFocusMinutes / 60
-        
-        val isDarkDialog = checkColor != Color(0xFF181C14)
-        val dialogBg = if (isDarkDialog) Color(0xFF1E2218).copy(alpha = 0.85f) else Color(0xFFF6F5F2).copy(alpha = 0.85f)
-        val glassBorder = if (isDarkDialog) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f)
-        
-        androidx.compose.ui.window.Dialog(onDismissRequest = { showRewardDialog = false; onDismiss() }) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.7f)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(dialogBg)
-                    .border(1.dp, glassBorder, RoundedCornerShape(20.dp))
-                    .padding(20.dp)
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    androidx.compose.material3.Icon(
-                        imageVector = androidx.compose.material.icons.Icons.Default.Lock,
-                        contentDescription = "Lock",
-                        tint = checkColor.copy(alpha = 0.8f),
-                        modifier = Modifier.size(36.dp)
-                    )
-                    
-                    Text(
-                        text = stringResource(R.string.reward_locked_title),
-                        style = TextStyle(
-                            fontFamily = GeistFontFamily,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = checkColor
-                        )
-                    )
-                    
-                    Text(
-                        text = stringResource(R.string.reward_palette_desc, requiredHours),
-                        style = TextStyle(
-                            fontFamily = GeistFontFamily,
-                            fontSize = 12.sp,
-                            color = checkColor.copy(alpha=0.8f),
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                    )
-                    
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFF4CAF50).copy(alpha = 0.1f))
-                            .padding(10.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = stringResource(R.string.reward_current_progress, currentHours),
-                            style = TextStyle(fontFamily = GeistFontFamily, fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
-                        )
-                    }
-                    
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Watch Ad Button
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(Color(0xFF4CAF50))
-                                .clickable {
-                                    onWatchAd()
-                                    showRewardDialog = false
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = stringResource(R.string.reward_watch_ad),
-                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 14.sp, fontWeight = FontWeight.Bold, color = Color.White)
-                            )
-                        }
-                        
-                        // Premium Button
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(48.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(checkColor.copy(alpha = 0.1f))
-                                .clickable {
-                                    showRewardDialog = false
-                                    onPremiumClick()
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = stringResource(R.string.reward_go_premium),
-                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = checkColor)
-                            )
                         }
                     }
                 }
@@ -1615,16 +1513,20 @@ fun SessionProgressIndicator(
 fun FixedDigitTimeText(
     text: String,
     style: TextStyle,
+    fontKey: String,
     modifier: Modifier = Modifier
 ) {
-    Text(
-        text = text,
-        style = style.copy(
-            fontFeatureSettings = style.fontFeatureSettings?.let { "$it, tnum" } ?: "tnum"
-        ),
-        modifier = modifier,
-        textAlign = TextAlign.Center,
-        maxLines = 1,
-        softWrap = false
-    )
+    Row(modifier = modifier, horizontalArrangement = Arrangement.Center) {
+        text.forEach { ch ->
+            Box(contentAlignment = Alignment.Center) {
+                // Invisible reference characters to maintain fixed width
+                if (ch.isDigit()) {
+                    Text("0", style = style.copy(color = Color.Transparent), textAlign = TextAlign.Center, maxLines = 1, softWrap = false)
+                } else if (ch == ':') {
+                    Text(":", style = style.copy(color = Color.Transparent), textAlign = TextAlign.Center, maxLines = 1, softWrap = false)
+                }
+                Text(ch.toString(), style = style, textAlign = TextAlign.Center, maxLines = 1, softWrap = false)
+            }
+        }
+    }
 }

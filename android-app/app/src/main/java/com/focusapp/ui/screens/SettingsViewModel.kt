@@ -39,6 +39,7 @@ class SettingsViewModel(context: Context) : ViewModel() {
     val adBonusMinutes: StateFlow<Int> = _adBonusMinutes
 
     private val _realFocusMinutes = MutableStateFlow(statisticsRepository.getTotalFocusMinutes())
+    val realFocusMinutes: StateFlow<Int> = _realFocusMinutes
 
     val virtualTotalFocusMinutes: Int
         get() = _realFocusMinutes.value + _adBonusMinutes.value
