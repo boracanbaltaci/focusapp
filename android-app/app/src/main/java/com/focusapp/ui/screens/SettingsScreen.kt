@@ -169,8 +169,8 @@ fun SettingsScreen(
                     .fillMaxWidth()
                     .weight(1f),
                 shape = RoundedCornerShape(16.dp),
-                color = containerColor,
-                shadowElevation = 1.dp
+                color = if (showSubscriptionSubmenu) Color.Transparent else containerColor,
+                shadowElevation = if (showSubscriptionSubmenu) 0.dp else 1.dp
             ) {
                 // Determine current submenu key for scroll state reset
                 val currentSubmenuKey = when {
@@ -1289,6 +1289,8 @@ private fun SubscriptionSubmenu(
     textColor: Color,
     isDark: Boolean
 ) {
+    var selectedPlan by remember { mutableStateOf("yearly") } // State to track selected plan
+
     val accent = Color(0xFF3DDC6F)
     val cardBg = if (isDark) Color(0xFF141A10) else Color(0xFFF0F5F0)
     val cardBgStandard = if (isDark) Color(0xFF111510) else Color(0xFFE8EFE8)
@@ -1370,15 +1372,23 @@ private fun SubscriptionSubmenu(
                         .weight(1f)
                         .fillMaxHeight()
                         .padding(top = 10.dp) // Provide room for the badge
+                        .clickable(
+                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                            indication = null
+                        ) { selectedPlan = "monthly" }
                 ) {
+                    val isMonthlySelected = selectedPlan == "monthly"
+                    val currentCardBg = if (isMonthlySelected) cardBg else cardBgStandard
+                    val borderAlpha = if (isMonthlySelected) 1f else 0.35f
+                    
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(cardBgStandard, RoundedCornerShape(16.dp))
+                            .background(currentCardBg, RoundedCornerShape(16.dp))
                     ) {
                         Canvas(modifier = Modifier.fillMaxSize()) {
                             drawRoundRect(
-                                color = accent.copy(alpha = 0.35f),
+                                color = accent.copy(alpha = borderAlpha),
                                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx()),
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
@@ -1420,20 +1430,29 @@ private fun SubscriptionSubmenu(
                                 SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_3), accent, textSecondary)
                             }
                             Box(
-                                modifier = Modifier.fillMaxWidth().height(36.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(36.dp)
+                                    .background(if (isMonthlySelected) accent else Color.Transparent, RoundedCornerShape(18.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Canvas(modifier = Modifier.fillMaxSize()) {
-                                    drawRoundRect(
-                                        color = accent.copy(alpha = 0.35f),
-                                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(18.dp.toPx()),
-                                        style = Stroke(width = 1.5.dp.toPx())
-                                    )
+                                if (!isMonthlySelected) {
+                                    Canvas(modifier = Modifier.fillMaxSize()) {
+                                        drawRoundRect(
+                                            color = accent.copy(alpha = 0.35f),
+                                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(18.dp.toPx()),
+                                            style = Stroke(width = 1.5.dp.toPx())
+                                        )
+                                    }
                                 }
                                 Text(
                                     stringResource(R.string.subs_select_monthly),
-                                    style = TextStyle(fontFamily = GeistFontFamily, fontSize = 12.sp.scaled(scale, min = 10.sp), fontWeight = FontWeight.Medium, color = accent),
-                                    modifier = Modifier.clickable { }
+                                    style = TextStyle(
+                                        fontFamily = GeistFontFamily, 
+                                        fontSize = 12.sp.scaled(scale, min = 10.sp), 
+                                        fontWeight = if (isMonthlySelected) FontWeight.Bold else FontWeight.Medium, 
+                                        color = if (isMonthlySelected) badgeBg else accent
+                                    )
                                 )
                             }
                         }
@@ -1443,11 +1462,20 @@ private fun SubscriptionSubmenu(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .offset(y = (-10).dp)
-                            .background(cardBgStandard, RoundedCornerShape(8.dp)) // background to cover card border
-                            .border(1.dp, accent.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
+                            .background(if (isMonthlySelected) accent else currentCardBg, RoundedCornerShape(8.dp))
+                            .border(1.dp, if (isMonthlySelected) accent else accent.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
                             .padding(horizontal = 10.dp, vertical = 3.dp)
                     ) {
-                        Text(stringResource(R.string.subs_cheapest), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, fontWeight = FontWeight.Bold, color = accent, letterSpacing = 0.8.sp))
+                        Text(
+                            stringResource(R.string.subs_cheapest), 
+                            style = TextStyle(
+                                fontFamily = GeistFontFamily, 
+                                fontSize = 7.sp, 
+                                fontWeight = FontWeight.Bold, 
+                                color = if (isMonthlySelected) badgeBg else accent, 
+                                letterSpacing = 0.8.sp
+                            )
+                        )
                     }
                 }
 
@@ -1457,15 +1485,23 @@ private fun SubscriptionSubmenu(
                         .weight(1f)
                         .fillMaxHeight()
                         .padding(top = 10.dp) // Provide room for the badge
+                        .clickable(
+                            interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
+                            indication = null
+                        ) { selectedPlan = "yearly" }
                 ) {
+                    val isYearlySelected = selectedPlan == "yearly"
+                    val currentCardBg = if (isYearlySelected) cardBg else cardBgStandard
+                    val borderAlpha = if (isYearlySelected) 1f else 0.35f
+
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(cardBg, RoundedCornerShape(16.dp))
+                            .background(currentCardBg, RoundedCornerShape(16.dp))
                     ) {
                         Canvas(modifier = Modifier.fillMaxSize()) {
                             drawRoundRect(
-                                color = accent,
+                                color = accent.copy(alpha = borderAlpha),
                                 cornerRadius = androidx.compose.ui.geometry.CornerRadius(16.dp.toPx()),
                                 style = Stroke(width = 1.5.dp.toPx())
                             )
@@ -1506,10 +1542,30 @@ private fun SubscriptionSubmenu(
                                 SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_3), accent, textSecondary)
                             }
                             Box(
-                                modifier = Modifier.fillMaxWidth().height(36.dp).background(accent, RoundedCornerShape(18.dp)).clickable { },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(36.dp)
+                                    .background(if (isYearlySelected) accent else Color.Transparent, RoundedCornerShape(18.dp)),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(stringResource(R.string.subs_select_yearly), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 12.sp.scaled(scale, min = 10.sp), fontWeight = FontWeight.Bold, color = badgeBg))
+                                if (!isYearlySelected) {
+                                    Canvas(modifier = Modifier.fillMaxSize()) {
+                                        drawRoundRect(
+                                            color = accent.copy(alpha = 0.35f),
+                                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(18.dp.toPx()),
+                                            style = Stroke(width = 1.5.dp.toPx())
+                                        )
+                                    }
+                                }
+                                Text(
+                                    stringResource(R.string.subs_select_yearly),
+                                    style = TextStyle(
+                                        fontFamily = GeistFontFamily, 
+                                        fontSize = 12.sp.scaled(scale, min = 10.sp), 
+                                        fontWeight = if (isYearlySelected) FontWeight.Bold else FontWeight.Medium, 
+                                        color = if (isYearlySelected) badgeBg else accent
+                                    )
+                                )
                             }
                         }
                     }
@@ -1518,10 +1574,20 @@ private fun SubscriptionSubmenu(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
                             .offset(y = (-10).dp)
-                            .background(accent, RoundedCornerShape(8.dp))
+                            .background(if (isYearlySelected) accent else currentCardBg, RoundedCornerShape(8.dp))
+                            .border(1.dp, if (isYearlySelected) accent else accent.copy(alpha = 0.35f), RoundedCornerShape(8.dp))
                             .padding(horizontal = 10.dp, vertical = 3.dp)
                     ) {
-                        Text(stringResource(R.string.subs_most_popular), style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, fontWeight = FontWeight.Bold, color = badgeBg, letterSpacing = 0.8.sp))
+                        Text(
+                            stringResource(R.string.subs_most_popular), 
+                            style = TextStyle(
+                                fontFamily = GeistFontFamily, 
+                                fontSize = 7.sp, 
+                                fontWeight = FontWeight.Bold, 
+                                color = if (isYearlySelected) badgeBg else accent, 
+                                letterSpacing = 0.8.sp
+                            )
+                        )
                     }
                 }
             }
@@ -1545,14 +1611,14 @@ private fun SubPlanFeatureRow(text: String, accent: Color, textColor: Color) {
 private fun SubFeatureIconItem(label: String, sublabel: String, accent: Color, iconType: String, titleColor: Color, descColor: Color) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp), // Increased spacing slightly
         modifier = Modifier.fillMaxWidth()
     ) {
         Box(
-            modifier = Modifier.size(24.dp), // Removed background box, just sized for icon
+            modifier = Modifier.size(28.dp), // Increased box size
             contentAlignment = Alignment.Center
         ) {
-            Canvas(modifier = Modifier.size(18.dp)) {
+            Canvas(modifier = Modifier.size(22.dp)) { // Increased canvas size
                 when (iconType) {
                     "clock" -> {
                         drawCircle(color = accent, radius = size.width / 2f, style = Stroke(width = 1.5.dp.toPx()))
@@ -1573,9 +1639,9 @@ private fun SubFeatureIconItem(label: String, sublabel: String, accent: Color, i
                 }
             }
         }
-        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(label, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = titleColor))
-            Text(sublabel, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 7.sp, color = descColor, lineHeight = 10.sp))
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(label, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = titleColor))
+            Text(sublabel, style = TextStyle(fontFamily = GeistFontFamily, fontSize = 9.sp, color = descColor, lineHeight = 12.sp))
         }
     }
 }

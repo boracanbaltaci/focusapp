@@ -471,7 +471,7 @@ fun StatisticsScreen(
                         .width(200.dp)
                         .shadow(if (isDark) 0.dp else 12.dp, RoundedCornerShape(20.dp))
                         .clip(RoundedCornerShape(20.dp))
-                        .background(cardBg.copy(alpha = 0.85f))
+                        .background(cardBg)
                         .border(1.dp, if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
                         .padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
@@ -479,8 +479,8 @@ fun StatisticsScreen(
                     // Total Sessions
                     StatCard(
                         modifier = Modifier.fillMaxWidth().height(68.dp),
-                        cardBg = if (isDark) Color(0xFF0F2615) else Color(0xFFE8F5E9),
-                        iconBg = if (isDark) Color(0xFF1B4D25) else Color(0xFFC8E6C9),
+                        cardBg = if (isDark) Color(0xFF0F2615) else Color(0xFFD4ECD8),
+                        iconBg = if (isDark) Color(0xFF1B4D25) else Color(0xFFB8E0C0),
                         iconColor = bgTabActive,
                         icon = Icons.Default.CheckCircle,
                         title = stringResource(R.string.stat_total_sessions).uppercase(),
@@ -490,8 +490,8 @@ fun StatisticsScreen(
                     // Streak 
                     StatCard(
                         modifier = Modifier.fillMaxWidth().height(68.dp),
-                        cardBg = if (isDark) Color(0xFF2A1C0F) else Color(0xFFFFF3E0),
-                        iconBg = if (isDark) Color(0xFF4A301A) else Color(0xFFFFE0B2),
+                        cardBg = if (isDark) Color(0xFF2A1C0F) else Color(0xFFFFE5C2),
+                        iconBg = if (isDark) Color(0xFF4A301A) else Color(0xFFFFD199),
                         iconColor = Color(0xFFFF9800),
                         icon = Icons.Default.Star,
                         title = stringResource(R.string.stat_longest_streak).uppercase(),
@@ -501,8 +501,8 @@ fun StatisticsScreen(
                     // Daily Average
                     StatCard(
                         modifier = Modifier.fillMaxWidth().height(68.dp),
-                        cardBg = if (isDark) Color(0xFF1E1C28) else Color(0xFFEDE7F6),
-                        iconBg = if (isDark) Color(0xFF382F4C) else Color(0xFFD1C4E9),
+                        cardBg = if (isDark) Color(0xFF1E1C28) else Color(0xFFE2D4F5),
+                        iconBg = if (isDark) Color(0xFF382F4C) else Color(0xFFC9B3EB),
                         iconColor = Color(0xFFB388FF),
                         icon = Icons.Default.DateRange,
                         title = stringResource(R.string.stat_daily_average).uppercase(),
@@ -530,7 +530,7 @@ fun StatisticsScreen(
                         .width(200.dp)
                         .shadow(if (isDark) 0.dp else 12.dp, RoundedCornerShape(16.dp))
                         .clip(RoundedCornerShape(16.dp))
-                        .background(cardBg.copy(alpha = 0.85f))
+                        .background(cardBg)
                         .border(1.dp, if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -759,7 +759,7 @@ fun PinCategorySelector(
                 .background(
                     if (isExpanded) accentColor
                     else if (hasSelection) selectedColor.copy(alpha = 0.5f)
-                    else if (isDark) Color(0xFF333333) else Color.White
+                    else Color.Transparent
                 )
                 .clickable {
                     if (!isExpanded) onExpand() 

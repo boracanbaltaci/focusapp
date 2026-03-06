@@ -156,7 +156,7 @@
     <string name="subs_feature_3_title">Odaklanma İstatistikleri</string>
     <string name="subs_feature_3_desc">Haftalık ve aylık odaklanma\nsürenizi bir bakışta takip edin.</string>
     <string name="subs_standard">STANDART</string>
-    <string name="subs_monthly">Aylık</string>
+    <string name="subs_monthly">Aylık Plan</string>
     <string name="subs_monthly_price">₺89.99</string>
     <string name="subs_per_month">/ay</string>
     <string name="subs_unlimited">LİMİTSİZ</string>
@@ -164,8 +164,8 @@
     <string name="subs_yearly_price">₺599.99</string>
     <string name="subs_per_year">/yıl</string>
     <string name="subs_save_badge">Aylığa göre %43 tasarruf edin</string>
-    <string name="subs_select_monthly">Aylık Seç</string>
-    <string name="subs_select_yearly">Yıllık Seç</string>
+    <string name="subs_select_monthly">Aylık Satın Al</string>
+    <string name="subs_select_yearly">Yıllık Satın Al</string>
     <string name="subs_most_popular">EN POPÜLER</string>
     <string name="subs_cheapest">EN UCUZ</string>
     <string name="subs_plan_feature_1">Tüm fontlar/renk paletleri ve gelecek özellikler.</string>

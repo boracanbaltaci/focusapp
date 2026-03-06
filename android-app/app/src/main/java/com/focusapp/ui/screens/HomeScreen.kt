@@ -178,7 +178,8 @@ fun HomeScreen(
             delay(1000)
         }
     }
-    
+
+
     // Timer countdown
     LaunchedEffect(isTimerRunning, timerGeneration) {
         if (!isTimerRunning) return@LaunchedEffect
@@ -192,14 +193,28 @@ fun HomeScreen(
         val elapsedSeconds = initialTimerSeconds - timerSeconds // This will be 0 if timer ran to completion
 
         if (isOnBreak) {
-            // Break finished - save to statistics and reset to initial focus duration
+            // Break finished - play sound, save to statistics and reset to initial focus duration
+            if (elapsedSeconds == initialTimerSeconds) {
+                // Timer reached 0 naturally
+                android.media.MediaPlayer.create(context, R.raw.break_finish).apply {
+                    setOnCompletionListener { it.release() }
+                    start()
+                }
+            }
             if (elapsedSeconds > 0) { // Only save if some time passed
                 statisticsRepository.saveSession(initialTimerSeconds / 60, initialTimerSeconds, selectedCategory?.name, isBreak = true)
             }
             isOnBreak = false
             timerSeconds = initialTimerSeconds
         } else {
-            // Focus session finished - save to statistics
+            // Focus session finished - play sound, save to statistics
+            if (elapsedSeconds == initialTimerSeconds) {
+                // Timer reached 0 naturally
+                android.media.MediaPlayer.create(context, R.raw.session_finish).apply {
+                    setOnCompletionListener { it.release() }
+                    start()
+                }
+            }
             statisticsRepository.saveSession(initialTimerSeconds / 60, initialTimerSeconds, selectedCategory?.name, isBreak = false)
             currentSessionIndex++
             // Always switch to break mode
