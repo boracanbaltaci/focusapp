@@ -241,6 +241,13 @@ class StatisticsRepository(context: Context) {
     }
     
     /**
+     * Returns the absolute total focus minutes across all time.
+     */
+    fun getTotalFocusMinutes(): Int {
+        return getAllSessions().filter { !it.isBreak }.sumOf { it.durationMinutes }
+    }
+    
+    /**
      * Returns total minutes per category for the current week.
      * Returns a map of category name -> total minutes.
      */

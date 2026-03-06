@@ -174,7 +174,7 @@ fun HomeScreen(
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
     val is24HourFormat by settingsViewModel.is24HourFormat.collectAsState()
     val pomodoroSessions by settingsViewModel.pomodoroSessions.collectAsState()
-
+    val activePlan by settingsViewModel.activePlan.collectAsState()
     
     // Update clock every second
     LaunchedEffect(amString, pmString, is24HourFormat) {
@@ -417,14 +417,19 @@ fun HomeScreen(
         
         // Color picker modal
         if (showColorPicker) {
+            val unlockedPalettesCount = settingsViewModel.unlockedPalettesCount
+            val virtualFocusMinutes = settingsViewModel.virtualTotalFocusMinutes
             ColorPickerModal(
                 colorPairs = colorPairs,
                 selectedIndex = colorPairIndex,
                 isDark = theme == "dark",
                 onSelect = { settingsViewModel.setColorPairIndex(it) },
                 onDismiss = { showColorPicker = false },
-                isPremium = isPremium,
-                onPremiumClick = onNavigateToSubscription
+                isPremium = isPremium || activePlan != "none",
+                unlockedCount = unlockedPalettesCount,
+                virtualFocusMinutes = virtualFocusMinutes,
+                onPremiumClick = onNavigateToSubscription,
+                onWatchAd = { settingsViewModel.watchAdForBonus() }
             )
         }
         
@@ -1230,12 +1235,18 @@ private fun ColorPickerModal(
     onSelect: (Int) -> Unit,
     onDismiss: () -> Unit,
     isPremium: Boolean,
-    onPremiumClick: () -> Unit
+    unlockedCount: Int,
+    virtualFocusMinutes: Int,
+    onPremiumClick: () -> Unit,
+    onWatchAd: () -> Unit
 ) {
     val dialogBg = if (isDark) Color(0xFF1E2218).copy(alpha = 0.85f) else Color(0xFFF6F5F2).copy(alpha = 0.85f)
     val borderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color(0xFF181C14).copy(alpha = 0.08f)
     val checkColor = if (isDark) Color(0xFFECDFCC) else Color(0xFF181C14)
     val glassBorder = if (isDark) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f)
+    
+    var showRewardDialog by remember { mutableStateOf(false) }
+    var clickedLockedIndex by remember { mutableStateOf(0) }
     
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -1255,6 +1266,21 @@ private fun ColorPickerModal(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                if (!isPremium && unlockedCount < colorPairs.size) {
+                    val remainingHours = 30 - ((virtualFocusMinutes / 60) % 30)
+                    Text(
+                        text = stringResource(R.string.reward_palette_next_title, remainingHours),
+                        style = TextStyle(
+                            fontFamily = GeistFontFamily,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = checkColor.copy(alpha = 0.8f)
+                        ),
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+
                 // Default (no custom color) option
                 val isDefaultSelected = selectedIndex == 0
                 
@@ -1326,7 +1352,9 @@ private fun ColorPickerModal(
                             rowPairs.forEachIndexed { colIndex, pair ->
                                 val pairIndex = rowIndex * 3 + colIndex + 1
                                 val isSelected = selectedIndex == pairIndex
-                                val isLocked = !isPremium
+                                // Default palette (index 0) is always free.
+                                // Palettes 1 to unlockedCount are free.
+                                val isLocked = !isPremium && pairIndex > unlockedCount
                                 
                                 Box(
                                     modifier = Modifier
@@ -1339,8 +1367,9 @@ private fun ColorPickerModal(
                                         )
                                         .clickable { 
                                             if (isLocked) {
+                                                clickedLockedIndex = pairIndex
                                                 onDismiss()
-                                                onPremiumClick()
+                                                showRewardDialog = true
                                             } else {
                                                 onSelect(pairIndex)
                                                 onDismiss()
@@ -1414,6 +1443,111 @@ private fun ColorPickerModal(
                             repeat(3 - rowPairs.size) {
                                 Spacer(modifier = Modifier.weight(1f))
                             }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    if (showRewardDialog) {
+        val requiredHours = (clickedLockedIndex * 30) // 1st locked palette needs 1*30=30 hours
+        val currentHours = virtualFocusMinutes / 60
+        
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showRewardDialog = false; onDismiss() }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(dialogBg)
+                    .border(1.dp, glassBorder, RoundedCornerShape(28.dp))
+                    .padding(24.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    androidx.compose.material3.Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.Lock,
+                        contentDescription = "Lock",
+                        tint = checkColor.copy(alpha = 0.8f),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    
+                    Text(
+                        text = stringResource(R.string.reward_locked_title),
+                        style = TextStyle(
+                            fontFamily = GeistFontFamily,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = checkColor
+                        )
+                    )
+                    
+                    Text(
+                        text = stringResource(R.string.reward_palette_desc, requiredHours),
+                        style = TextStyle(
+                            fontFamily = GeistFontFamily,
+                            fontSize = 14.sp,
+                            color = checkColor.copy(alpha=0.8f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    )
+                    
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF4CAF50).copy(alpha = 0.1f))
+                            .padding(12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.reward_current_progress, currentHours),
+                            style = TextStyle(fontFamily = GeistFontFamily, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+                        )
+                    }
+                    
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Watch Ad Button
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .clip(RoundedCornerShape(28.dp))
+                                .background(Color(0xFF4CAF50))
+                                .clickable {
+                                    onWatchAd()
+                                    showRewardDialog = false
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.reward_watch_ad),
+                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            )
+                        }
+                        
+                        // Premium Button
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .clip(RoundedCornerShape(28.dp))
+                                .background(checkColor.copy(alpha = 0.1f))
+                                .clickable {
+                                    showRewardDialog = false
+                                    onPremiumClick()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.reward_go_premium),
+                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = checkColor)
+                            )
                         }
                     }
                 }

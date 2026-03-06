@@ -166,10 +166,23 @@
     <string name="subs_save_badge">Save 43%% compared to monthly</string>
     <string name="subs_select_monthly">Buy Monthly</string>
     <string name="subs_select_yearly">Buy Yearly</string>
+    <string name="subs_already_owned">Zaten Clockera Premium\'a sahipsiniz</string>
     <string name="subs_most_popular">MOST POPULAR</string>
     <string name="subs_cheapest">CHEAPEST</string>
     <string name="subs_plan_feature_1">All fonts/color palettes and upcoming features.</string>
     <string name="subs_plan_feature_2">Aesthetic looking working area.</string>
     <string name="subs_plan_feature_3">More productive working hours.</string>
+    
+    <!-- Gamification / Rewards -->
+    <string name="reward_locked_title">Özellik Kilitli</string>
+    <string name="reward_font_desc">Bu fontu açmak için toplam %1$d saat daha odaklanmalı veya Premium\'a geçmelisiniz.</string>
+    <string name="reward_palette_desc">Bu renk paletini açmak için toplam %1$d saat daha odaklanmalı veya Premium\'a geçmelisiniz.</string>
+    <string name="reward_current_progress">Mevcut İlerleme: %1$d Saat</string>
+    <string name="reward_watch_ad">Reklam İzle (+2 Saat Kazan)</string>
+    <string name="reward_go_premium">Premium\'a Geç</string>
+    <string name="reward_cancel">İptal</string>
+    <string name="reward_font_next_remaining">%1$dsa kaldı</string>
+    <string name="reward_font_constant">35sa kaldı</string>
+    <string name="reward_palette_next_title">Sonraki hediye renk paleti için %1$d saat kaldı.</string>
 
 </resources>

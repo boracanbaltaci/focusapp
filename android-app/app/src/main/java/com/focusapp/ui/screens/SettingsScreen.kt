@@ -32,6 +32,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.clockera.R
 import com.focusapp.ui.components.LocalScreenScale
@@ -58,6 +59,7 @@ fun SettingsScreen(
     val is24HourFormat by settingsViewModel.is24HourFormat.collectAsState()
     val pomodoroSessions by settingsViewModel.pomodoroSessions.collectAsState()
     val isPremium by settingsViewModel.isPremium.collectAsState()
+    val activePlan by settingsViewModel.activePlan.collectAsState()
     
     var showFontSubmenu by remember { mutableStateOf(false) }
     var showLanguageSubmenu by remember { mutableStateOf(false) }
@@ -209,6 +211,8 @@ fun SettingsScreen(
                         verticalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
                     if (showFontSubmenu) {
+                        val unlockedFontsCount = settingsViewModel.unlockedFontsCount
+                        val virtualFocusMinutes = settingsViewModel.virtualTotalFocusMinutes
                         // Font Selection Submenu
                         FontSubmenu(
                             selectedFont = clockFont,
@@ -218,8 +222,11 @@ fun SettingsScreen(
                             },
                             onBack = { showFontSubmenu = false },
                             textColor = textColor,
-                            isPremium = isPremium,
-                            onPremiumClick = { showSubscriptionSubmenu = true }
+                            isPremium = isPremium || activePlan != "none",
+                            unlockedCount = unlockedFontsCount,
+                            virtualFocusMinutes = virtualFocusMinutes,
+                            onPremiumClick = { showSubscriptionSubmenu = true },
+                            onWatchAd = { settingsViewModel.watchAdForBonus() }
                         )
                     } else if (showLanguageSubmenu) {
                         // Language Selection Submenu
@@ -545,10 +552,15 @@ private fun FontSubmenu(
     @Suppress("UNUSED_PARAMETER") onBack: () -> Unit,
     textColor: Color,
     isPremium: Boolean,
-    onPremiumClick: () -> Unit
+    unlockedCount: Int,
+    virtualFocusMinutes: Int,
+    onPremiumClick: () -> Unit,
+    onWatchAd: () -> Unit
 ) {
     // Get current time for preview
     var currentTimePreview by remember { mutableStateOf("") }
+    var showRewardDialog by remember { mutableStateOf(false) }
+    var clickedLockedIndex by remember { mutableStateOf(0) }
     
     LaunchedEffect(Unit) {
         while (true) {
@@ -606,9 +618,10 @@ private fun FontSubmenu(
 
         androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
             columns = androidx.compose.foundation.lazy.grid.GridCells.Fixed(4),
-            modifier = Modifier.fillMaxWidth().height(480.dp),
+            // Increased height slightly to accommodate the text below boxes
+            modifier = Modifier.fillMaxWidth().height(520.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
             items(gridItems.size) { index ->
@@ -616,17 +629,22 @@ private fun FontSubmenu(
                 val isPlaceholder = value.startsWith("coming_soon")
                 val isSelected = selectedFont == value
                 val fontFamily = fontFamilyMap[value] ?: MenilFontFamily
-                val isLocked = !isPremium && index > 3
+                // The first 4 are always free. Further fonts unlock as unlockedCount grows.
+                // e.g. unlockedCount=0 means index up to 3 are free. unlockedCount=1 means index up to 4...
+                val isLocked = !isPremium && index >= (4 + unlockedCount)
                 
-                Box(
-                    modifier = Modifier
-                        .padding(12.dp)
-                        .aspectRatio(1f)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (isSelected) Color(0xFF4CAF50).copy(alpha = 0.2f) 
-                            else textColor.copy(alpha = 0.05f)
-                        )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .aspectRatio(1f)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (isSelected) Color(0xFF4CAF50).copy(alpha = 0.2f) 
+                                else textColor.copy(alpha = 0.05f)
+                            )
                         .then(
                             if (isSelected) Modifier.border(1.5.dp, Color(0xFF4CAF50), RoundedCornerShape(12.dp))
                             else Modifier
@@ -635,7 +653,8 @@ private fun FontSubmenu(
                             enabled = !isPlaceholder,
                             onClick = {
                                 if (isLocked) {
-                                    onPremiumClick()
+                                    clickedLockedIndex = index
+                                    showRewardDialog = true
                                 } else {
                                     onFontSelect(value)
                                 }
@@ -677,11 +696,148 @@ private fun FontSubmenu(
                                 .offset(x = (-4).dp, y = 4.dp)
                         )
                     }
+                    if (isLocked) {
+                        val nextToUnlockIndex = 4 + unlockedCount
+                        val textToShow = if (index == nextToUnlockIndex) {
+                            val remainingHours = 35 - ((virtualFocusMinutes / 60) % 35)
+                            stringResource(R.string.reward_font_next_remaining, remainingHours)
+                        } else {
+                            stringResource(R.string.reward_font_constant)
+                        }
+                        
+                        // Banner Overlay at the bottom of the box
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .background(textColor.copy(alpha = 0.15f))
+                                .padding(vertical = 4.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = textToShow,
+                                style = TextStyle(
+                                    fontFamily = GeistFontFamily,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = textColor
+                                )
+                            )
+                        }
+                    }
+                } // Closes Box
+            } // Closes Column
+        } // Closes items
+    } // Closes LazyVerticalGrid
+    if (showRewardDialog) {
+        val requiredHours = ((clickedLockedIndex - 3) * 35) // since index 3 is the 4th font (free), index 4 needs 1*35=35 hours
+        val currentHours = virtualFocusMinutes / 60
+        
+        val dialogBg = if (textColor == Color.White) Color(0xFF1E2218).copy(alpha = 0.85f) else Color(0xFFF6F5F2).copy(alpha = 0.85f)
+        val glassBorder = if (textColor == Color.White) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f)
+        
+        androidx.compose.ui.window.Dialog(onDismissRequest = { showRewardDialog = false }) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(dialogBg)
+                    .border(1.dp, glassBorder, RoundedCornerShape(28.dp))
+                    .padding(24.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    androidx.compose.material3.Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Lock",
+                        tint = textColor.copy(alpha = 0.8f),
+                        modifier = Modifier.size(48.dp)
+                    )
+                    
+                    Text(
+                        text = stringResource(R.string.reward_locked_title),
+                        style = TextStyle(
+                            fontFamily = GeistFontFamily,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = textColor
+                        )
+                    )
+                    
+                    Text(
+                        text = stringResource(R.string.reward_font_desc, requiredHours),
+                        style = TextStyle(
+                            fontFamily = GeistFontFamily,
+                            fontSize = 14.sp,
+                            color = textColor.copy(alpha=0.8f),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    )
+                    
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color(0xFF4CAF50).copy(alpha = 0.1f))
+                            .padding(12.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = stringResource(R.string.reward_current_progress, currentHours),
+                            style = TextStyle(fontFamily = GeistFontFamily, fontWeight = FontWeight.Bold, color = Color(0xFF4CAF50))
+                        )
+                    }
+                    
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Watch Ad Button
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .clip(RoundedCornerShape(28.dp))
+                                .background(Color(0xFF4CAF50))
+                                .clickable {
+                                    onWatchAd()
+                                    showRewardDialog = false
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.reward_watch_ad),
+                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            )
+                        }
+                        
+                        // Premium Button
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .clip(RoundedCornerShape(28.dp))
+                                .background(textColor.copy(alpha = 0.1f))
+                                .clickable {
+                                    showRewardDialog = false
+                                    onPremiumClick()
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = stringResource(R.string.reward_go_premium),
+                                style = TextStyle(fontFamily = GeistFontFamily, fontSize = 16.sp, fontWeight = FontWeight.Bold, color = textColor)
+                            )
+                        }
+                    }
                 }
-            }
-        }
-    }
-}
+            } // Box
+        } // Dialog
+    } // if (showRewardDialog)
+} // Column
+} // FontSubmenu
 
 @Composable
 private fun LanguageSubmenu(
@@ -1324,7 +1480,8 @@ private fun SubscriptionSubmenu(
 ) {
     val context = LocalContext.current
     val isPremium by viewModel.isPremium.collectAsState()
-    var selectedPlan by remember { mutableStateOf("yearly") } // State to track selected plan
+    val activePlan by viewModel.activePlan.collectAsState()
+    var selectedPlan by remember { mutableStateOf(if (activePlan == "monthly") "yearly" else "yearly") } // State to track selected plan
 
     val accent = Color(0xFF3DDC6F)
     val cardBg = if (isDark) Color(0xFF141A10) else Color(0xFFF0F5F0)
@@ -1464,17 +1621,18 @@ private fun SubscriptionSubmenu(
                                 SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_2), accent, textSecondary)
                                 SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_3), accent, textSecondary)
                             }
+                            val isOwned = activePlan == "monthly" || activePlan == "yearly"
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(36.dp)
-                                    .background(if (isMonthlySelected) accent else Color.Transparent, RoundedCornerShape(18.dp))
-                                    .clickable {
+                                    .background(if (isMonthlySelected && !isOwned) accent else Color.Transparent, RoundedCornerShape(18.dp))
+                                    .clickable(enabled = !isOwned) {
                                         viewModel.purchasePremium(context as Activity, "monthly_plan_id")
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (!isMonthlySelected) {
+                                if (!isMonthlySelected || isOwned) {
                                     Canvas(modifier = Modifier.fillMaxSize()) {
                                         drawRoundRect(
                                             color = accent.copy(alpha = 0.35f),
@@ -1484,12 +1642,13 @@ private fun SubscriptionSubmenu(
                                     }
                                 }
                                 Text(
-                                    stringResource(R.string.subs_select_monthly),
+                                    if (isOwned) stringResource(R.string.subs_already_owned) else stringResource(R.string.subs_select_monthly),
                                     style = TextStyle(
                                         fontFamily = GeistFontFamily, 
-                                        fontSize = 12.sp.scaled(scale, min = 10.sp), 
-                                        fontWeight = if (isMonthlySelected) FontWeight.Bold else FontWeight.Medium, 
-                                        color = if (isMonthlySelected) badgeBg else accent
+                                        fontSize = if (isOwned) 8.sp.scaled(scale, min = 6.sp) else 12.sp.scaled(scale, min = 10.sp), 
+                                        fontWeight = if (isMonthlySelected && !isOwned) FontWeight.Bold else FontWeight.Medium, 
+                                        color = if (isMonthlySelected && !isOwned) badgeBg else accent,
+                                        textAlign = TextAlign.Center
                                     )
                                 )
                             }
@@ -1579,17 +1738,18 @@ private fun SubscriptionSubmenu(
                                 SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_2), accent, textSecondary)
                                 SubPlanFeatureRow(stringResource(R.string.subs_plan_feature_3), accent, textSecondary)
                             }
+                            val isOwned = activePlan == "yearly"
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(36.dp)
-                                    .background(if (isYearlySelected) accent else Color.Transparent, RoundedCornerShape(18.dp))
-                                    .clickable {
+                                    .background(if (isYearlySelected && !isOwned) accent else Color.Transparent, RoundedCornerShape(18.dp))
+                                    .clickable(enabled = !isOwned) {
                                         viewModel.purchasePremium(context as Activity, "yearly_plan_id")
                                     },
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (!isYearlySelected) {
+                                if (!isYearlySelected || isOwned) {
                                     Canvas(modifier = Modifier.fillMaxSize()) {
                                         drawRoundRect(
                                             color = accent.copy(alpha = 0.35f),
@@ -1599,12 +1759,13 @@ private fun SubscriptionSubmenu(
                                     }
                                 }
                                 Text(
-                                    stringResource(R.string.subs_select_yearly),
+                                    if (isOwned) stringResource(R.string.subs_already_owned) else stringResource(R.string.subs_select_yearly),
                                     style = TextStyle(
                                         fontFamily = GeistFontFamily, 
-                                        fontSize = 12.sp.scaled(scale, min = 10.sp), 
-                                        fontWeight = if (isYearlySelected) FontWeight.Bold else FontWeight.Medium, 
-                                        color = if (isYearlySelected) badgeBg else accent
+                                        fontSize = if (isOwned) 8.sp.scaled(scale, min = 6.sp) else 12.sp.scaled(scale, min = 10.sp), 
+                                        fontWeight = if (isYearlySelected && !isOwned) FontWeight.Bold else FontWeight.Medium, 
+                                        color = if (isYearlySelected && !isOwned) badgeBg else accent,
+                                        textAlign = TextAlign.Center
                                     )
                                 )
                             }

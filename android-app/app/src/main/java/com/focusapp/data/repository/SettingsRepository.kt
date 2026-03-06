@@ -96,4 +96,20 @@ class SettingsRepository(context: Context) {
     fun setPomodoroSessions(sessions: Int) {
         prefs.edit().putInt("pomodoro_sessions", sessions).apply()
     }
+
+    fun getAdBonusMinutes(): Int {
+        return prefs.getInt("ad_bonus_minutes", 0)
+    }
+
+    fun setAdBonusMinutes(minutes: Int) {
+        prefs.edit().putInt("ad_bonus_minutes", minutes).apply()
+    }
+
+    fun getActivePlan(): String {
+        return prefs.getString("active_plan", "none") ?: "none"
+    }
+
+    fun setActivePlan(plan: String) {
+        prefs.edit().putString("active_plan", plan).apply()
+    }
 }

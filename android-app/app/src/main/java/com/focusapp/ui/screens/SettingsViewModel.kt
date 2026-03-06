@@ -12,11 +12,51 @@ class SettingsViewModel(context: Context) : ViewModel() {
     
     private val settingsRepository = SettingsRepository(context)
     private val billingRepository = BillingRepository(context)
+    private val statisticsRepository = com.focusapp.data.StatisticsRepository(context)
+    // Subscription Status Tracking - Forced to "none" for testing gamification
+    private val _activePlan = MutableStateFlow("none") // settingsRepository.getActivePlan()
+    val activePlan: StateFlow<String> = _activePlan
     
-    val isPremium = billingRepository.isPremium
+    // DEBUG BYPASS: Mocks the premium status so the user can test the app without Google Play limits
+    private val _isPremiumMock = MutableStateFlow(false)
+    val isPremium: StateFlow<Boolean> = _isPremiumMock
     
     fun purchasePremium(activity: Activity, planId: String) {
-        billingRepository.launchBillingFlow(activity, planId)
+        // Bypass real Google Play billing flow for testing
+        _isPremiumMock.value = true
+        val planName = if (planId == "monthly_plan_id" || planId == "monthly") "monthly" else "yearly"
+        _activePlan.value = planName
+        settingsRepository.setActivePlan(planName)
+
+        android.widget.Toast.makeText(activity, "Test Purchase Successful! Premium Unlocked.", android.widget.Toast.LENGTH_SHORT).show()
+        
+        // Original code to restore later:
+        // billingRepository.launchBillingFlow(activity, planId)
+    }
+
+    // Gamification properties
+    private val _adBonusMinutes = MutableStateFlow(settingsRepository.getAdBonusMinutes())
+    val adBonusMinutes: StateFlow<Int> = _adBonusMinutes
+
+    private val _realFocusMinutes = MutableStateFlow(statisticsRepository.getTotalFocusMinutes())
+
+    val virtualTotalFocusMinutes: Int
+        get() = _realFocusMinutes.value + _adBonusMinutes.value
+
+    val unlockedFontsCount: Int
+        get() = virtualTotalFocusMinutes / 60 / 35
+
+    val unlockedPalettesCount: Int
+        get() = virtualTotalFocusMinutes / 60 / 30
+
+    fun watchAdForBonus() {
+        val newBonus = _adBonusMinutes.value + 120 // Adds 2 hours
+        _adBonusMinutes.value = newBonus
+        settingsRepository.setAdBonusMinutes(newBonus)
+    }
+
+    fun refreshGamificationStats() {
+        _realFocusMinutes.value = statisticsRepository.getTotalFocusMinutes()
     }
     
     private val _clockType = MutableStateFlow(settingsRepository.getClockType())
