@@ -37,6 +37,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -237,6 +240,21 @@ fun HomeScreen(
         }
         onNavigateToSettings()
     }
+    
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_PAUSE || event == Lifecycle.Event.ON_STOP) {
+                if (isTimerRunning) {
+                    isTimerRunning = false
+                }
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -309,17 +327,8 @@ fun HomeScreen(
                         if (isTimerRunning) {
                             // Pausing timer
                             isTimerRunning = false
-                            val elapsedSeconds = initialTimerSeconds - timerSeconds
-                            if (elapsedSeconds > 0) {
-                                if (!isOnBreak) {
-                                    statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name, isBreak = false)
-                                } else {
-                                    statisticsRepository.saveSession(elapsedSeconds / 60, elapsedSeconds, selectedCategory?.name, isBreak = true)
-                                }
-                            }
                         } else {
-                            // Starting timer - capture initial duration
-                            initialTimerSeconds = timerSeconds
+                            // Starting or Resuming timer
                             isTimerRunning = true
                         }
                     },
@@ -659,7 +668,10 @@ private fun TimerScreen(
                                 horizontalArrangement = Arrangement.Center,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable {
+                                    .clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) {
                                     if (!isRunning && !isOnBreak) {
                                         onTimerClick()
                                     } else {

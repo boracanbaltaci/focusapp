@@ -472,39 +472,42 @@ fun StatisticsScreen(
                         .shadow(if (isDark) 0.dp else 12.dp, RoundedCornerShape(20.dp))
                         .clip(RoundedCornerShape(20.dp))
                         .background(cardBg.copy(alpha = 0.85f))
-                        .border(1.dp, if (isDark) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f), RoundedCornerShape(20.dp))
+                        .border(1.dp, if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
                         .padding(12.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     // Total Sessions
                     StatCard(
                         modifier = Modifier.fillMaxWidth().height(68.dp),
-                        cardBg = Color(0xFF0F2615),
-                        iconBg = Color(0xFF1B4D25),
+                        cardBg = if (isDark) Color(0xFF0F2615) else Color(0xFFE8F5E9),
+                        iconBg = if (isDark) Color(0xFF1B4D25) else Color(0xFFC8E6C9),
                         iconColor = bgTabActive,
                         icon = Icons.Default.CheckCircle,
                         title = stringResource(R.string.stat_total_sessions).uppercase(),
-                        value = totalSessions.toString()
+                        value = totalSessions.toString(),
+                        textColor = textColor
                     )
                     // Streak 
                     StatCard(
                         modifier = Modifier.fillMaxWidth().height(68.dp),
-                        cardBg = Color(0xFF2A1C0F),
-                        iconBg = Color(0xFF4A301A),
+                        cardBg = if (isDark) Color(0xFF2A1C0F) else Color(0xFFFFF3E0),
+                        iconBg = if (isDark) Color(0xFF4A301A) else Color(0xFFFFE0B2),
                         iconColor = Color(0xFFFF9800),
                         icon = Icons.Default.Star,
                         title = stringResource(R.string.stat_longest_streak).uppercase(),
-                        value = "$streak ${stringResource(R.string.streak_days).replaceFirstChar { it.titlecase() }}"
+                        value = "$streak ${stringResource(R.string.streak_days).replaceFirstChar { it.titlecase() }}",
+                        textColor = textColor
                     )
                     // Daily Average
                     StatCard(
                         modifier = Modifier.fillMaxWidth().height(68.dp),
-                        cardBg = Color(0xFF1E1C28),
-                        iconBg = Color(0xFF382F4C),
+                        cardBg = if (isDark) Color(0xFF1E1C28) else Color(0xFFEDE7F6),
+                        iconBg = if (isDark) Color(0xFF382F4C) else Color(0xFFD1C4E9),
                         iconColor = Color(0xFFB388FF),
                         icon = Icons.Default.DateRange,
                         title = stringResource(R.string.stat_daily_average).uppercase(),
-                        value = dailyAvgText
+                        value = dailyAvgText,
+                        textColor = textColor
                     )
                 }
             }
@@ -528,7 +531,7 @@ fun StatisticsScreen(
                         .shadow(if (isDark) 0.dp else 12.dp, RoundedCornerShape(16.dp))
                         .clip(RoundedCornerShape(16.dp))
                         .background(cardBg.copy(alpha = 0.85f))
-                        .border(1.dp, if (isDark) Color.White.copy(alpha = 0.1f) else Color.White.copy(alpha = 0.6f), RoundedCornerShape(16.dp))
+                        .border(1.dp, if (isDark) Color.White.copy(alpha = 0.1f) else Color.Black.copy(alpha = 0.1f), RoundedCornerShape(16.dp))
                         .padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -635,7 +638,8 @@ fun StatCard(
     iconColor: Color,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
     title: String,
-    value: String
+    value: String,
+    textColor: Color = Color.White
 ) {
     Row(
         modifier = modifier
@@ -662,9 +666,9 @@ fun StatCard(
         Spacer(modifier = Modifier.width(16.dp))
         
         Column(verticalArrangement = Arrangement.Center) {
-            Text(title, color = Color.White.copy(alpha = 0.6f), fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = GeistFontFamily)
+            Text(title, color = textColor.copy(alpha = 0.6f), fontSize = 8.sp, fontWeight = FontWeight.Bold, fontFamily = GeistFontFamily)
             Spacer(modifier = Modifier.height(2.dp))
-            Text(value, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, fontFamily = GeistFontFamily)
+            Text(value, color = textColor, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, fontFamily = GeistFontFamily)
         }
     }
 }

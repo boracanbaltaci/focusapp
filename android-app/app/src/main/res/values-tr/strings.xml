@@ -146,7 +146,7 @@
 
     <!-- Subscription Screen V2 -->
     <string name="subs_unlock_clockera">Clockera\'yı </string>
-    <string name="subs_unlock_name">Açın</string>
+    <string name="subs_unlock_name">Edinin</string>
     <string name="subs_subtitle_1">Size uygun planı seçin.</string>
     <string name="subs_subtitle_2">Estetik bir şekilde üretkenliği deneyimleyin.</string>
     <string name="subs_feature_1_title">Estetik Saat Yüzleri</string>
