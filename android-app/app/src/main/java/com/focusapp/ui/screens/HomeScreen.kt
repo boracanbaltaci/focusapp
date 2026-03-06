@@ -102,7 +102,9 @@ fun HomeScreen(
         Pair(Color(0xFFBDDBF7), Color(0xFF6071B6)), // Uranian Blue + Glaucous
         Pair(Color(0xFFBAD797), Color(0xFF670626)), // Matcha + Cherry
         Pair(Color(0xFFC2D8C4), Color(0xFF222222)), // Matcha Mist + Dusty Coal
-        Pair(Color(0xFFFAF0CA), Color(0xFF0D3B66))  // Lemon Chiffon + Yale Blue
+        Pair(Color(0xFFFAF0CA), Color(0xFF0D3B66)), // Lemon Chiffon + Yale Blue
+        Pair(Color(0xFFFFEDA8), Color(0xFF003631)), // Butter Yellow + Dark Green
+        Pair(Color(0xFFFFBDC5), Color(0xFF670626))  // Pink + Claret
     )
     
     // Effective colors for Clock/Timer screens
@@ -210,7 +212,7 @@ fun HomeScreen(
             // Focus session finished - play sound, save to statistics
             if (elapsedSeconds == initialTimerSeconds) {
                 // Timer reached 0 naturally
-                android.media.MediaPlayer.create(context, R.raw.session_finish).apply {
+                android.media.MediaPlayer.create(context, R.raw.sessions_finish).apply {
                     setOnCompletionListener { it.release() }
                     start()
                 }
@@ -381,6 +383,7 @@ fun HomeScreen(
                     },
                     clockFontFamily = clockFontFamily,
                     textColor = textColor,
+                    clockFontKey = clockFont,
                     isImmersiveMode = isImmersiveMode,
                     onToggleImmersiveMode = { 
                         isImmersiveMode = !isImmersiveMode
@@ -535,6 +538,7 @@ private fun ClockScreen(
                 ) {
                     FixedDigitTimeText(
                         text = time,
+                        modifier = if (clockFontKey == "break") Modifier.offset(y = (15 * scale).dp) else Modifier,
                         style = TextStyle(
                             fontFamily = clockFontFamily,
                             fontWeight = FontWeight.Normal,
@@ -586,7 +590,8 @@ private fun TimerScreen(
     onCategoryExpand: () -> Unit = {},
     totalSessions: Int = 4,
     currentSessionIndex: Int = 0,
-    initialTimerSeconds: Int = 0
+    initialTimerSeconds: Int = 0,
+    clockFontKey: String = "menil"
 ) {
     val context = LocalContext.current
     
@@ -714,6 +719,7 @@ private fun TimerScreen(
                                 // Ana saniye ve dakika bölümü
                                 FixedDigitTimeText(
                                     text = timeStr,
+                                    modifier = if (clockFontKey == "break") Modifier.offset(y = (15 * scale).dp) else Modifier,
                                     style = TextStyle(
                                         fontFamily = clockFontFamily,
                                         fontWeight = FontWeight.Normal,

@@ -573,7 +573,7 @@ private fun FontSubmenu(
         "Menil-Étroit" to "menil",
         "LT Avocado" to "avocado",
         "Break" to "break",
-        "DXBurst Smooth" to "dxburst",
+        "Sentient" to "sentient",
         "Kiya Handwrite" to "kiya",
         "Flaviotte" to "flaviotte",
         "Awesome Ways" to "awesome",
@@ -582,7 +582,7 @@ private fun FontSubmenu(
         "Kino 40" to "kino40",
         "1797 Medium" to "1797",
         "Glina Script" to "glina",
-        "Sentient" to "sentient",
+        "DXBurst Smooth" to "dxburst",
         "Chillax" to "chillax"
     )
     
@@ -610,12 +610,16 @@ private fun FontSubmenu(
                 
                 Box(
                     modifier = Modifier
-                        .padding(12.dp) // added more padding to shrink the visual box even further
-                        .aspectRatio(1f) // Square cell
+                        .padding(12.dp)
+                        .aspectRatio(1f)
                         .clip(RoundedCornerShape(12.dp))
                         .background(
                             if (isSelected) Color(0xFF4CAF50).copy(alpha = 0.2f) 
                             else textColor.copy(alpha = 0.05f)
+                        )
+                        .then(
+                            if (isSelected) Modifier.border(1.5.dp, Color(0xFF4CAF50), RoundedCornerShape(12.dp))
+                            else Modifier
                         )
                         .clickable(
                             enabled = !isPlaceholder,
@@ -626,7 +630,7 @@ private fun FontSubmenu(
                 ) {
                     if (isPlaceholder) {
                         Text(
-                            text = stringResource(R.string.coming_soon),
+                            text = "...",
                             style = TextStyle(
                                 fontFamily = GeistFontFamily,
                                 fontSize = 10.sp,
@@ -637,6 +641,7 @@ private fun FontSubmenu(
                     } else {
                         Text(
                             text = currentTimePreview,
+                            modifier = if (value == "break") Modifier.offset(y = 4.dp) else Modifier,
                             style = TextStyle(
                                 fontFamily = fontFamily,
                                 fontSize = 40.sp,
