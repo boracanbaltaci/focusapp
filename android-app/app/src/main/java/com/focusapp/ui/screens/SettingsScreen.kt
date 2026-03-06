@@ -12,6 +12,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,6 +44,7 @@ import java.util.*
 @Composable
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel,
+    showSubscriptionInitially: Boolean = false,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -54,13 +57,14 @@ fun SettingsScreen(
     val breakDurationMinutes by settingsViewModel.breakDurationMinutes.collectAsState()
     val is24HourFormat by settingsViewModel.is24HourFormat.collectAsState()
     val pomodoroSessions by settingsViewModel.pomodoroSessions.collectAsState()
+    val isPremium by settingsViewModel.isPremium.collectAsState()
     
     var showFontSubmenu by remember { mutableStateOf(false) }
     var showLanguageSubmenu by remember { mutableStateOf(false) }
     var showBreakSubmenu by remember { mutableStateOf(false) }
     var showAboutSubmenu by remember { mutableStateOf(false) }
     var showSessionsSubmenu by remember { mutableStateOf(false) }
-    var showSubscriptionSubmenu by remember { mutableStateOf(false) }
+    var showSubscriptionSubmenu by remember { mutableStateOf(showSubscriptionInitially) }
     var pendingLanguageChange by remember { mutableStateOf<String?>(null) }
     
     // Handle language change with LaunchedEffect for safe recreation
@@ -93,14 +97,13 @@ fun SettingsScreen(
                 .padding(24.dp.scaled(settingsScale, min = 12.dp)),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Determine active title and back action
             val (headerTitle, onBackAction) = when {
+                showSubscriptionSubmenu -> stringResource(R.string.subscription) to { showSubscriptionSubmenu = false }
                 showFontSubmenu -> stringResource(R.string.font_selection) to { showFontSubmenu = false }
                 showLanguageSubmenu -> stringResource(R.string.language) to { showLanguageSubmenu = false }
                 showBreakSubmenu -> stringResource(R.string.auto_break) to { showBreakSubmenu = false }
                 showAboutSubmenu -> stringResource(R.string.about) to { showAboutSubmenu = false }
                 showSessionsSubmenu -> stringResource(R.string.sessions) to { showSessionsSubmenu = false }
-                showSubscriptionSubmenu -> stringResource(R.string.subscription) to { showSubscriptionSubmenu = false }
                 else -> stringResource(R.string.settings) to onBack
             }
 
@@ -192,6 +195,7 @@ fun SettingsScreen(
                 if (showSubscriptionSubmenu) {
                     // Subscription renders directly (no scroll wrapper) so fillMaxHeight works
                     SubscriptionSubmenu(
+                        viewModel = settingsViewModel,
                         onBack = { showSubscriptionSubmenu = false },
                         textColor = textColor,
                         isDark = theme == "dark"
@@ -213,7 +217,9 @@ fun SettingsScreen(
                                 showFontSubmenu = false
                             },
                             onBack = { showFontSubmenu = false },
-                            textColor = textColor
+                            textColor = textColor,
+                            isPremium = isPremium,
+                            onPremiumClick = { showSubscriptionSubmenu = true }
                         )
                     } else if (showLanguageSubmenu) {
                         // Language Selection Submenu
@@ -255,6 +261,7 @@ fun SettingsScreen(
                     } else if (showSubscriptionSubmenu) {
                         // Subscription Page — rendered outside scroll so fillMaxHeight works
                         SubscriptionSubmenu(
+                            viewModel = settingsViewModel,
                             onBack = { showSubscriptionSubmenu = false },
                             textColor = textColor,
                             isDark = theme == "dark"
@@ -536,7 +543,9 @@ private fun FontSubmenu(
     selectedFont: String,
     onFontSelect: (String) -> Unit,
     @Suppress("UNUSED_PARAMETER") onBack: () -> Unit,
-    textColor: Color
+    textColor: Color,
+    isPremium: Boolean,
+    onPremiumClick: () -> Unit
 ) {
     // Get current time for preview
     var currentTimePreview by remember { mutableStateOf("") }
@@ -607,6 +616,7 @@ private fun FontSubmenu(
                 val isPlaceholder = value.startsWith("coming_soon")
                 val isSelected = selectedFont == value
                 val fontFamily = fontFamilyMap[value] ?: MenilFontFamily
+                val isLocked = !isPremium && index > 3
                 
                 Box(
                     modifier = Modifier
@@ -623,7 +633,13 @@ private fun FontSubmenu(
                         )
                         .clickable(
                             enabled = !isPlaceholder,
-                            onClick = { onFontSelect(value) }
+                            onClick = {
+                                if (isLocked) {
+                                    onPremiumClick()
+                                } else {
+                                    onFontSelect(value)
+                                }
+                            }
                         )
                         .padding(8.dp),
                     contentAlignment = Alignment.Center
@@ -648,6 +664,17 @@ private fun FontSubmenu(
                                 color = textColor.copy(alpha = if (isSelected) 1f else 0.8f),
                                 letterSpacing = (-0.5).sp
                             )
+                        )
+                    }
+                    if (isLocked) {
+                        androidx.compose.material3.Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Locked Font",
+                            tint = textColor.copy(alpha = 0.5f),
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .size(16.dp)
+                                .offset(x = (-4).dp, y = 4.dp)
                         )
                     }
                 }
@@ -1290,10 +1317,13 @@ private fun updateLocale(context: android.content.Context, languageCode: String)
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun SubscriptionSubmenu(
+    viewModel: SettingsViewModel,
     @Suppress("UNUSED_PARAMETER") onBack: () -> Unit,
     textColor: Color,
     isDark: Boolean
 ) {
+    val context = LocalContext.current
+    val isPremium by viewModel.isPremium.collectAsState()
     var selectedPlan by remember { mutableStateOf("yearly") } // State to track selected plan
 
     val accent = Color(0xFF3DDC6F)
@@ -1438,7 +1468,10 @@ private fun SubscriptionSubmenu(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(36.dp)
-                                    .background(if (isMonthlySelected) accent else Color.Transparent, RoundedCornerShape(18.dp)),
+                                    .background(if (isMonthlySelected) accent else Color.Transparent, RoundedCornerShape(18.dp))
+                                    .clickable {
+                                        viewModel.purchasePremium(context as Activity, "monthly_plan_id")
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (!isMonthlySelected) {
@@ -1550,7 +1583,10 @@ private fun SubscriptionSubmenu(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(36.dp)
-                                    .background(if (isYearlySelected) accent else Color.Transparent, RoundedCornerShape(18.dp)),
+                                    .background(if (isYearlySelected) accent else Color.Transparent, RoundedCornerShape(18.dp))
+                                    .clickable {
+                                        viewModel.purchasePremium(context as Activity, "yearly_plan_id")
+                                    },
                                 contentAlignment = Alignment.Center
                             ) {
                                 if (!isYearlySelected) {

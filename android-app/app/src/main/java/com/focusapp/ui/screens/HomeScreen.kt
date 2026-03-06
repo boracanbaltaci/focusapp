@@ -56,6 +56,7 @@ import com.focusapp.ui.components.scaled
 import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.AvocadoFontFamily
 import com.focusapp.ui.theme.BreakFontFamily
+import androidx.compose.material.icons.filled.Lock
 import com.focusapp.ui.theme.DxburstFontFamily
 import com.focusapp.ui.theme.KiyaFontFamily
 import com.focusapp.ui.theme.FlaviotteFontFamily
@@ -81,7 +82,8 @@ import kotlin.math.roundToInt
 fun HomeScreen(
     sessionViewModel: SessionViewModel,
     settingsViewModel: SettingsViewModel,
-    onNavigateToSettings: () -> Unit
+    onNavigateToSettings: () -> Unit,
+    onNavigateToSubscription: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val statisticsRepository = remember { StatisticsRepository(context) }
@@ -90,6 +92,7 @@ fun HomeScreen(
     val clockFont by settingsViewModel.clockFont.collectAsState()
     val theme by settingsViewModel.theme.collectAsState()
     val colorPairIndex by settingsViewModel.colorPairIndex.collectAsState()
+    val isPremium by settingsViewModel.isPremium.collectAsState()
     
     // Default theme colors (used for statistics screen always)
     val defaultBackgroundColor = if (theme == "dark") Color(0xFF181C14) else Color(0xFFF6F5F2)
@@ -418,10 +421,10 @@ fun HomeScreen(
                 colorPairs = colorPairs,
                 selectedIndex = colorPairIndex,
                 isDark = theme == "dark",
-                onSelect = { index ->
-                    settingsViewModel.setColorPairIndex(index)
-                },
-                onDismiss = { showColorPicker = false }
+                onSelect = { settingsViewModel.setColorPairIndex(it) },
+                onDismiss = { showColorPicker = false },
+                isPremium = isPremium,
+                onPremiumClick = onNavigateToSubscription
             )
         }
         
@@ -1225,7 +1228,9 @@ private fun ColorPickerModal(
     selectedIndex: Int,
     isDark: Boolean,
     onSelect: (Int) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    isPremium: Boolean,
+    onPremiumClick: () -> Unit
 ) {
     val dialogBg = if (isDark) Color(0xFF1E2218).copy(alpha = 0.85f) else Color(0xFFF6F5F2).copy(alpha = 0.85f)
     val borderColor = if (isDark) Color.White.copy(alpha = 0.15f) else Color(0xFF181C14).copy(alpha = 0.08f)
@@ -1321,6 +1326,7 @@ private fun ColorPickerModal(
                             rowPairs.forEachIndexed { colIndex, pair ->
                                 val pairIndex = rowIndex * 3 + colIndex + 1
                                 val isSelected = selectedIndex == pairIndex
+                                val isLocked = !isPremium
                                 
                                 Box(
                                     modifier = Modifier
@@ -1331,7 +1337,15 @@ private fun ColorPickerModal(
                                             if (isSelected) checkColor.copy(alpha = 0.08f)
                                             else Color.Transparent
                                         )
-                                        .clickable { onSelect(pairIndex); onDismiss() },
+                                        .clickable { 
+                                            if (isLocked) {
+                                                onDismiss()
+                                                onPremiumClick()
+                                            } else {
+                                                onSelect(pairIndex)
+                                                onDismiss()
+                                            }
+                                        },
                                     contentAlignment = Alignment.Center
                                 ) {
                                     // Two overlapping circles for each pair
@@ -1380,6 +1394,19 @@ private fun ColorPickerModal(
                                                 )
                                             )
                                         }
+                                    }
+                                    
+                                    // Lock icon indicator
+                                    if (isLocked) {
+                                        androidx.compose.material3.Icon(
+                                            imageVector = androidx.compose.material.icons.Icons.Default.Lock,
+                                            contentDescription = "Locked Color Palette",
+                                            tint = checkColor.copy(alpha = 0.5f),
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .size(14.dp)
+                                                .offset(x = (-2).dp, y = 2.dp)
+                                        )
                                     }
                                 }
                             }
@@ -1471,67 +1498,14 @@ fun FixedDigitTimeText(
     style: TextStyle,
     modifier: Modifier = Modifier
 ) {
-    val textMeasurer = androidx.compose.ui.text.rememberTextMeasurer()
-    val density = androidx.compose.ui.platform.LocalDensity.current
-
-    val parts = text.split(":")
-    if (parts.size != 2) {
-        // Beklenmeyen format (tek parça, 3 parça vs.) gelirse normal text bas
-        Text(text = text, style = style, modifier = modifier, textAlign = TextAlign.Center)
-        return
-    }
-
-    val minutes = parts[0]
-    val seconds = parts[1]
-
-    // 00'dan 99'a kadar tüm iki basamaklı kombinasyonların en genişini bul
-    // Bu sayede el yazısı fontlarında (ör. cursive) rakamlar bitişik (kerned) olarak mükemmel görünür
-    // ve toplam genişliği her saniye tamamen sabit kalacağı için asla titreme yapmaz!
-    val maxTwoDigitsWidth = remember(style, textMeasurer, density) {
-        var maxWidth = 0f
-        for (i in 0..9) {
-            for (j in 0..9) {
-                val w = textMeasurer.measure("$i$j", style).size.width.toFloat()
-                if (w > maxWidth) maxWidth = w
-            }
-        }
-        with(density) { (maxWidth + 2f).toDp() }
-    }
-
-    Row(
+    Text(
+        text = text,
+        style = style.copy(
+            fontFeatureSettings = style.fontFeatureSettings?.let { "$it, tnum" } ?: "tnum"
+        ),
         modifier = modifier,
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Sol Kısım (Dakikalar) - İki noktaya doğru sağa hizalı
-        Box(
-            modifier = Modifier.width(maxTwoDigitsWidth),
-            contentAlignment = Alignment.CenterEnd
-        ) {
-            Text(
-                text = minutes,
-                style = style,
-                textAlign = TextAlign.End
-            )
-        }
-
-        // Sabit Merkez (İki Nokta)
-        Text(
-            text = ":",
-            style = style,
-            textAlign = TextAlign.Center
-        )
-
-        // Sağ Kısım (Saniyeler) - İki noktadan uzaklaşan sola hizalı
-        Box(
-            modifier = Modifier.width(maxTwoDigitsWidth),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Text(
-                text = seconds,
-                style = style,
-                textAlign = TextAlign.Start
-            )
-        }
-    }
+        textAlign = TextAlign.Center,
+        maxLines = 1,
+        softWrap = false
+    )
 }

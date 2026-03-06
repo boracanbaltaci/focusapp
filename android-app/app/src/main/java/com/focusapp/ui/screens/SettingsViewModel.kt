@@ -1,7 +1,9 @@
 package com.focusapp.ui.screens
 
+import android.app.Activity
 import android.content.Context
 import androidx.lifecycle.ViewModel
+import com.focusapp.data.repository.BillingRepository
 import com.focusapp.data.repository.SettingsRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -9,6 +11,13 @@ import kotlinx.coroutines.flow.StateFlow
 class SettingsViewModel(context: Context) : ViewModel() {
     
     private val settingsRepository = SettingsRepository(context)
+    private val billingRepository = BillingRepository(context)
+    
+    val isPremium = billingRepository.isPremium
+    
+    fun purchasePremium(activity: Activity, planId: String) {
+        billingRepository.launchBillingFlow(activity, planId)
+    }
     
     private val _clockType = MutableStateFlow(settingsRepository.getClockType())
     val clockType: StateFlow<String> = _clockType

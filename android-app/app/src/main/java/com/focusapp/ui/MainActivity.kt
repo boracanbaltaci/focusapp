@@ -187,13 +187,23 @@ fun FocusApp() {
             HomeScreen(
                 sessionViewModel = sessionViewModel,
                 settingsViewModel = settingsViewModel,
-                onNavigateToSettings = { navController.navigate("settings") }
+                onNavigateToSettings = { navController.navigate("settings") },
+                onNavigateToSubscription = { navController.navigate("settings/subscription") }
             )
         }
         
         composable("settings") {
             SettingsScreen(
                 settingsViewModel = settingsViewModel,
+                showSubscriptionInitially = false,
+                onBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable("settings/subscription") {
+            SettingsScreen(
+                settingsViewModel = settingsViewModel,
+                showSubscriptionInitially = true,
                 onBack = { navController.popBackStack() }
             )
         }

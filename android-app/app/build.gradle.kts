@@ -79,6 +79,9 @@ dependencies {
     // WorkManager for scheduled notifications
     implementation("androidx.work:work-runtime-ktx:2.9.0")
     
+    // Google Play Billing
+    implementation("com.android.billingclient:billing-ktx:6.1.0")
+    
     // Testing
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:5.7.0")
