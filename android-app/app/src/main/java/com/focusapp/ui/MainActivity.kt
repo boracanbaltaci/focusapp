@@ -135,12 +135,23 @@ class MainActivity : ComponentActivity() {
         
         setContent {
             FocusAppTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                // Determine clamped font scale to prevent UI breakage with huge system fonts
+                val currentDensity = androidx.compose.ui.platform.LocalDensity.current
+                val fontScale = currentDensity.fontScale.coerceAtMost(1.1f) // allow slight scaling but prevent breakage
+                
+                CompositionLocalProvider(
+                    androidx.compose.ui.platform.LocalDensity provides androidx.compose.ui.unit.Density(
+                        density = currentDensity.density,
+                        fontScale = fontScale
+                    )
                 ) {
-                    ScreenScaleProvider(modifier = Modifier.fillMaxSize()) {
-                        FocusApp()
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        ScreenScaleProvider(modifier = Modifier.fillMaxSize()) {
+                            FocusApp()
+                        }
                     }
                 }
             }
