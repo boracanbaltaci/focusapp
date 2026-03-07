@@ -165,5 +165,5 @@
     <string name="subs_plan_feature_1">Tutti i font/colori e le novità in arrivo.</string>
     <string name="subs_plan_feature_2">Ambiente di lavoro esteticamente curato.</string>
     <string name="subs_plan_feature_3">Ore di lavoro molto più produttive.</string>
-
+    <string name="reward_palette_next_title">Devi lavorare ancora %1$d ore per la prossima tavolozza di colori in regalo.</string>
 </resources>

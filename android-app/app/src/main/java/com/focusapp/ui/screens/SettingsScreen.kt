@@ -705,39 +705,43 @@ private fun FontSubmenu(
                         )
                     }
                     if (isLocked || isPlaceholder) {
-                        val bannerText = if (isPlaceholder) {
-                            stringResource(R.string.reward_coming_soon)
-                        } else {
-                            stringResource(R.string.reward_press_to_unlock)
-                        }
-                        
-                        // Modern Green Banner with slight transparency/glass effect
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .padding(horizontal = 4.dp, vertical = 4.dp)
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(
-                                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
-                                        colors = listOf(
-                                            Color(0xFF4CAF50).copy(alpha = 0.9f),
-                                            Color(0xFF388E3C).copy(alpha = 0.95f)
+                        // Only show banner for placeholder or the EXACT NEXT locked font
+                        val isNextLocked = !isPremium && index == (4 + unlockedCount)
+                        if (isPlaceholder || isNextLocked) {
+                            val bannerText = if (isPlaceholder) {
+                                stringResource(R.string.reward_coming_soon)
+                            } else {
+                                stringResource(R.string.reward_press_to_unlock)
+                            }
+                            
+                            // Modern Green Banner with slight transparency/glass effect
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(horizontal = 4.dp, vertical = 4.dp)
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .background(
+                                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color(0xFF4CAF50).copy(alpha = 0.9f),
+                                                Color(0xFF388E3C).copy(alpha = 0.95f)
+                                            )
                                         )
                                     )
+                                    .padding(vertical = 6.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = bannerText,
+                                    style = TextStyle(
+                                        fontFamily = GeistFontFamily,
+                                        fontSize = 11.sp, // Slightly smaller for better fit
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    )
                                 )
-                                .padding(vertical = 6.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = bannerText,
-                                style = TextStyle(
-                                    fontFamily = GeistFontFamily,
-                                    fontSize = 11.sp, // Slightly smaller for better fit
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White
-                                )
-                            )
+                            }
                         }
                     }
                 } // Closes Box

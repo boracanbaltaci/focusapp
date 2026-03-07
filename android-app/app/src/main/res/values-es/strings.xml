@@ -165,5 +165,5 @@
     <string name="subs_plan_feature_1">Todas las fuentes/paletas y futuras novedades.</string>
     <string name="subs_plan_feature_2">Espacio de trabajo estéticamente atractivo.</string>
     <string name="subs_plan_feature_3">Horas de trabajo más productivas.</string>
-
+    <string name="reward_palette_next_title">Necesitas trabajar %1$d horas más para la próxima paleta de colores de recompensa.</string>
 </resources>

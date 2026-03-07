@@ -57,6 +57,7 @@ import com.focusapp.ui.theme.MenilFontFamily
 import com.focusapp.ui.theme.AvocadoFontFamily
 import com.focusapp.ui.theme.BreakFontFamily
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import com.focusapp.ui.theme.DxburstFontFamily
 import com.focusapp.ui.theme.KiyaFontFamily
 import com.focusapp.ui.theme.FlaviotteFontFamily
@@ -107,7 +108,11 @@ fun HomeScreen(
         Pair(Color(0xFFC2D8C4), Color(0xFF222222)), // Matcha Mist + Dusty Coal
         Pair(Color(0xFFFAF0CA), Color(0xFF0D3B66)), // Lemon Chiffon + Yale Blue
         Pair(Color(0xFFFFEDA8), Color(0xFF003631)), // Butter Yellow + Dark Green
-        Pair(Color(0xFFFFBDC5), Color(0xFF670626))  // Pink + Claret
+        Pair(Color(0xFFFFBDC5), Color(0xFF670626)), // Pink + Claret
+        Pair(Color(0xFFFFF7EB), Color(0xFF453336)), // Crema + Umber
+        Pair(Color(0xFFABBCD3), Color(0xFF1E1509)), // Noira + Terrane
+        Pair(Color(0xFFEFE9DC), Color(0xFF706C61)), // Chalk Cream + Olive Smoke
+        Pair(Color(0xFF93032E), Color(0xFF151515))  // Burgundy + Night
     )
     
     // Effective colors for Clock/Timer screens
@@ -1247,10 +1252,13 @@ private fun ColorPickerModal(
     val checkColor = if (isDark) Color(0xFFECDFCC) else Color(0xFF181C14)
     val glassBorder = if (isDark) Color.White.copy(alpha = 0.15f) else Color(0xFF181C14).copy(alpha = 0.1f)
     
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = androidx.compose.ui.window.DialogProperties(usePlatformDefaultWidth = false)
+    ) {
         Box(
             modifier = Modifier
-                .fillMaxWidth(0.98f) // Very wide as requested
+                .fillMaxWidth(0.5f) // Wide enough for 4 columns
                 .shadow(
                     elevation = 24.dp,
                     shape = RoundedCornerShape(32.dp),
@@ -1346,13 +1354,14 @@ private fun ColorPickerModal(
                     )
 
                     // RIGHT: Color Palette Grid (2 rows for horizontal rectangle look)
-                    androidx.compose.foundation.layout.FlowRow(
-                        modifier = Modifier.weight(1f),
-                        maxItemsInEachRow = 5, // Ensures horizontal spread
+                    androidx.compose.foundation.lazy.grid.LazyHorizontalGrid(
+                        rows = androidx.compose.foundation.lazy.grid.GridCells.Fixed(2),
+                        modifier = Modifier.weight(1f).height(116.dp), // 50dp * 2 + 16dp spacing
                         horizontalArrangement = Arrangement.spacedBy(16.dp),
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        colorPairs.forEachIndexed { index, pair ->
+                        items(colorPairs.size) { index ->
+                            val pair = colorPairs[index]
                             val pairIndex = index + 1
                             val isSelected = selectedIndex == pairIndex
                             val isLocked = !isPremium && pairIndex > unlockedCount
@@ -1432,6 +1441,21 @@ private fun ColorPickerModal(
                                 }
                             }
                         }
+                    }
+
+                    // Right Scroll Indicator
+                    Box(
+                        modifier = Modifier
+                            .height(116.dp)
+                            .padding(end = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        androidx.compose.material3.Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.KeyboardArrowRight,
+                            contentDescription = "Scroll Right",
+                            tint = checkColor.copy(alpha = 0.5f),
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
             }

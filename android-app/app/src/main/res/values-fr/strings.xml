@@ -165,5 +165,5 @@
     <string name="subs_plan_feature_1">Toutes les polices/palettes et accès aux nouveautés.</string>
     <string name="subs_plan_feature_2">Espace de travail attrayant et esthétique.</string>
     <string name="subs_plan_feature_3">Heures de travail plus productives.</string>
-
+    <string name="reward_palette_next_title">Tu dois travailler %1$d heures de plus pour la prochaine palette de couleurs récompense.</string>
 </resources>

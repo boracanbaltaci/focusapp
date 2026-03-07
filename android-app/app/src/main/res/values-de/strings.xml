@@ -165,5 +165,5 @@
     <string name="subs_plan_feature_1">Alle Schriften/Farbpaletten und neue Funktionen.</string>
     <string name="subs_plan_feature_2">Ästhetisch ansprechender Arbeitsbereich.</string>
     <string name="subs_plan_feature_3">Viel produktivere Arbeitszeiten.</string>
-
+    <string name="reward_palette_next_title">Du musst noch %1$d Stunden für die nächste als Belohnung gedachte Farbpalette arbeiten.</string>
 </resources>

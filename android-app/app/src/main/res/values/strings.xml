@@ -188,6 +188,6 @@
     <string name="reward_font_constant">35h left</string>
     <string name="reward_press_to_unlock">Press to unlock</string>
     <string name="reward_coming_soon">Coming soon...</string>
-    <string name="reward_palette_next_title">Next reward color palette in %1$d hours.</string>
+    <string name="reward_palette_next_title">You need to work %1$d more hours for the next reward color palette.</string>
 
 </resources>

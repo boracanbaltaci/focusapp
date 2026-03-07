@@ -187,5 +187,5 @@
     <string name="reward_font_constant">35sa kaldı</string>
     <string name="reward_press_to_unlock">Açmak için dokun</string>
     <string name="reward_coming_soon">Yakında...</string>
-    <string name="reward_palette_next_title">Sonraki hediye renk paleti için %1$d saat kaldı.</string>
+    <string name="reward_palette_next_title">Sonraki hediye renk paleti için %1$d saat daha çalışman gerek.</string>
 </resources>
